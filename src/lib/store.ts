@@ -3,6 +3,20 @@ import food1 from "@/assets/food-1.jpg";
 import food2 from "@/assets/food-2.jpg";
 import food3 from "@/assets/food-3.jpg";
 import food4 from "@/assets/food-4.jpg";
+import {
+  getDatabaseState,
+  saveMenuItemDb,
+  deleteMenuItemDb,
+  saveOrderDb,
+  saveVoucherDb,
+  deleteVoucherDb,
+  savePromoDb,
+  deletePromoDb,
+  saveAccountDb,
+  saveStaffDb,
+  saveSettingsDb,
+  saveCmsDb,
+} from "./server-functions";
 
 export type Category = "Foods" | "Snacks" | "Drinks" | "Combos" | "Others";
 export const CATEGORIES: Category[] = ["Foods", "Snacks", "Drinks", "Combos", "Others"];
@@ -572,6 +586,27 @@ export function useStore<T>(selector: (s: State) => T): T {
 }
 
 export const actions = {
+  async loadServerState() {
+    try {
+      const data = await getDatabaseState();
+      if (data) {
+        set((s) => ({
+          ...s,
+          settings: data.settings ? { ...s.settings, ...data.settings } : s.settings,
+          cms: data.cms ? { ...s.cms, ...data.cms } : s.cms,
+          menu: data.menu && data.menu.length ? data.menu : s.menu,
+          orders: data.orders && data.orders.length ? data.orders : s.orders,
+          promos: data.promos && data.promos.length ? data.promos : s.promos,
+          vouchers: data.vouchers && data.vouchers.length ? data.vouchers : s.vouchers,
+          accounts: data.accounts && data.accounts.length ? data.accounts : s.accounts,
+          staff: data.staff && data.staff.length ? data.staff : s.staff,
+        }));
+        console.log("State synchronized from PostgreSQL database successfully.");
+      }
+    } catch (error) {
+      console.warn("Failed to load state from database server. Using local memory state.", error);
+    }
+  },
   setOrderType(type: "pickup" | "delivery") {
     set((s) => ({ ...s, orderType: type, orderTypeChosen: true }));
   },
@@ -596,9 +631,11 @@ export const actions = {
         ? s.vouchers.map((x) => (x.code === v.code ? v : x))
         : [...s.vouchers, v],
     }));
+    saveVoucherDb(v).catch(console.error);
   },
   deleteVoucher(code: string) {
     set((s) => ({ ...s, vouchers: s.vouchers.filter((v) => v.code !== code) }));
+    deleteVoucherDb(code).catch(console.error);
   },
   savePromo(p: Promo) {
     set((s) => ({
@@ -607,9 +644,11 @@ export const actions = {
         ? s.promos.map((x) => (x.id === p.id ? p : x))
         : [...s.promos, p],
     }));
+    savePromoDb(p).catch(console.error);
   },
   deletePromo(id: string) {
     set((s) => ({ ...s, promos: s.promos.filter((p) => p.id !== id) }));
+    deletePromoDb(id).catch(console.error);
   },
   signUp(data: { name: string; email: string; phone: string; password: string }): {
     ok: boolean;
@@ -641,6 +680,7 @@ export const actions = {
         method: "Email",
       },
     }));
+    saveAccountDb(account).catch(console.error);
     return { ok: true, role: "user" as const };
   },
   signIn(
@@ -708,30 +748,52 @@ export const actions = {
     set((s) => ({ ...s, adminUnlocked: false }));
   },
   setStock(id: string, stock: number | null) {
-    set((s) => ({
-      ...s,
-      menu: s.menu.map((m) =>
+    set((s) => {
+      const updatedMenu = s.menu.map((m) =>
         m.id === id ? { ...m, stock, available: stock === null ? m.available : stock > 0 } : m,
-      ),
-    }));
+      );
+      const updatedItem = updatedMenu.find((m) => m.id === id);
+      if (updatedItem) {
+        saveMenuItemDb(updatedItem).catch(console.error);
+      }
+      return { ...s, menu: updatedMenu };
+    });
   },
   saveAddress(address: string) {
-    set((s) => ({
-      ...s,
-      profile: {
+    set((s) => {
+      const updatedProfile = {
         ...s.profile,
         address,
         addresses: s.profile.addresses.includes(address)
           ? s.profile.addresses
           : [address, ...s.profile.addresses].slice(0, 5),
-      },
-    }));
+      };
+
+      // Sync profile's user account with db
+      const account = s.accounts.find((a) => a.email === s.profile.email);
+      if (account) {
+        const updatedAcc = { ...account, address, addresses: updatedProfile.addresses };
+        saveAccountDb(updatedAcc).catch(console.error);
+      }
+
+      return { ...s, profile: updatedProfile };
+    });
   },
   removeAddress(address: string) {
-    set((s) => ({
-      ...s,
-      profile: { ...s.profile, addresses: s.profile.addresses.filter((a) => a !== address) },
-    }));
+    set((s) => {
+      const updatedProfile = {
+        ...s.profile,
+        addresses: s.profile.addresses.filter((a) => a !== address),
+      };
+
+      const account = s.accounts.find((a) => a.email === s.profile.email);
+      if (account) {
+        const updatedAcc = { ...account, addresses: updatedProfile.addresses };
+        saveAccountDb(updatedAcc).catch(console.error);
+      }
+
+      return { ...s, profile: updatedProfile };
+    });
   },
   addToCart(line: Omit<CartLine, "id">) {
     set((s) => ({ ...s, cart: [...s.cart, { ...line, id: uid() }] }));
@@ -759,37 +821,64 @@ export const actions = {
       paid: false,
       pointsEarned,
     };
-    set((s) => ({
-      ...s,
-      orders: [full, ...s.orders],
-      cart: [],
-      voucherCode: "",
-      menu: s.menu.map((m) => {
+    set((s) => {
+      const updatedMenu = s.menu.map((m) => {
         if (m.stock === null || m.stock === undefined) return m;
         const ordered = full.lines
           .filter((l) => l.itemId === m.id)
           .reduce((sum, l) => sum + l.qty, 0);
         if (!ordered) return m;
         const stock = Math.max(0, m.stock - ordered);
-        return { ...m, stock, available: stock > 0 };
-      }),
-      profile: { ...s.profile, points: s.profile.points + pointsEarned },
-    }));
+        const updated = { ...m, stock, available: stock > 0 };
+        saveMenuItemDb(updated).catch(console.error);
+        return updated;
+      });
+
+      // Save order to db
+      saveOrderDb(full).catch(console.error);
+
+      // Save updated points for profile
+      const account = s.accounts.find((a) => a.email === s.profile.email);
+      const updatedPoints = s.profile.points + pointsEarned;
+      if (account) {
+        const updatedAcc = { ...account, points: updatedPoints };
+        saveAccountDb(updatedAcc).catch(console.error);
+      }
+
+      return {
+        ...s,
+        orders: [full, ...s.orders],
+        cart: [],
+        voucherCode: "",
+        menu: updatedMenu,
+        profile: { ...s.profile, points: updatedPoints },
+      };
+    });
     return full;
   },
   setOrderStatus(id: string, status: OrderStatus) {
-    set((s) => ({
-      ...s,
-      orders: s.orders.map((o) =>
+    set((s) => {
+      const updatedOrders = s.orders.map((o) =>
         o.id === id ? { ...o, status, paid: o.paid || status !== "Pending Payment" } : o,
-      ),
-    }));
+      );
+      const updatedOrder = updatedOrders.find((o) => o.id === id);
+      if (updatedOrder) {
+        saveOrderDb(updatedOrder).catch(console.error);
+      }
+      return { ...s, orders: updatedOrders };
+    });
   },
   markPaid(id: string) {
-    set((s) => ({
-      ...s,
-      orders: s.orders.map((o) => (o.id === id ? { ...o, paid: true, status: "Cooking" } : o)),
-    }));
+    set((s) => {
+      const updatedOrders = s.orders.map((o) =>
+        o.id === id ? { ...o, paid: true, status: "Cooking" } : o,
+      );
+      const updatedOrder = updatedOrders.find((o) => o.id === id);
+      if (updatedOrder) {
+        saveOrderDb(updatedOrder).catch(console.error);
+      }
+      return { ...s, orders: updatedOrders };
+    });
   },
   saveMenuItem(item: MenuItem) {
     set((s) => ({
@@ -798,24 +887,39 @@ export const actions = {
         ? s.menu.map((m) => (m.id === item.id ? item : m))
         : [...s.menu, item],
     }));
+    saveMenuItemDb(item).catch(console.error);
   },
   deleteMenuItem(id: string) {
     set((s) => ({ ...s, menu: s.menu.filter((m) => m.id !== id) }));
+    deleteMenuItemDb(id).catch(console.error);
   },
   toggleAvailability(id: string) {
-    set((s) => ({
-      ...s,
-      menu: s.menu.map((m) => (m.id === id ? { ...m, available: !m.available } : m)),
-    }));
+    set((s) => {
+      const updatedMenu = s.menu.map((m) => (m.id === id ? { ...m, available: !m.available } : m));
+      const updatedItem = updatedMenu.find((m) => m.id === id);
+      if (updatedItem) {
+        saveMenuItemDb(updatedItem).catch(console.error);
+      }
+      return { ...s, menu: updatedMenu };
+    });
   },
   setAvailability(id: string, available: boolean) {
-    set((s) => ({
-      ...s,
-      menu: s.menu.map((m) => (m.id === id ? { ...m, available } : m)),
-    }));
+    set((s) => {
+      const updatedMenu = s.menu.map((m) => (m.id === id ? { ...m, available } : m));
+      const updatedItem = updatedMenu.find((m) => m.id === id);
+      if (updatedItem) {
+        saveMenuItemDb(updatedItem).catch(console.error);
+      }
+      return { ...s, menu: updatedMenu };
+    });
   },
   setAllAvailability(available: boolean) {
-    set((s) => ({ ...s, menu: s.menu.map((m) => ({ ...m, available })) }));
+    set((s) => {
+      s.menu.forEach((m) => {
+        saveMenuItemDb({ ...m, available }).catch(console.error);
+      });
+      return { ...s, menu: s.menu.map((m) => ({ ...m, available })) };
+    });
   },
   saveStaff(member: StaffMember) {
     set((s) => ({
@@ -824,51 +928,92 @@ export const actions = {
         ? s.staff.map((x) => (x.id === member.id ? member : x))
         : [...s.staff, member],
     }));
+    saveStaffDb(member).catch(console.error);
   },
   updateStaff(id: string, patch: Partial<StaffMember>) {
-    set((s) => ({
-      ...s,
-      staff: s.staff.map((x) => (x.id === id ? { ...x, ...patch } : x)),
-    }));
+    set((s) => {
+      const updatedStaff = s.staff.map((x) => (x.id === id ? { ...x, ...patch } : x));
+      const updatedMember = updatedStaff.find((x) => x.id === id);
+      if (updatedMember) {
+        saveStaffDb(updatedMember).catch(console.error);
+      }
+      return { ...s, staff: updatedStaff };
+    });
   },
   deleteStaff(id: string) {
-    set((s) => ({ ...s, staff: s.staff.filter((x) => x.id !== id) }));
+    set((s) => {
+      const staffMember = s.staff.find((x) => x.id === id);
+      if (staffMember) {
+        // Soft delete/mark inactive in database
+        saveStaffDb({ ...staffMember, active: false }).catch(console.error);
+      }
+      return { ...s, staff: s.staff.filter((x) => x.id !== id) };
+    });
   },
   updateSettings(patch: Partial<Settings>) {
-    set((s) => ({ ...s, settings: { ...s.settings, ...patch } }));
+    set((s) => {
+      const updated = { ...s.settings, ...patch };
+      saveSettingsDb(updated).catch(console.error);
+      return { ...s, settings: updated };
+    });
   },
   updateProfile(patch: Partial<Profile>) {
-    set((s) => ({ ...s, profile: { ...s.profile, ...patch } }));
+    set((s) => {
+      const updatedProfile = { ...s.profile, ...patch };
+
+      // Update matching user account in db
+      const account = s.accounts.find((a) => a.email === s.profile.email);
+      if (account) {
+        const updatedAcc = {
+          ...account,
+          name: updatedProfile.name || account.name,
+          phone: updatedProfile.phone || account.phone,
+          address: updatedProfile.address || account.address,
+          addresses: updatedProfile.addresses.length ? updatedProfile.addresses : account.addresses,
+          points: updatedProfile.points,
+        };
+        saveAccountDb(updatedAcc).catch(console.error);
+      }
+
+      return { ...s, profile: updatedProfile };
+    });
   },
   updateCms(patch: Partial<CmsContent>) {
-    set((s) => ({ ...s, cms: { ...s.cms, ...patch } }));
+    set((s) => {
+      const updated = { ...s.cms, ...patch };
+      saveCmsDb(updated).catch(console.error);
+      return { ...s, cms: updated };
+    });
   },
   updateCmsAnnouncement(patch: Partial<CmsContent["announcement"]>) {
-    set((s) => ({
-      ...s,
-      cms: {
+    set((s) => {
+      const updated = {
         ...s.cms,
         announcement: { ...s.cms.announcement, ...patch },
-      },
-    }));
+      };
+      saveCmsDb(updated).catch(console.error);
+      return { ...s, cms: updated };
+    });
   },
   updateCmsWelcome(patch: Partial<CmsContent["welcomeScreen"]>) {
-    set((s) => ({
-      ...s,
-      cms: {
+    set((s) => {
+      const updated = {
         ...s.cms,
         welcomeScreen: { ...s.cms.welcomeScreen, ...patch },
-      },
-    }));
+      };
+      saveCmsDb(updated).catch(console.error);
+      return { ...s, cms: updated };
+    });
   },
   updateCmsSocials(patch: Partial<CmsContent["socials"]>) {
-    set((s) => ({
-      ...s,
-      cms: {
+    set((s) => {
+      const updated = {
         ...s.cms,
         socials: { ...s.cms.socials, ...patch },
-      },
-    }));
+      };
+      saveCmsDb(updated).catch(console.error);
+      return { ...s, cms: updated };
+    });
   },
   addCmsFaq(faq: { question: string; answer: string; active?: boolean }) {
     const newFaq: CmsFaq = {
@@ -877,37 +1022,43 @@ export const actions = {
       answer: faq.answer.trim(),
       active: faq.active ?? true,
     };
-    set((s) => ({
-      ...s,
-      cms: {
+    set((s) => {
+      const updated = {
         ...s.cms,
         faqs: [...s.cms.faqs, newFaq],
-      },
-    }));
+      };
+      saveCmsDb(updated).catch(console.error);
+      return { ...s, cms: updated };
+    });
   },
   updateCmsFaq(id: string, patch: Partial<CmsFaq>) {
-    set((s) => ({
-      ...s,
-      cms: {
+    set((s) => {
+      const updated = {
         ...s.cms,
         faqs: s.cms.faqs.map((f) => (f.id === id ? { ...f, ...patch } : f)),
-      },
-    }));
+      };
+      saveCmsDb(updated).catch(console.error);
+      return { ...s, cms: updated };
+    });
   },
   deleteCmsFaq(id: string) {
-    set((s) => ({
-      ...s,
-      cms: {
+    set((s) => {
+      const updated = {
         ...s.cms,
         faqs: s.cms.faqs.filter((f) => f.id !== id),
-      },
-    }));
+      };
+      saveCmsDb(updated).catch(console.error);
+      return { ...s, cms: updated };
+    });
   },
   resetCms() {
-    set((s) => ({
-      ...s,
-      cms: defaultCmsContent,
-    }));
+    set((s) => {
+      saveCmsDb(defaultCmsContent).catch(console.error);
+      return {
+        ...s,
+        cms: defaultCmsContent,
+      };
+    });
   },
 };
 
