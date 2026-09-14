@@ -8,7 +8,8 @@ export const Route = createFileRoute("/owner/audit")({
       { title: "Log Aktivitas — Panel Owner Nanami Kitchen" },
       {
         name: "description",
-        content: "Riwayat aktivitas sistem Nanami Kitchen: pesanan, perubahan status, dan pengaturan.",
+        content:
+          "Riwayat aktivitas sistem Nanami Kitchen: pesanan, perubahan status, dan pengaturan.",
       },
       { property: "og:title", content: "Log Aktivitas — Nanami Kitchen" },
       { property: "og:description", content: "Riwayat aktivitas sistem Nanami Kitchen." },

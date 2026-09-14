@@ -134,7 +134,11 @@ function VouchersPage() {
         <SectionCard title="Banner promo" description="Tampil di beranda pembeli.">
           <label className="block text-xs text-muted-foreground">
             Judul
-            <input value={title} onChange={(e) => setTitle(e.target.value)} className={fieldClass} />
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className={fieldClass}
+            />
           </label>
           <label className="block text-xs text-muted-foreground">
             Subjudul
@@ -146,7 +150,11 @@ function VouchersPage() {
           </label>
           <label className="block text-xs text-muted-foreground">
             Badge
-            <input value={badge} onChange={(e) => setBadge(e.target.value)} className={fieldClass} />
+            <input
+              value={badge}
+              onChange={(e) => setBadge(e.target.value)}
+              className={fieldClass}
+            />
           </label>
           <button
             disabled={!title}

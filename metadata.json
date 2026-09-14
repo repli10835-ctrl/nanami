@@ -1,0 +1,6 @@
+{
+  "name": "Nanami Kitchen",
+  "description": "Nanami Kitchen cloud kitchen. Order bento, geprek, snacks and drinks for pickup or delivery with WhatsApp checkout.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

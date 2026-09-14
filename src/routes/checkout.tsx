@@ -149,81 +149,79 @@ function Checkout() {
   }
 
   const field =
-    "mt-1 w-full rounded-xl border border-input bg-secondary/40 px-3 py-2.5 text-sm outline-none focus:border-primary";
+    "mt-0.5 w-full rounded-lg border border-input bg-secondary/40 px-2.5 py-1.5 text-xs outline-none focus:border-primary transition";
 
   return (
     <AppShell hideCartBar>
       {/* Header */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 py-0.5">
         <button
           onClick={() => (step > 0 ? setStep(step - 1) : navigate({ to: "/cart" }))}
           aria-label="Back"
-          className="text-foreground"
+          className="text-foreground p-1 hover:bg-secondary/40 rounded-lg transition"
         >
-          <ArrowLeft className="size-6" />
+          <ArrowLeft className="size-4" />
         </button>
-        <h1 className="text-2xl font-semibold">
-          {step === 2 ? "Order via WhatsApp" : "Checkout"}
-        </h1>
+        <h1 className="text-lg font-bold">{step === 2 ? "Order via WhatsApp" : "Checkout"}</h1>
       </div>
 
       {/* Step indicator */}
       {step < 2 && (
-      <div className="mt-6 flex items-start">
-        {STEPS.map((label, i) => (
-          <div key={label} className={`flex items-start ${i < STEPS.length - 1 ? "flex-1" : ""}`}>
-            <div className="flex flex-col items-center gap-2">
-              <div
-                className={`flex size-8 items-center justify-center rounded-full text-sm font-bold ${
-                  i < step
-                    ? "bg-primary text-primary-foreground"
-                    : i === step
+        <div className="mt-3 flex items-start">
+          {STEPS.map((label, i) => (
+            <div key={label} className={`flex items-start ${i < STEPS.length - 1 ? "flex-1" : ""}`}>
+              <div className="flex flex-col items-center gap-1">
+                <div
+                  className={`flex size-6 items-center justify-center rounded-full text-xs font-bold ${
+                    i < step
                       ? "bg-primary text-primary-foreground"
-                      : "bg-secondary text-muted-foreground"
-                }`}
-              >
-                {i < step ? <Check className="size-4" /> : i + 1}
+                      : i === step
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-secondary text-muted-foreground"
+                  }`}
+                >
+                  {i < step ? <Check className="size-3" /> : i + 1}
+                </div>
+                <span
+                  className={`text-[10px] ${i === step ? "font-bold text-foreground" : "text-muted-foreground"}`}
+                >
+                  {label}
+                </span>
               </div>
-              <span
-                className={`text-sm ${i === step ? "font-medium text-foreground" : "text-muted-foreground"}`}
-              >
-                {label}
-              </span>
+              {i < STEPS.length - 1 && (
+                <div className="mx-2 mt-3 h-0.5 flex-1">
+                  <div className={`h-full rounded ${i < step ? "bg-primary" : "bg-secondary"}`} />
+                </div>
+              )}
             </div>
-            {i < STEPS.length - 1 && (
-              <div className="mx-3 mt-4 h-0.5 flex-1">
-                <div className={`h-full rounded ${i < step ? "bg-primary" : "bg-secondary"}`} />
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
       )}
 
       {step === 0 && (
         <>
           {/* Delivery address card */}
-          <section className="mt-6 rounded-2xl border border-border bg-card p-5">
+          <section className="mt-3 rounded-xl border border-border bg-card p-3">
             <div className="flex items-start justify-between">
-              <h2 className="text-lg font-semibold">Delivery Address</h2>
+              <h2 className="text-sm font-bold">Delivery Address</h2>
               <button
                 onClick={() => navigate({ to: "/address" })}
-                className="text-sm font-medium text-primary"
+                className="text-xs font-bold text-primary hover:underline"
               >
                 {editingAddress ? "Done" : "Change"}
               </button>
             </div>
             {editingAddress ? (
-              <div className="mt-3 space-y-3">
+              <div className="mt-2 space-y-2">
                 <textarea
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   rows={2}
                   className={field}
                 />
-                <label className="block text-xs text-muted-foreground">
+                <label className="block text-[11px] text-muted-foreground">
                   <span className="flex items-center gap-1">
-                    <MapPin className="size-3.5" /> Distance from kitchen: {distance} km
+                    <MapPin className="size-3" /> Distance from kitchen: {distance} km
                   </span>
                   <input
                     type="range"
@@ -231,7 +229,7 @@ function Checkout() {
                     max={20}
                     value={distance}
                     onChange={(e) => setDistance(Number(e.target.value))}
-                    className="mt-2 w-full accent-[var(--primary)]"
+                    className="mt-1 w-full accent-[var(--primary)]"
                   />
                 </label>
                 <input
@@ -242,32 +240,32 @@ function Checkout() {
                 />
               </div>
             ) : (
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                 {orderType === "delivery" ? address : "Pickup at Nanami Kitchen"}
               </p>
             )}
             {outOfRange && (
-              <p className="mt-3 rounded-lg bg-destructive/15 px-3 py-2 text-xs text-destructive">
+              <p className="mt-2 rounded-lg bg-destructive/15 px-2.5 py-1.5 text-[11px] text-destructive">
                 Out of delivery range (max {settings.maxRadiusKm} km).
               </p>
             )}
           </section>
 
           {/* Delivery method */}
-          <h2 className="mt-6 text-lg font-semibold">Delivery Method</h2>
-          <div className="mt-3 grid grid-cols-2 gap-3">
+          <h2 className="mt-3 text-xs font-bold">Delivery Method</h2>
+          <div className="mt-1.5 grid grid-cols-2 gap-2">
             {(["delivery", "pickup"] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => actions.setOrderType(t)}
-                className={`flex items-center justify-center gap-2 rounded-full py-3 text-sm font-semibold capitalize ${
+                className={`flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold capitalize transition ${
                   orderType === t
-                    ? "bg-primary text-primary-foreground"
-                    : "border border-border bg-card text-muted-foreground"
+                    ? "bg-primary text-primary-foreground shadow-xs"
+                    : "border border-border bg-card text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <span
-                  className={`size-2 rounded-full ${orderType === t ? "bg-primary-foreground" : "bg-muted-foreground/50"}`}
+                  className={`size-1.5 rounded-full ${orderType === t ? "bg-primary-foreground" : "bg-muted-foreground/50"}`}
                 />
                 {t}
               </button>
@@ -275,14 +273,14 @@ function Checkout() {
           </div>
 
           {/* Fee & ETA */}
-          <div className="mt-6 space-y-4 text-sm">
+          <div className="mt-3 space-y-1.5 rounded-xl border border-border bg-card p-2.5 text-xs">
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Delivery Fee</span>
-              <span className="font-medium">{rupiah(deliveryFee)}</span>
+              <span className="font-semibold">{rupiah(deliveryFee)}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Estimated Arrival</span>
-              <span className="font-medium">
+              <span className="font-semibold">
                 {orderType === "delivery" ? "25 - 35 minutes" : "15 - 25 minutes"}
               </span>
             </div>
@@ -296,42 +294,42 @@ function Checkout() {
               width={1024}
               height={640}
               loading="lazy"
-              className="mt-6 h-44 w-full rounded-2xl border border-border object-cover"
+              className="mt-2.5 h-28 w-full rounded-xl border border-border object-cover"
             />
           )}
 
           {error && (
-            <p className="mt-4 rounded-lg bg-destructive/15 px-3 py-2 text-xs text-destructive">
+            <p className="mt-2 rounded-lg bg-destructive/15 px-2.5 py-1.5 text-[11px] text-destructive">
               {error}
             </p>
           )}
           <button
             onClick={() => goToStep(1)}
-            className="mt-6 w-full rounded-full bg-primary py-4 text-sm font-bold text-primary-foreground"
+            className="mt-3 w-full rounded-xl bg-primary py-2.5 text-xs font-bold text-primary-foreground transition hover:brightness-105"
           >
-            Continue
+            Continue &rarr;
           </button>
         </>
       )}
 
       {step === 1 && (
         <>
-          <section className="mt-6 rounded-2xl border border-border bg-card p-5">
-            <h2 className="text-lg font-semibold">Your details</h2>
-            <div className="mt-3 space-y-3">
-              <label className="block text-xs text-muted-foreground">
+          <section className="mt-3 rounded-xl border border-border bg-card p-3">
+            <h2 className="text-xs font-bold">Your details</h2>
+            <div className="mt-2 space-y-2">
+              <label className="block text-[11px] text-muted-foreground">
                 Full name
                 <input value={name} onChange={(e) => setName(e.target.value)} className={field} />
               </label>
-              <label className="block text-xs text-muted-foreground">
+              <label className="block text-[11px] text-muted-foreground">
                 WhatsApp number
                 <input value={phone} onChange={(e) => setPhone(e.target.value)} className={field} />
               </label>
             </div>
           </section>
 
-          {/* Payment method options — one card with dividers, radio on the right */}
-          <section className="mt-6 overflow-hidden rounded-2xl border border-border bg-card">
+          {/* Payment method options */}
+          <section className="mt-3 overflow-hidden rounded-xl border border-border bg-card">
             {PAYMENT_OPTIONS.map((opt, i) => {
               const Icon = opt.icon;
               const selected = payment === opt.id;
@@ -339,16 +337,16 @@ function Checkout() {
                 <button
                   key={opt.id}
                   onClick={() => setPayment(opt.id)}
-                  className={`flex w-full items-center gap-4 px-5 py-5 text-left ${
+                  className={`flex w-full items-center gap-2.5 px-3 py-2.5 text-left transition hover:bg-secondary/40 ${
                     i > 0 ? "border-t border-border" : ""
                   }`}
                 >
-                  <Icon className="size-6 shrink-0 text-muted-foreground" />
+                  <Icon className="size-4 shrink-0 text-muted-foreground" />
                   <span className="min-w-0 flex-1">
-                    <span className="block text-base font-semibold text-foreground">
-                      {opt.label}
+                    <span className="block text-xs font-bold text-foreground">{opt.label}</span>
+                    <span className="mt-0.5 block text-[10px] text-muted-foreground">
+                      {opt.sub}
                     </span>
-                    <span className="mt-0.5 block text-sm text-muted-foreground">{opt.sub}</span>
                     {"badges" in opt && opt.badges && (
                       <span className="mt-1.5 flex gap-1">
                         {opt.badges.map((b: { text: string; bg: string }) => (
@@ -400,9 +398,7 @@ function Checkout() {
                           {settings.bankName}
                         </span>
                       </p>
-                      <p className="mt-2 text-sm text-muted-foreground">
-                        Bank Central Asia (BCA)
-                      </p>
+                      <p className="mt-2 text-sm text-muted-foreground">Bank Central Asia (BCA)</p>
                       <p className="mt-1 text-sm text-muted-foreground">
                         Account Name: <span className="text-foreground">{settings.bankHolder}</span>
                       </p>
@@ -428,10 +424,7 @@ function Checkout() {
                 </div>
                 <button
                   onClick={() =>
-                    copy(
-                      payment === "bank" ? settings.bankAccount : settings.ewallet,
-                      "account",
-                    )
+                    copy(payment === "bank" ? settings.bankAccount : settings.ewallet, "account")
                   }
                   className="flex shrink-0 items-center gap-2 rounded-xl bg-secondary px-4 py-3 text-sm font-semibold text-foreground"
                 >

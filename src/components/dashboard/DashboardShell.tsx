@@ -5,8 +5,10 @@ import {
   ClipboardList,
   Coins,
   LayoutDashboard,
+  LayoutTemplate,
   ScrollText,
   Settings,
+  Smartphone,
   Truck,
   ShieldCheck,
   Store,
@@ -14,7 +16,8 @@ import {
   UtensilsCrossed,
   Users,
 } from "lucide-react";
-import logo from "@/assets/nanami-logo.png";
+import defaultLogo from "@/assets/nanami-logo.png";
+import { useStore } from "@/lib/store";
 
 export type DashboardRole = "admin" | "owner";
 
@@ -33,6 +36,8 @@ const OWNER_NAV: NavItem[] = [
   { to: "/owner", label: "Ringkasan", icon: LayoutDashboard },
   { to: "/owner/finance", label: "Keuangan", icon: Coins },
   { to: "/owner/menu", label: "Katalog", icon: UtensilsCrossed },
+  { to: "/owner/cms", label: "CMS Konten", icon: LayoutTemplate },
+  { to: "/owner/preview", label: "Live Preview", icon: Smartphone },
   { to: "/owner/vouchers", label: "Promo & Voucher", icon: Ticket },
   { to: "/owner/staff", label: "Akun & Staf", icon: ShieldCheck },
   { to: "/owner/outlets", label: "Outlet", icon: Store },
@@ -56,14 +61,23 @@ export function DashboardShell({
 }) {
   const nav = role === "owner" ? OWNER_NAV : ADMIN_NAV;
   const roleLabel = role === "owner" ? "Owner" : "Admin";
+  const { cms, settings } = useStore((s) => ({ cms: s.cms, settings: s.settings }));
+  const displayLogo = cms?.logoUrl || defaultLogo;
+  const storeName = settings?.storeName || "Nanami Kitchen";
 
   return (
     <div className="min-h-screen bg-background">
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-border bg-popover/60 px-3 py-5 lg:flex">
         <div className="flex items-center gap-2 px-2">
-          <img src={logo} alt="Nanami Kitchen" width={32} height={32} className="size-8" />
-          <div>
-            <p className="text-sm font-bold leading-tight">Nanami Kitchen</p>
+          <img
+            src={displayLogo}
+            alt={storeName}
+            width={32}
+            height={32}
+            className="size-8 rounded-lg object-contain"
+          />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-bold leading-tight">{storeName}</p>
             <p className="text-[11px] text-muted-foreground">Panel {roleLabel}</p>
           </div>
         </div>
@@ -133,15 +147,7 @@ export function DashboardShell({
   );
 }
 
-export function StatCard({
-  label,
-  value,
-  hint,
-}: {
-  label: string;
-  value: string;
-  hint?: string;
-}) {
+export function StatCard({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
     <div className="glow-card p-4">
       <p className="text-xs text-muted-foreground">{label}</p>

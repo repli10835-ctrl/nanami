@@ -3,13 +3,15 @@ import { Download, X } from "lucide-react";
 
 type InstallEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<unknown> };
 
+let installDismissed = false;
+
 export function InstallPrompt() {
   const [event, setEvent] = useState<InstallEvent | null>(null);
   const [hidden, setHidden] = useState(true);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (localStorage.getItem("nanami-install-dismissed")) return;
+    if (installDismissed) return;
 
     const handler = (e: Event) => {
       e.preventDefault();
@@ -23,7 +25,7 @@ export function InstallPrompt() {
   if (hidden || !event) return null;
 
   function dismiss() {
-    localStorage.setItem("nanami-install-dismissed", "1");
+    installDismissed = true;
     setHidden(true);
   }
 

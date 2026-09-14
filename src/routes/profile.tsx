@@ -87,7 +87,12 @@ function Profile() {
           {initials}
         </div>
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-2xl font-bold">{profile.name || "Guest"}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="truncate text-2xl font-bold">{profile.name || "Guest"}</h1>
+            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary capitalize">
+              {profile.role ?? "user"}
+            </span>
+          </div>
           <p className="mt-0.5 truncate text-sm text-muted-foreground">{profile.email}</p>
           <p className="truncate text-sm text-muted-foreground">{profile.phone}</p>
         </div>
@@ -184,25 +189,17 @@ function Profile() {
       <button
         onClick={() => {
           actions.signOut();
-          navigate({ to: "/", replace: true });
+          navigate({ to: "/login", replace: true });
         }}
         className="mt-6 flex w-full items-center justify-center gap-2 rounded-full border border-border py-3.5 text-sm font-semibold"
       >
-        <LogOut className="size-4" /> Sign out
+        <LogOut className="size-4" /> Keluar (Sign out)
       </button>
     </AppShell>
   );
 }
 
-function Row({
-  to,
-  icon: Icon,
-  label,
-}: {
-  to: string;
-  icon: typeof ReceiptText;
-  label: string;
-}) {
+function Row({ to, icon: Icon, label }: { to: string; icon: typeof ReceiptText; label: string }) {
   return (
     <Link
       to={to}

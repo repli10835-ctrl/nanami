@@ -66,7 +66,57 @@ export type Order = {
   customer: { name: string; phone: string; address: string; deliveryNote: string };
 };
 
-export type Promo = { id: string; title: string; subtitle: string; badge: string };
+export type Promo = {
+  id: string;
+  title: string;
+  subtitle: string;
+  badge: string;
+  imageUrl?: string;
+  link?: string;
+  active?: boolean;
+};
+
+export type CmsFaq = {
+  id: string;
+  question: string;
+  answer: string;
+  active: boolean;
+};
+
+export type CmsContent = {
+  logoUrl: string;
+  brandName: string;
+  brandSuffix: string;
+  tagline: string;
+  description: string;
+  heroImage: string;
+  heroTitleLine1: string;
+  heroTitleLine2: string;
+  heroSlogan: string;
+  heroCtaText: string;
+  announcement: {
+    enabled: boolean;
+    text: string;
+    type: "info" | "promo" | "warning";
+    link?: string;
+  };
+  welcomeScreen: {
+    enabled: boolean;
+    durationSec: number;
+    title: string;
+    subtitle: string;
+    slogan: string;
+    imageUrl: string;
+  };
+  socials: {
+    instagram: string;
+    tiktok: string;
+    whatsapp: string;
+    mapsUrl: string;
+  };
+  aboutStory: string;
+  faqs: CmsFaq[];
+};
 
 export type Voucher = {
   code: string;
@@ -115,6 +165,7 @@ export type Profile = {
   points: number;
   signedIn: boolean;
   method: string;
+  role?: "user" | "admin" | "owner";
 };
 
 export type Account = {
@@ -123,6 +174,10 @@ export type Account = {
   password: string;
   name: string;
   phone: string;
+  role?: "user" | "admin" | "owner";
+  address?: string;
+  addresses?: string[];
+  points?: number;
 };
 
 export type StaffRole = "owner" | "admin" | "staff";
@@ -154,6 +209,7 @@ export type State = {
   accounts: Account[];
   staff: StaffMember[];
   adminUnlocked: boolean;
+  cms: CmsContent;
 };
 
 const spice: OptionGroup = {
@@ -263,6 +319,111 @@ const seedMenu: MenuItem[] = [
   },
 ];
 
+export const DEMO_ACCOUNTS: Account[] = [
+  {
+    id: "demo-user",
+    email: "user@nanami.id",
+    password: "user123",
+    name: "Budi Pratama",
+    phone: "0812-9876-5432",
+    role: "user",
+    address: "Jl. Melati No. 12, Kebayoran Baru, Jakarta Selatan",
+    addresses: [
+      "Jl. Melati No. 12, Kebayoran Baru, Jakarta Selatan",
+      "Office Tower Lt. 14, SCBD, Jakarta Pusat",
+    ],
+    points: 350,
+  },
+  {
+    id: "demo-admin",
+    email: "admin@nanami.id",
+    password: "admin123",
+    name: "Rina Astuti",
+    phone: "0812-3333-4444",
+    role: "admin",
+    address: "Kitchen Nanami Kitchen, Jl. Radio Dalam",
+    addresses: ["Kitchen Nanami Kitchen, Jl. Radio Dalam"],
+    points: 120,
+  },
+  {
+    id: "demo-owner",
+    email: "owner@nanami.id",
+    password: "owner123",
+    name: "Nanami Putri",
+    phone: "0812-1111-2222",
+    role: "owner",
+    address: "HQ Nanami Kitchen, Senopati",
+    addresses: ["HQ Nanami Kitchen, Senopati"],
+    points: 1500,
+  },
+];
+
+export const defaultCmsContent: CmsContent = {
+  logoUrl: "",
+  brandName: "nanami",
+  brandSuffix: "kitchen",
+  tagline: "Good food, made with love.",
+  description:
+    "Dapur bento, geprek, camilan, dan minuman lezat siap saji untuk keluarga dan rekan kerja.",
+  heroImage: "",
+  heroTitleLine1: "Good Food.",
+  heroTitleLine2: "Made with Love",
+  heroSlogan: "Good Food. Made with Love",
+  heroCtaText: "Pesan Sekarang",
+  announcement: {
+    enabled: true,
+    text: "🎉 Promo Spesial: Diskon 20% semua menu dengan voucher NANAMI20!",
+    type: "promo",
+    link: "/vouchers",
+  },
+  welcomeScreen: {
+    enabled: true,
+    durationSec: 2.6,
+    title: "nanami",
+    subtitle: "kitchen",
+    slogan: "Good Food.\nMade with Love",
+    imageUrl: "",
+  },
+  socials: {
+    instagram: "@nanami.kitchen",
+    tiktok: "@nanami.kitchen",
+    whatsapp: "0812-3456-7890",
+    mapsUrl: "https://maps.google.com/?q=Nanami+Kitchen",
+  },
+  aboutStory:
+    "Nanami Kitchen menyajikan sajian bento Jepang autentik, aneka olahan geprek lezat pedas gurih, dan minuman segar yang diolah secara higienis menggunakan bahan-bahan pilihan berkualitas setiap hari.",
+  faqs: [
+    {
+      id: "faq-1",
+      question: "Berapa lama estimasi waktu masak dan pengantaran pesanan?",
+      answer:
+        "Rata-rata pesanan dimasak dalam 15-20 menit. Pengantaran kurir disesuaikan dengan jarak outlet (sekitar 15-30 menit).",
+      active: true,
+    },
+    {
+      id: "faq-2",
+      question: "Apakah Nanami Kitchen menyediakan opsi Pick-up (Ambil Sendiri)?",
+      answer:
+        "Ya, Anda dapat memilih metode Pick-up saat checkout tanpa dikenakan biaya ongkos kirim.",
+      active: true,
+    },
+    {
+      id: "faq-3",
+      question: "Bagaimana cara menggunakan voucher diskon?",
+      answer:
+        "Buka menu Voucher, klik 'Gunakan' pada voucher yang Anda inginkan atau ketik kode voucher pada halaman Checkout.",
+      active: true,
+    },
+    {
+      id: "faq-4",
+      question: "Metode pembayaran apa saja yang diterima?",
+      answer:
+        "Kami menerima Transfer Bank (BCA), E-Wallet (GoPay, OVO, ShopeePay, DANA), dan Bayar di Tempat (COD / Cash on Pickup).",
+      active: true,
+    },
+  ],
+};
+
 const defaultState: State = {
   orderType: "delivery",
   orderTypeChosen: false,
@@ -305,18 +466,34 @@ const defaultState: State = {
     points: 0,
     signedIn: false,
     method: "",
+    role: undefined,
   },
   promos: [
-    { id: "p1", title: "20% OFF all menu", subtitle: "Today only — use code NANAMI20", badge: "Special" },
-    { id: "p2", title: "Free delivery over Rp 100.000", subtitle: "Within 5 km of the kitchen", badge: "Delivery" },
-    { id: "p3", title: "Earn points on every order", subtitle: "1 point per Rp 10.000 spent", badge: "Loyalty" },
+    {
+      id: "p1",
+      title: "20% OFF all menu",
+      subtitle: "Today only — use code NANAMI20",
+      badge: "Special",
+    },
+    {
+      id: "p2",
+      title: "Free delivery over Rp 100.000",
+      subtitle: "Within 5 km of the kitchen",
+      badge: "Delivery",
+    },
+    {
+      id: "p3",
+      title: "Earn points on every order",
+      subtitle: "1 point per Rp 10.000 spent",
+      badge: "Loyalty",
+    },
   ],
   vouchers: [
     { code: "NANAMI20", type: "percent", value: 20, minSpend: 0, active: true },
     { code: "HEMAT10K", type: "fixed", value: 10000, minSpend: 60000, active: true },
   ],
   voucherCode: "",
-  accounts: [],
+  accounts: DEMO_ACCOUNTS,
   staff: [
     {
       id: "s1",
@@ -347,56 +524,19 @@ const defaultState: State = {
     },
   ],
   adminUnlocked: false,
+  cms: defaultCmsContent,
 };
 
-const KEY = "nanami-kitchen-v1";
-
 let state: State = defaultState;
-let hydrated = false;
 const listeners = new Set<() => void>();
-
-function persist() {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(KEY, JSON.stringify(state));
-  } catch {
-    /* ignore */
-  }
-}
-
-function hydrate() {
-  if (hydrated || typeof window === "undefined") return;
-  hydrated = true;
-  try {
-    const raw = window.localStorage.getItem(KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw) as Partial<State>;
-      state = {
-        ...defaultState,
-        ...parsed,
-        settings: { ...defaultState.settings, ...(parsed.settings ?? {}) },
-        profile: { ...defaultState.profile, ...(parsed.profile ?? {}) },
-        menu: parsed.menu?.length ? parsed.menu : defaultState.menu,
-        promos: parsed.promos?.length ? parsed.promos : defaultState.promos,
-        vouchers: parsed.vouchers?.length ? parsed.vouchers : defaultState.vouchers,
-        staff: parsed.staff?.length ? parsed.staff : defaultState.staff,
-      };
-    }
-  } catch {
-    /* ignore */
-  }
-  listeners.forEach((l) => l());
-}
 
 function set(updater: (s: State) => State) {
   state = updater(state);
-  persist();
   listeners.forEach((l) => l());
 }
 
 function subscribe(cb: () => void) {
   listeners.add(cb);
-  hydrate();
   return () => listeners.delete(cb);
 }
 
@@ -414,12 +554,18 @@ function shallowEqual(a: unknown, b: unknown) {
 export function useStore<T>(selector: (s: State) => T): T {
   // Cache the derived snapshot so object-returning selectors stay referentially
   // stable between renders (otherwise useSyncExternalStore loops forever).
-  const cache = useRef<{ value: T } | null>(null);
+  const cache = useRef<{ value: T; base: State } | null>(null);
 
   const read = (base: State) => {
+    if (cache.current && cache.current.base === base) {
+      return cache.current.value;
+    }
     const next = selector(base);
-    if (cache.current && shallowEqual(cache.current.value, next)) return cache.current.value;
-    cache.current = { value: next };
+    if (cache.current && shallowEqual(cache.current.value, next)) {
+      cache.current.base = base;
+      return cache.current.value;
+    }
+    cache.current = { value: next, base };
     return next;
   };
 
@@ -495,29 +641,52 @@ export const actions = {
         name: account.name,
         email: account.email,
         phone: account.phone,
+        role: "user",
         signedIn: true,
         method: "Email",
       },
     }));
-    return { ok: true };
+    return { ok: true, role: "user" as const };
   },
-  signIn(email: string, password: string): { ok: boolean; error?: string } {
+  signIn(
+    email: string,
+    password: string,
+  ): { ok: boolean; error?: string; role?: "user" | "admin" | "owner" } {
     const clean = email.trim().toLowerCase();
-    const account = state.accounts.find((a) => a.email === clean);
+    const account =
+      state.accounts.find((a) => a.email.toLowerCase() === clean) ||
+      DEMO_ACCOUNTS.find((a) => a.email.toLowerCase() === clean);
     if (!account || account.password !== password)
-      return { ok: false, error: "Email or password is incorrect." };
+      return { ok: false, error: "Email atau kata sandi tidak sesuai." };
+
+    const role = account.role ?? "user";
     set((s) => ({
       ...s,
+      adminUnlocked: role === "admin" || role === "owner",
       profile: {
         ...s.profile,
         name: account.name,
         email: account.email,
         phone: account.phone,
+        role,
+        address: account.address || s.profile.address,
+        addresses:
+          account.addresses && account.addresses.length ? account.addresses : s.profile.addresses,
+        points: account.points !== undefined ? account.points : s.profile.points,
         signedIn: true,
         method: "Email",
       },
     }));
-    return { ok: true };
+    return { ok: true, role };
+  },
+  loginAsDemo(role: "user" | "admin" | "owner"): {
+    ok: boolean;
+    error?: string;
+    role?: "user" | "admin" | "owner";
+  } {
+    const demo = DEMO_ACCOUNTS.find((a) => a.role === role);
+    if (!demo) return { ok: false, error: "Akun demo tidak ditemukan." };
+    return this.signIn(demo.email, demo.password);
   },
   changePassword(currentPassword: string, newPassword: string): { ok: boolean; error?: string } {
     const email = state.profile.email;
@@ -676,6 +845,75 @@ export const actions = {
   updateProfile(patch: Partial<Profile>) {
     set((s) => ({ ...s, profile: { ...s.profile, ...patch } }));
   },
+  updateCms(patch: Partial<CmsContent>) {
+    set((s) => ({ ...s, cms: { ...s.cms, ...patch } }));
+  },
+  updateCmsAnnouncement(patch: Partial<CmsContent["announcement"]>) {
+    set((s) => ({
+      ...s,
+      cms: {
+        ...s.cms,
+        announcement: { ...s.cms.announcement, ...patch },
+      },
+    }));
+  },
+  updateCmsWelcome(patch: Partial<CmsContent["welcomeScreen"]>) {
+    set((s) => ({
+      ...s,
+      cms: {
+        ...s.cms,
+        welcomeScreen: { ...s.cms.welcomeScreen, ...patch },
+      },
+    }));
+  },
+  updateCmsSocials(patch: Partial<CmsContent["socials"]>) {
+    set((s) => ({
+      ...s,
+      cms: {
+        ...s.cms,
+        socials: { ...s.cms.socials, ...patch },
+      },
+    }));
+  },
+  addCmsFaq(faq: { question: string; answer: string; active?: boolean }) {
+    const newFaq: CmsFaq = {
+      id: "faq-" + uid(),
+      question: faq.question.trim(),
+      answer: faq.answer.trim(),
+      active: faq.active ?? true,
+    };
+    set((s) => ({
+      ...s,
+      cms: {
+        ...s.cms,
+        faqs: [...s.cms.faqs, newFaq],
+      },
+    }));
+  },
+  updateCmsFaq(id: string, patch: Partial<CmsFaq>) {
+    set((s) => ({
+      ...s,
+      cms: {
+        ...s.cms,
+        faqs: s.cms.faqs.map((f) => (f.id === id ? { ...f, ...patch } : f)),
+      },
+    }));
+  },
+  deleteCmsFaq(id: string) {
+    set((s) => ({
+      ...s,
+      cms: {
+        ...s.cms,
+        faqs: s.cms.faqs.filter((f) => f.id !== id),
+      },
+    }));
+  },
+  resetCms() {
+    set((s) => ({
+      ...s,
+      cms: defaultCmsContent,
+    }));
+  },
 };
 
 export function uid() {
@@ -705,7 +943,6 @@ export function deliveryFeeFor(
   const fee = settings.baseFee + km * settings.feePerKm;
   return Math.max(settings.minFee ?? 0, Math.round(fee / 500) * 500);
 }
-
 
 export function buildWhatsappMessage(order: Order) {
   const lines = order.lines

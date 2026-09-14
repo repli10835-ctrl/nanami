@@ -198,7 +198,9 @@ export function MenuCrudPanel() {
             Status ketersediaan
             <span
               className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                draft.available ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"
+                draft.available
+                  ? "bg-success/15 text-success"
+                  : "bg-destructive/15 text-destructive"
               }`}
             >
               {draft.available ? "Tersedia" : "Habis"}

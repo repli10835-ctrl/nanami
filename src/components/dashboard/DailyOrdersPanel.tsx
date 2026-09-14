@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Printer } from "lucide-react";
 import { rupiah, useStore, type Order } from "@/lib/store";
-import { printReceipt } from "./OrdersPanel";
+import { printReceipt } from "@/lib/receipt";
 import { StatCard } from "./DashboardShell";
 
 const DAY = 86400000;
@@ -60,9 +60,7 @@ export function DailyOrdersPanel() {
       const list = orders
         .filter((o) => o.createdAt >= from && o.createdAt < from + DAY)
         .sort((a, b) => b.createdAt - a.createdAt);
-      const revenue = list
-        .filter((o) => o.status !== "Cancelled")
-        .reduce((t, o) => t + o.total, 0);
+      const revenue = list.filter((o) => o.status !== "Cancelled").reduce((t, o) => t + o.total, 0);
       return { offset, list, revenue };
     });
   }, [orders]);

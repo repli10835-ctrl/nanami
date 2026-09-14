@@ -17,7 +17,8 @@ export const Route = createFileRoute("/owner/shipping")({
       { property: "og:title", content: "Tarif Ongkir — Panel Owner Nanami Kitchen" },
       {
         property: "og:description",
-        content: "Pengaturan tarif ongkir per kilometer dari titik lokasi usaha ke titik pelanggan.",
+        content:
+          "Pengaturan tarif ongkir per kilometer dari titik lokasi usaha ke titik pelanggan.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -55,7 +56,10 @@ function ShippingPage() {
   const [testUrl, setTestUrl] = useState("");
   const [testSubtotal, setTestSubtotal] = useState(75000);
 
-  const storePoint = { lat: settings.storeLat, lng: settings.storeLng };
+  const storePoint = useMemo(
+    () => ({ lat: settings.storeLat, lng: settings.storeLng }),
+    [settings.storeLat, settings.storeLng],
+  );
 
   function saveStorePoint() {
     const p = parseLatLng(mapsUrl);
@@ -81,7 +85,7 @@ function ShippingPage() {
       fee: deliveryFeeFor(settings, "delivery", km, testSubtotal),
       outOfRange: km > settings.maxRadiusKm,
     };
-  }, [testUrl, testSubtotal, settings]);
+  }, [testUrl, testSubtotal, settings, storePoint]);
 
   const table = [1, 2, 3, 5, 7, 10].filter((km) => km <= settings.maxRadiusKm + 2);
 
@@ -99,7 +103,7 @@ function ShippingPage() {
           <div className="space-y-3">
             <Field
               label="Tautan Google Maps atau koordinat"
-              hint='Di Google Maps: klik kanan lokasi usaha → klik koordinat untuk menyalin, lalu tempel di sini.'
+              hint="Di Google Maps: klik kanan lokasi usaha → klik koordinat untuk menyalin, lalu tempel di sini."
             >
               <input
                 value={mapsUrl}

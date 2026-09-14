@@ -1,13 +1,6 @@
 import { useState } from "react";
 import { Power, Trash2 } from "lucide-react";
-import {
-  actions,
-  rupiah,
-  uid,
-  useStore,
-  CATEGORIES,
-  type Category,
-} from "@/lib/store";
+import { actions, rupiah, uid, useStore, CATEGORIES, type Category } from "@/lib/store";
 import { SectionCard, fieldClass } from "./DashboardShell";
 
 export function MenuPanel({ canDelete = true }: { canDelete?: boolean }) {

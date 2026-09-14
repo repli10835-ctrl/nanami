@@ -81,9 +81,7 @@ function OrderCard({ order }: { order: Order }) {
         <ol className="mt-4 space-y-2">
           {flow.map((step, i) => (
             <li key={step} className="flex items-center gap-2 text-xs">
-              <span
-                className={`size-2.5 rounded-full ${i <= index ? "bg-primary" : "bg-muted"}`}
-              />
+              <span className={`size-2.5 rounded-full ${i <= index ? "bg-primary" : "bg-muted"}`} />
               <span className={i <= index ? "text-foreground" : "text-muted-foreground"}>
                 {step}
               </span>

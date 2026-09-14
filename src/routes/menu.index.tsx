@@ -16,7 +16,8 @@ export const Route = createFileRoute("/menu/")({
       { title: "Menu — Nanami Kitchen" },
       {
         name: "description",
-        content: "Browse foods, snacks, drinks and combos from Nanami Kitchen and add them in one tap.",
+        content:
+          "Browse foods, snacks, drinks and combos from Nanami Kitchen and add them in one tap.",
       },
       { property: "og:title", content: "Menu — Nanami Kitchen" },
       { property: "og:description", content: "Foods, snacks, drinks and combos ready to order." },
@@ -33,45 +34,43 @@ function MenuPage() {
   const [searchOpen, setSearchOpen] = useState(false);
 
   const list = menu.filter(
-    (m) =>
-      (q ? m.name.toLowerCase().includes(q.toLowerCase()) : m.category === tab) &&
-      true,
+    (m) => (q ? m.name.toLowerCase().includes(q.toLowerCase()) : m.category === tab) && true,
   );
 
   return (
     <AppShell>
-      <header className="flex items-center gap-3">
+      <header className="flex items-center gap-2 py-0.5">
         <button
           onClick={() => window.history.back()}
           aria-label="Back"
-          className="-ml-1 p-1 text-foreground"
+          className="-ml-1 p-1 text-foreground hover:bg-secondary/40 rounded-lg transition"
         >
-          <ChevronLeft className="size-7" />
+          <ChevronLeft className="size-5" />
         </button>
-        <h1 className="text-2xl font-bold">Menu</h1>
+        <h1 className="text-xl font-bold">Menu</h1>
         <button
           onClick={() => setSearchOpen((v) => !v)}
           aria-label="Search menu"
-          className="ml-auto p-1 text-foreground"
+          className="ml-auto p-1 text-foreground hover:bg-secondary/40 rounded-lg transition"
         >
-          <Search className="size-6" />
+          <Search className="size-5" />
         </button>
       </header>
 
       {searchOpen && (
-        <div className="mt-3 flex items-center gap-2 rounded-full border border-input bg-secondary/40 px-4 py-2.5">
-          <Search className="size-4 text-muted-foreground" />
+        <div className="mt-1.5 flex items-center gap-2 rounded-xl border border-input bg-secondary/40 px-3 py-1.5">
+          <Search className="size-3.5 text-muted-foreground" />
           <input
             autoFocus
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search menu..."
-            className="w-full bg-transparent text-sm outline-none"
+            className="w-full bg-transparent text-xs outline-none"
           />
         </div>
       )}
 
-      <div className="no-scrollbar mt-4 flex gap-3 overflow-x-auto pb-1">
+      <div className="no-scrollbar mt-2 flex gap-1.5 overflow-x-auto pb-0.5">
         {CATEGORIES.map((c) => (
           <button
             key={c}
@@ -79,10 +78,10 @@ function MenuPage() {
               setTab(c);
               setQ("");
             }}
-            className={`shrink-0 rounded-full px-5 py-2.5 text-sm font-semibold ${
+            className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
               tab === c && !q
-                ? "bg-primary text-primary-foreground"
-                : "border border-border bg-secondary/40 text-muted-foreground"
+                ? "bg-primary text-primary-foreground shadow-xs"
+                : "border border-border bg-secondary/40 text-muted-foreground hover:text-foreground"
             }`}
           >
             {c}
@@ -90,12 +89,9 @@ function MenuPage() {
         ))}
       </div>
 
-      <div className="mt-4 space-y-3">
+      <div className="mt-2 space-y-1.5">
         {list.map((m) => (
-          <div
-            key={m.id}
-            className="glow-card flex items-center gap-3 p-3"
-          >
+          <div key={m.id} className="glow-card flex items-center gap-2.5 rounded-xl p-2">
             <Link
               to="/menu/$itemId"
               params={{ itemId: m.id }}
@@ -106,20 +102,18 @@ function MenuPage() {
                 src={m.image}
                 alt={m.name}
                 loading="lazy"
-                className="size-24 rounded-xl object-cover"
+                className="size-18 sm:size-20 rounded-lg object-cover"
               />
             </Link>
             <div className="min-w-0 flex-1">
-              <Link
-                to="/menu/$itemId"
-                params={{ itemId: m.id }}
-                className="block w-full text-left"
-              >
-                <p className="line-clamp-2 text-base font-semibold">{m.name}</p>
-                <p className="mt-1 text-sm text-muted-foreground">{rupiah(m.price)}</p>
-                {!m.available && <p className="mt-1 text-[11px] text-destructive">Sold out</p>}
+              <Link to="/menu/$itemId" params={{ itemId: m.id }} className="block w-full text-left">
+                <p className="line-clamp-1 text-xs sm:text-sm font-bold">{m.name}</p>
+                <p className="mt-0.5 text-xs font-semibold text-primary">{rupiah(m.price)}</p>
+                {!m.available && (
+                  <p className="mt-0.5 text-[10px] font-bold text-destructive">Sold out</p>
+                )}
               </Link>
-              <div className="mt-2 flex justify-end">
+              <div className="mt-1 flex justify-end">
                 <button
                   disabled={!m.available}
                   aria-label={`Add ${m.name}`}
@@ -133,16 +127,16 @@ function MenuPage() {
                       note: "",
                     })
                   }
-                  className="rounded-xl bg-primary p-2 text-primary-foreground disabled:opacity-30"
+                  className="rounded-md bg-primary p-1 text-primary-foreground disabled:opacity-30 transition hover:brightness-105 active:scale-95"
                 >
-                  <Plus className="size-5" />
+                  <Plus className="size-3.5" />
                 </button>
               </div>
             </div>
           </div>
         ))}
         {list.length === 0 && (
-          <p className="py-10 text-center text-sm text-muted-foreground">No items found.</p>
+          <p className="py-6 text-center text-xs text-muted-foreground">No items found.</p>
         )}
       </div>
     </AppShell>

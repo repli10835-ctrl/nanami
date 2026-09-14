@@ -49,77 +49,77 @@ function CartPage() {
   return (
     <AppShell hideCartBar>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between py-0.5">
         <button
           onClick={() => navigate({ to: "/menu" })}
           aria-label="Back to menu"
-          className="flex size-10 items-center justify-center rounded-full bg-card text-foreground"
+          className="flex size-8 items-center justify-center rounded-lg bg-card text-foreground transition hover:bg-secondary/40"
         >
-          <ChevronLeft className="size-5" />
+          <ChevronLeft className="size-4" />
         </button>
-        <h1 className="text-xl font-bold">My Cart</h1>
+        <h1 className="text-lg font-bold">My Cart</h1>
         <button
           onClick={() => actions.clearCart()}
           aria-label="Clear cart"
-          className="flex size-10 items-center justify-center rounded-full text-foreground"
+          className="flex size-8 items-center justify-center rounded-lg text-foreground hover:bg-secondary/40 transition"
         >
-          <Trash2 className="size-5" />
+          <Trash2 className="size-4 text-muted-foreground hover:text-destructive" />
         </button>
       </div>
 
       {/* Cart items */}
-      <div className="mt-5 space-y-3">
+      <div className="mt-2 space-y-1.5">
         {cart.map((l) => (
-          <div key={l.id} className="flex gap-4 rounded-2xl border border-border bg-card p-4">
+          <div key={l.id} className="flex gap-2.5 rounded-xl border border-border bg-card p-2.5">
             {imageFor(l.itemId) && (
               <img
                 src={imageFor(l.itemId)}
                 alt={l.name}
-                className="size-20 shrink-0 self-center rounded-xl object-cover"
+                className="size-16 shrink-0 self-center rounded-lg object-cover"
               />
             )}
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-bold">{l.name}</p>
+              <p className="truncate text-xs font-bold">{l.name}</p>
               {l.optionLabels.length > 0 && (
-                <p className="mt-0.5 text-xs text-muted-foreground">
+                <p className="mt-0.5 text-[10px] text-muted-foreground">
                   {l.optionLabels.join(" - ")}
                 </p>
               )}
-              {l.note && <p className="text-xs text-muted-foreground">Note: {l.note}</p>}
-              <p className="mt-1 text-sm text-muted-foreground">{rupiah(l.unitPrice)}</p>
-              <div className="mt-2 inline-flex items-center overflow-hidden rounded-lg border border-border">
+              {l.note && <p className="text-[10px] text-muted-foreground">Note: {l.note}</p>}
+              <p className="mt-0.5 text-xs font-semibold text-primary">{rupiah(l.unitPrice)}</p>
+              <div className="mt-1.5 inline-flex items-center overflow-hidden rounded-md border border-border">
                 <button
                   onClick={() => actions.setQty(l.id, l.qty - 1)}
                   aria-label="Decrease quantity"
-                  className="flex size-8 items-center justify-center"
+                  className="flex size-6 items-center justify-center hover:bg-secondary/40"
                 >
-                  <Minus className="size-4" />
+                  <Minus className="size-3" />
                 </button>
-                <span className="w-10 border-x border-border py-1 text-center text-sm font-semibold">
+                <span className="w-8 border-x border-border py-0.5 text-center text-xs font-bold">
                   {l.qty}
                 </span>
                 <button
                   onClick={() => actions.setQty(l.id, l.qty + 1)}
                   aria-label="Increase quantity"
-                  className="flex size-8 items-center justify-center"
+                  className="flex size-6 items-center justify-center hover:bg-secondary/40"
                 >
-                  <Plus className="size-4" />
+                  <Plus className="size-3" />
                 </button>
               </div>
             </div>
             <button
               onClick={() => actions.setQty(l.id, 0)}
               aria-label={`Remove ${l.name}`}
-              className="self-end pb-1 text-muted-foreground"
+              className="self-end pb-0.5 text-muted-foreground hover:text-destructive transition"
             >
-              <Trash2 className="size-5" />
+              <Trash2 className="size-4" />
             </button>
           </div>
         ))}
         {cart.length === 0 && (
-          <p className="py-10 text-center text-sm text-muted-foreground">
+          <p className="py-8 text-center text-xs text-muted-foreground">
             Your cart is empty.{" "}
-            <Link to="/menu" className="text-primary">
+            <Link to="/menu" className="text-primary font-semibold hover:underline">
               Browse the menu
             </Link>
           </p>
@@ -129,51 +129,51 @@ function CartPage() {
       {cart.length > 0 && (
         <>
           {/* Totals */}
-          <div className="mt-6 space-y-2">
-            <div className="flex justify-between text-sm">
+          <div className="mt-3 space-y-1 rounded-xl border border-border bg-card p-2.5">
+            <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">Subtotal</span>
               <span className="font-semibold">{rupiah(subtotal)}</span>
             </div>
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">Delivery Fee</span>
               <span className="text-muted-foreground">
                 {deliveryFee > 0 ? rupiah(deliveryFee) : "Free"}
               </span>
             </div>
             {discount > 0 && (
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">Voucher ({voucherCode})</span>
                 <span className="font-semibold text-primary">-{rupiah(discount)}</span>
               </div>
             )}
-            <div className="flex justify-between pt-1 text-base">
+            <div className="flex justify-between border-t border-border pt-1 text-xs">
               <span className="font-bold">Total</span>
-              <span className="text-xl font-bold">{rupiah(total)}</span>
+              <span className="text-sm font-extrabold text-primary">{rupiah(total)}</span>
             </div>
           </div>
 
           {/* Voucher */}
-          <div className="mt-4 rounded-2xl border border-border bg-card">
+          <div className="mt-2 rounded-xl border border-border bg-card">
             <button
               onClick={() => setVoucherOpen((o) => !o)}
-              className="flex w-full items-center justify-between px-4 py-3.5 text-sm text-muted-foreground"
+              className="flex w-full items-center justify-between px-3 py-2 text-xs text-muted-foreground hover:text-foreground"
             >
-              Have a voucher code?
+              <span>Have a voucher code?</span>
               <ChevronDown
-                className={`size-4 transition-transform ${voucherOpen ? "rotate-180" : ""}`}
+                className={`size-3.5 transition-transform ${voucherOpen ? "rotate-180" : ""}`}
               />
             </button>
             {voucherOpen && (
-              <div className="flex gap-2 px-4 pb-4">
+              <div className="flex gap-1.5 px-3 pb-2.5">
                 <input
                   value={codeInput}
                   onChange={(e) => setCodeInput(e.target.value)}
                   placeholder="e.g. NANAMI20"
-                  className="min-w-0 flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm uppercase outline-none"
+                  className="min-w-0 flex-1 rounded-lg border border-border bg-background px-2.5 py-1 text-xs uppercase outline-none"
                 />
                 <button
                   onClick={() => actions.setVoucherCode(codeInput)}
-                  className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
+                  className="rounded-lg bg-primary px-3 py-1 text-xs font-bold text-primary-foreground transition hover:brightness-105"
                 >
                   Apply
                 </button>
@@ -182,12 +182,12 @@ function CartPage() {
           </div>
 
           {!settings.storeOpen && (
-            <p className="mt-3 rounded-lg bg-destructive/15 px-3 py-2 text-xs text-destructive">
+            <p className="mt-2 rounded-lg bg-destructive/15 px-2.5 py-1.5 text-[11px] text-destructive">
               The store is currently closed. Checkout is disabled.
             </p>
           )}
           {settings.storeOpen && serviceOff && (
-            <p className="mt-3 rounded-lg bg-destructive/15 px-3 py-2 text-xs text-destructive">
+            <p className="mt-2 rounded-lg bg-destructive/15 px-2.5 py-1.5 text-[11px] text-destructive">
               {orderType} service is temporarily unavailable.
             </p>
           )}
@@ -195,16 +195,16 @@ function CartPage() {
           {blocked ? (
             <button
               disabled
-              className="mt-4 w-full rounded-full bg-muted py-3.5 text-sm font-bold text-muted-foreground"
+              className="mt-2.5 w-full rounded-xl bg-muted py-2.5 text-xs font-bold text-muted-foreground"
             >
               Checkout unavailable
             </button>
           ) : (
             <Link
               to="/checkout"
-              className="mt-4 block w-full rounded-full bg-primary py-3.5 text-center text-sm font-bold text-primary-foreground"
+              className="mt-2.5 block w-full rounded-xl bg-primary py-2.5 text-center text-xs font-bold text-primary-foreground transition hover:brightness-105"
             >
-              Checkout
+              Checkout &rarr;
             </Link>
           )}
         </>

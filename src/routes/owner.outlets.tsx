@@ -75,7 +75,13 @@ function OutletsPage() {
             onClick={() => {
               setOutlets((o) => [
                 ...o,
-                { id: String(Date.now()), name, address, hours: hours || "10.00 - 22.00", open: true },
+                {
+                  id: String(Date.now()),
+                  name,
+                  address,
+                  hours: hours || "10.00 - 22.00",
+                  open: true,
+                },
               ]);
               setName("");
               setAddress("");

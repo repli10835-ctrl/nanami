@@ -10,7 +10,8 @@ export const Route = createFileRoute("/menu/$itemId")({
       { title: "Detail Menu — Nanami Kitchen" },
       {
         name: "description",
-        content: "Customize your dish — size, spice level and extra toppings — then add it to your cart.",
+        content:
+          "Customize your dish — size, spice level and extra toppings — then add it to your cart.",
       },
       { property: "og:title", content: "Detail Menu — Nanami Kitchen" },
       { property: "og:description", content: "Customize your dish and add it to your cart." },
@@ -30,11 +31,14 @@ function ratingFor(id: string) {
 
 function MenuDetailPage() {
   const { itemId } = Route.useParams();
-  const navigate = useNavigate();
   const menu = useStore((s) => s.menu);
   const item = menu.find((m) => m.id === itemId) as MenuItem | undefined;
-  if (!item) throw notFound();
+  if (!item) return <MenuDetailNotFound />;
+  return <MenuDetailContent item={item} />;
+}
 
+function MenuDetailContent({ item }: { item: MenuItem }) {
+  const navigate = useNavigate();
   const [selected, setSelected] = useState<Record<string, string[]>>(() => {
     const init: Record<string, string[]> = {};
     item.groups.forEach((g) => {
@@ -113,9 +117,7 @@ function MenuDetailPage() {
               <span className="text-muted-foreground">({reviews} reviews)</span>
             </p>
           </div>
-          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            {item.description}
-          </p>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.description}</p>
           {!item.available && (
             <p className="mt-2 text-sm font-semibold text-destructive">Sold out</p>
           )}
@@ -135,9 +137,7 @@ function MenuDetailPage() {
                       key={c.id}
                       onClick={() => toggle(g.id, g.type, c.id)}
                       className={`flex flex-col items-start gap-1 rounded-2xl border-2 p-4 text-left transition-colors ${
-                        active
-                          ? "border-primary bg-primary/10"
-                          : "border-border bg-secondary/40"
+                        active ? "border-primary bg-primary/10" : "border-border bg-secondary/40"
                       }`}
                     >
                       <span className="flex items-center gap-2">
@@ -266,7 +266,10 @@ export function MenuDetailNotFound() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background">
       <p className="text-muted-foreground">Menu item not found.</p>
-      <Link to="/menu" className="rounded-xl bg-primary px-4 py-2 font-semibold text-primary-foreground">
+      <Link
+        to="/menu"
+        className="rounded-xl bg-primary px-4 py-2 font-semibold text-primary-foreground"
+      >
         Back to menu
       </Link>
     </div>

@@ -15,21 +15,21 @@ export function BottomNav() {
   const { items: count } = cartTotals(cart);
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-popover/95 backdrop-blur">
-      <div className="shell grid grid-cols-5">
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border/80 bg-popover/95 backdrop-blur-md">
+      <div className="w-full max-w-2xl mx-auto grid grid-cols-5">
         {items.map(({ to, label, icon: Icon }) => (
           <Link
             key={to}
             to={to}
             activeOptions={{ exact: to === "/" }}
             activeProps={{ className: "text-primary" }}
-            inactiveProps={{ className: "text-muted-foreground" }}
-            className="relative flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium"
+            inactiveProps={{ className: "text-muted-foreground hover:text-foreground" }}
+            className="relative flex flex-col items-center justify-center gap-0.5 py-1.5 text-[10px] font-semibold transition"
           >
-            <Icon className="size-5" />
-            {label}
+            <Icon className="size-4" />
+            <span>{label}</span>
             {to === "/cart" && count > 0 && (
-              <span className="absolute right-1/2 top-1 translate-x-4 rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
+              <span className="absolute right-1/2 top-1 translate-x-3 rounded-full bg-primary px-1 text-[9px] font-extrabold text-primary-foreground">
                 {count}
               </span>
             )}

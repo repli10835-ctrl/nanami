@@ -45,7 +45,9 @@ function AddressPage() {
       return;
     }
     setMapsError("");
-    const km = haversineKm({ lat: settings.storeLat, lng: settings.storeLng }, p) * (settings.routeFactor || 1);
+    const km =
+      haversineKm({ lat: settings.storeLat, lng: settings.storeLng }, p) *
+      (settings.routeFactor || 1);
     actions.setCustomerPoint(mapsUrl.trim(), km);
   }
 
@@ -56,7 +58,11 @@ function AddressPage() {
   const [editingAddress, setEditingAddress] = useState(false);
   const [radiusOpen, setRadiusOpen] = useState(false);
 
-  const estimatedFee = deliveryFeeFor(settings, orderType === "pickup" ? "delivery" : orderType, radius);
+  const estimatedFee = deliveryFeeFor(
+    settings,
+    orderType === "pickup" ? "delivery" : orderType,
+    radius,
+  );
 
   function save() {
     actions.saveAddress(address);
@@ -70,7 +76,13 @@ function AddressPage() {
         {/* Header */}
         <div className="flex items-center gap-4">
           <button
-            onClick={() => history.back()}
+            onClick={() => {
+              if (typeof window !== "undefined" && window.history.length > 1) {
+                window.history.back();
+              } else {
+                navigate({ to: "/checkout" });
+              }
+            }}
             aria-label="Back"
             className="text-foreground"
           >

@@ -1,0 +1,1131 @@
+import { useState, useRef } from "react";
+import { Link } from "@tanstack/react-router";
+import {
+  AlertCircle,
+  Check,
+  ExternalLink,
+  Eye,
+  HelpCircle,
+  Image as ImageIcon,
+  Info,
+  Layers,
+  LayoutTemplate,
+  MessageSquare,
+  Palette,
+  Plus,
+  RefreshCw,
+  Share2,
+  Smartphone,
+  Sparkles,
+  Tag,
+  Trash2,
+  Upload,
+  Volume2,
+} from "lucide-react";
+import { actions, defaultCmsContent, uid, useStore, type CmsFaq, type Promo } from "@/lib/store";
+import defaultLogo from "@/assets/nanami-logo.png";
+import heroImg from "@/assets/hero.jpg";
+import food1 from "@/assets/food-1.jpg";
+import food2 from "@/assets/food-2.jpg";
+import food3 from "@/assets/food-3.jpg";
+import food4 from "@/assets/food-4.jpg";
+import { SectionCard, fieldClass } from "./DashboardShell";
+
+const LOGO_PRESETS = [
+  { id: "default", name: "Default Nanami Logo", url: defaultLogo },
+  {
+    id: "bento",
+    name: "Bento Master Icon",
+    url: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=150&auto=format&fit=crop&q=80",
+  },
+  {
+    id: "sushi",
+    name: "Japanese Minimalist",
+    url: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=150&auto=format&fit=crop&q=80",
+  },
+  {
+    id: "ramen",
+    name: "Chef Bowl Badge",
+    url: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=150&auto=format&fit=crop&q=80",
+  },
+];
+
+const HERO_PRESETS = [
+  { id: "default", name: "Default Signature Dish", url: heroImg },
+  { id: "food1", name: "Bento Teriyaki Spread", url: food1 },
+  { id: "food2", name: "Crispy Geprek Feast", url: food2 },
+  { id: "food3", name: "Golden Crispy Snacks", url: food3 },
+  { id: "food4", name: "Refreshing Matcha & Boba", url: food4 },
+  {
+    id: "japanese-dining",
+    name: "Izakaya Warm Ambiance",
+    url: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1200&auto=format&fit=crop&q=80",
+  },
+];
+
+export function CmsPanel() {
+  const { cms, promos, settings } = useStore((s) => ({
+    cms: s.cms || defaultCmsContent,
+    promos: s.promos,
+    settings: s.settings,
+  }));
+
+  const [activeTab, setActiveTab] = useState<
+    "branding" | "hero" | "announcement" | "promos" | "welcome" | "socials" | "faqs"
+  >("branding");
+
+  const [saveToast, setSaveToast] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const heroInputRef = useRef<HTMLInputElement>(null);
+  const welcomeInputRef = useRef<HTMLInputElement>(null);
+
+  // New Promo form state
+  const [promoTitle, setPromoTitle] = useState("");
+  const [promoSubtitle, setPromoSubtitle] = useState("");
+  const [promoBadge, setPromoBadge] = useState("PROMO");
+  const [promoImage, setPromoImage] = useState("");
+
+  // New FAQ form state
+  const [newQuestion, setNewQuestion] = useState("");
+  const [newAnswer, setNewAnswer] = useState("");
+
+  const triggerToast = () => {
+    setSaveToast(true);
+    setTimeout(() => setSaveToast(false), 2500);
+  };
+
+  const handleFileUpload = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    callback: (base64: string) => void,
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        callback(reader.result);
+        triggerToast();
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleResetCms = () => {
+    if (
+      window.confirm(
+        "Apakah Anda yakin ingin mengembalikan seluruh konten publik ke konfigurasi awal bawaan Nanami Kitchen?",
+      )
+    ) {
+      actions.resetCms();
+      triggerToast();
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Top Banner & Quick Live Preview link */}
+      <div className="flex flex-col justify-between gap-4 rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 via-background to-secondary/30 p-4 sm:flex-row sm:items-center">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <Palette className="size-4" />
+            </span>
+            <h2 className="text-base font-bold text-foreground">Content Management System (CMS)</h2>
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Kelola identitas visual, logo, banner promo, teks pengumuman, dan informasi publik toko.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            to="/owner/preview"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-xs font-bold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+          >
+            <Smartphone className="size-3.5" />
+            Buka Live Preview
+          </Link>
+          <button
+            onClick={handleResetCms}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground transition hover:bg-secondary"
+          >
+            <RefreshCw className="size-3.5" />
+            Reset Default
+          </button>
+        </div>
+      </div>
+
+      {/* Save indicator toast */}
+      {saveToast && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-xl border border-success/30 bg-success/20 px-4 py-3 text-sm font-bold text-success shadow-lg backdrop-blur">
+          <Check className="size-4" /> Perubahan berhasil tersimpan!
+        </div>
+      )}
+
+      {/* Tabs Navigation */}
+      <div className="no-scrollbar flex gap-1.5 overflow-x-auto rounded-2xl border border-border bg-secondary/20 p-1.5">
+        {[
+          { key: "branding", label: "Logo & Identitas", icon: Palette },
+          { key: "hero", label: "Hero Banner", icon: LayoutTemplate },
+          { key: "announcement", label: "Pengumuman", icon: Volume2 },
+          { key: "promos", label: "Banner Promo", icon: Tag },
+          { key: "welcome", label: "Layar Pembuka", icon: Sparkles },
+          { key: "socials", label: "Kontak & Medsos", icon: Share2 },
+          { key: "faqs", label: "FAQ & Bantuan", icon: HelpCircle },
+        ].map(({ key, label, icon: Icon }) => (
+          <button
+            key={key}
+            onClick={() => setActiveTab(key as typeof activeTab)}
+            className={`flex items-center gap-2 whitespace-nowrap rounded-xl px-3.5 py-2 text-xs font-semibold transition ${
+              activeTab === key
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+            }`}
+          >
+            <Icon className="size-3.5" />
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* TAB 1: BRANDING & LOGO */}
+      {activeTab === "branding" && (
+        <div className="grid gap-6 lg:grid-cols-12">
+          <div className="space-y-6 lg:col-span-7">
+            <SectionCard
+              title="Logo Utama Aplikasi"
+              description="Logo yang tampil di header aplikasi pelanggan, panel staf, dan invoice pesanan."
+            >
+              <div className="space-y-4">
+                {/* Logo Preset Picker */}
+                <div>
+                  <label className="text-xs font-semibold text-foreground">Pilih Dari Preset</label>
+                  <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    {LOGO_PRESETS.map((p) => {
+                      const isSelected = (cms.logoUrl || defaultLogo) === p.url;
+                      return (
+                        <button
+                          key={p.id}
+                          onClick={() => {
+                            actions.updateCms({ logoUrl: p.url === defaultLogo ? "" : p.url });
+                            triggerToast();
+                          }}
+                          className={`flex flex-col items-center gap-2 rounded-xl border p-2.5 text-center transition ${
+                            isSelected
+                              ? "border-primary bg-primary/10 ring-2 ring-primary/30"
+                              : "border-border bg-card hover:bg-secondary/40"
+                          }`}
+                        >
+                          <img
+                            src={p.url}
+                            alt={p.name}
+                            className="size-10 rounded-lg object-contain"
+                          />
+                          <span className="text-[11px] font-medium leading-tight">{p.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Custom Image Upload & URL */}
+                <div className="grid gap-3 pt-2 sm:grid-cols-2">
+                  <div>
+                    <label className="text-xs font-semibold text-foreground">
+                      Upload Dari Komputer / HP
+                    </label>
+                    <input
+                      type="file"
+                      ref={logoInputRef}
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) =>
+                        handleFileUpload(e, (base64) => actions.updateCms({ logoUrl: base64 }))
+                      }
+                    />
+                    <button
+                      onClick={() => logoInputRef.current?.click()}
+                      className="mt-1.5 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-secondary/30 px-3 py-2.5 text-xs font-semibold text-muted-foreground transition hover:border-primary hover:text-foreground"
+                    >
+                      <Upload className="size-4" /> Upload File Gambar
+                    </button>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-foreground">
+                      Atau Tautan Gambar (URL)
+                    </label>
+                    <input
+                      type="url"
+                      placeholder="https://contoh.com/logo.png"
+                      value={cms.logoUrl}
+                      onChange={(e) => {
+                        actions.updateCms({ logoUrl: e.target.value });
+                        triggerToast();
+                      }}
+                      className={fieldClass}
+                    />
+                  </div>
+                </div>
+              </div>
+            </SectionCard>
+
+            <SectionCard
+              title="Nama & Tipografi Brand"
+              description="Format teks nama restoran pada header tampilan aplikasi."
+            >
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block text-xs text-muted-foreground">
+                  Nama Utama (Display Style)
+                  <input
+                    value={cms.brandName}
+                    onChange={(e) => {
+                      actions.updateCms({ brandName: e.target.value });
+                      triggerToast();
+                    }}
+                    placeholder="nanami"
+                    className={fieldClass}
+                  />
+                  <span className="mt-1 text-[10px] text-muted-foreground">
+                    Contoh: &quot;nanami&quot; (Font display serif tebal)
+                  </span>
+                </label>
+
+                <label className="block text-xs text-muted-foreground">
+                  Sub-nama / Suffix
+                  <input
+                    value={cms.brandSuffix}
+                    onChange={(e) => {
+                      actions.updateCms({ brandSuffix: e.target.value });
+                      triggerToast();
+                    }}
+                    placeholder="kitchen"
+                    className={fieldClass}
+                  />
+                  <span className="mt-1 text-[10px] text-muted-foreground">
+                    Contoh: &quot;kitchen&quot; (Teks huruf kapital tracking renggang)
+                  </span>
+                </label>
+              </div>
+
+              <div className="mt-3">
+                <label className="block text-xs text-muted-foreground">
+                  Slogan Singkat (Tagline)
+                  <input
+                    value={cms.tagline}
+                    onChange={(e) => {
+                      actions.updateCms({ tagline: e.target.value });
+                      actions.updateSettings({ storeTagline: e.target.value });
+                      triggerToast();
+                    }}
+                    placeholder="Good food, made with love."
+                    className={fieldClass}
+                  />
+                </label>
+              </div>
+            </SectionCard>
+          </div>
+
+          {/* Live Preview Card */}
+          <div className="space-y-4 lg:col-span-5">
+            <div className="sticky top-24 rounded-2xl border border-border bg-card p-4 shadow-sm">
+              <div className="flex items-center justify-between border-b border-border pb-3">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
+                  <Eye className="size-4 text-primary" />
+                  Live Preview Header Pelanggan
+                </div>
+                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                  Sinkron Instan
+                </span>
+              </div>
+
+              {/* Mockup Header */}
+              <div className="mt-4 rounded-xl border border-border bg-background p-3.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <img
+                      src={cms.logoUrl || defaultLogo}
+                      alt="Brand Logo"
+                      className="size-11 rounded-lg object-contain"
+                    />
+                    <div className="leading-none">
+                      <h1 className="font-display text-3xl italic text-primary">
+                        {cms.brandName || "nanami"}
+                      </h1>
+                      <p className="mt-1 text-xs uppercase tracking-[0.45em] text-primary/80">
+                        {cms.brandSuffix || "kitchen"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-border p-2 text-foreground">
+                    <Tag className="size-4" />
+                  </div>
+                </div>
+              </div>
+
+              <p className="mt-3 text-[11px] text-muted-foreground">
+                Tagline aktif: <strong className="text-foreground">{cms.tagline}</strong>
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 2: HERO BANNER & SLOGAN */}
+      {activeTab === "hero" && (
+        <div className="grid gap-6 lg:grid-cols-12">
+          <div className="space-y-6 lg:col-span-7">
+            <SectionCard
+              title="Gambar Hero Banner Utama"
+              description="Visual utama yang menjadi daya tarik pada bagian atas beranda dan splash pembuka."
+            >
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-semibold text-foreground">
+                    Pilih Dari Koleksi Gambar
+                  </label>
+                  <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    {HERO_PRESETS.map((p) => {
+                      const isSelected = (cms.heroImage || heroImg) === p.url;
+                      return (
+                        <button
+                          key={p.id}
+                          onClick={() => {
+                            actions.updateCms({ heroImage: p.url === heroImg ? "" : p.url });
+                            triggerToast();
+                          }}
+                          className={`group relative overflow-hidden rounded-xl border text-left transition ${
+                            isSelected
+                              ? "border-primary ring-2 ring-primary/40"
+                              : "border-border hover:border-muted-foreground"
+                          }`}
+                        >
+                          <img
+                            src={p.url}
+                            alt={p.name}
+                            className="h-20 w-full object-cover transition group-hover:scale-105"
+                          />
+                          <div className="bg-background/90 p-1.5">
+                            <p className="truncate text-[11px] font-medium">{p.name}</p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="grid gap-3 pt-2 sm:grid-cols-2">
+                  <div>
+                    <label className="text-xs font-semibold text-foreground">
+                      Upload Foto Sendiri
+                    </label>
+                    <input
+                      type="file"
+                      ref={heroInputRef}
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) =>
+                        handleFileUpload(e, (base64) => actions.updateCms({ heroImage: base64 }))
+                      }
+                    />
+                    <button
+                      onClick={() => heroInputRef.current?.click()}
+                      className="mt-1.5 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-secondary/30 px-3 py-2.5 text-xs font-semibold text-muted-foreground transition hover:border-primary hover:text-foreground"
+                    >
+                      <Upload className="size-4" /> Upload Foto Hero
+                    </button>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-foreground">
+                      Atau Tautan URL Gambar
+                    </label>
+                    <input
+                      type="url"
+                      placeholder="https://contoh.com/hero-dish.jpg"
+                      value={cms.heroImage}
+                      onChange={(e) => {
+                        actions.updateCms({ heroImage: e.target.value });
+                        triggerToast();
+                      }}
+                      className={fieldClass}
+                    />
+                  </div>
+                </div>
+              </div>
+            </SectionCard>
+
+            <SectionCard
+              title="Teks Judul & Call To Action (CTA)"
+              description="Pesan utama yang menyapa pembeli di layar beranda."
+            >
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block text-xs text-muted-foreground">
+                  Judul Baris 1
+                  <input
+                    value={cms.heroTitleLine1}
+                    onChange={(e) => {
+                      actions.updateCms({ heroTitleLine1: e.target.value });
+                      triggerToast();
+                    }}
+                    placeholder="Good Food."
+                    className={fieldClass}
+                  />
+                </label>
+                <label className="block text-xs text-muted-foreground">
+                  Judul Baris 2
+                  <input
+                    value={cms.heroTitleLine2}
+                    onChange={(e) => {
+                      actions.updateCms({ heroTitleLine2: e.target.value });
+                      triggerToast();
+                    }}
+                    placeholder="Made with Love"
+                    className={fieldClass}
+                  />
+                </label>
+              </div>
+
+              <div className="grid gap-4 pt-3 sm:grid-cols-2">
+                <label className="block text-xs text-muted-foreground">
+                  Teks Tombol CTA
+                  <input
+                    value={cms.heroCtaText}
+                    onChange={(e) => {
+                      actions.updateCms({ heroCtaText: e.target.value });
+                      triggerToast();
+                    }}
+                    placeholder="Pesan Sekarang"
+                    className={fieldClass}
+                  />
+                </label>
+
+                <label className="block text-xs text-muted-foreground">
+                  Slogan Lengkap
+                  <input
+                    value={cms.heroSlogan}
+                    onChange={(e) => {
+                      actions.updateCms({ heroSlogan: e.target.value });
+                      triggerToast();
+                    }}
+                    placeholder="Good Food. Made with Love"
+                    className={fieldClass}
+                  />
+                </label>
+              </div>
+            </SectionCard>
+          </div>
+
+          {/* Hero Live Preview */}
+          <div className="space-y-4 lg:col-span-5">
+            <div className="sticky top-24 rounded-2xl border border-border bg-card p-4 shadow-sm">
+              <div className="flex items-center justify-between border-b border-border pb-3">
+                <span className="flex items-center gap-1.5 text-xs font-bold text-foreground">
+                  <Eye className="size-4 text-primary" /> Live Preview Hero Card
+                </span>
+                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                  Tampilan Pelanggan
+                </span>
+              </div>
+
+              <div className="mt-4 overflow-hidden rounded-2xl border border-border">
+                <div className="relative h-48 w-full">
+                  <img
+                    src={cms.heroImage || heroImg}
+                    alt="Hero banner preview"
+                    className="h-full w-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-background via-background/85 to-transparent" />
+                  <div className="absolute inset-y-0 left-0 flex w-3/4 flex-col justify-center p-4">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                      SPECIAL RECOMMENDATION
+                    </span>
+                    <h3 className="text-xl font-extrabold leading-tight text-primary">
+                      {cms.heroTitleLine1}
+                      <br />
+                      {cms.heroTitleLine2}
+                    </h3>
+                    <p className="mt-1 text-xs text-muted-foreground">{cms.tagline}</p>
+                    <div className="mt-3">
+                      <span className="inline-block rounded-full bg-primary px-3.5 py-1.5 text-xs font-bold text-primary-foreground shadow-sm">
+                        {cms.heroCtaText || "Pesan Sekarang"} &rarr;
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 3: PENGUMUMAN PUBLIK (ANNOUNCEMENT BAR) */}
+      {activeTab === "announcement" && (
+        <div className="space-y-6">
+          <SectionCard
+            title="Running Announcement Bar"
+            description="Pita pengumuman yang muncul di bagian paling atas aplikasi untuk menginfokan promo, jam buka khusus, atau pengumuman penting."
+          >
+            <div className="space-y-4">
+              <div className="flex items-center justify-between rounded-xl border border-border bg-secondary/30 p-3.5">
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Status Pita Pengumuman</p>
+                  <p className="text-xs text-muted-foreground">
+                    Tampilkan banner pengumuman di atas halaman Beranda pembeli.
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    actions.updateCmsAnnouncement({ enabled: !cms.announcement.enabled });
+                    triggerToast();
+                  }}
+                  className={`rounded-full px-4 py-1.5 text-xs font-bold transition ${
+                    cms.announcement.enabled
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {cms.announcement.enabled ? "AKTIF" : "NONAKTIF"}
+                </button>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="sm:col-span-2">
+                  <label className="block text-xs text-muted-foreground">
+                    Teks Pengumuman
+                    <input
+                      value={cms.announcement.text}
+                      onChange={(e) => {
+                        actions.updateCmsAnnouncement({ text: e.target.value });
+                        triggerToast();
+                      }}
+                      placeholder="🎉 Promo Hari Ini: Diskon 20% dengan kode..."
+                      className={fieldClass}
+                    />
+                  </label>
+                </div>
+
+                <div>
+                  <label className="block text-xs text-muted-foreground">
+                    Tipe Tampilan
+                    <select
+                      value={cms.announcement.type}
+                      onChange={(e) => {
+                        actions.updateCmsAnnouncement({
+                          type: e.target.value as "info" | "promo" | "warning",
+                        });
+                        triggerToast();
+                      }}
+                      className={fieldClass}
+                    >
+                      <option value="promo">Promo (Aksen Emas / Primer)</option>
+                      <option value="info">Informasi (Biru / Netral)</option>
+                      <option value="warning">Penting / Perhatian (Oranye)</option>
+                    </select>
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs text-muted-foreground">
+                  Tautan / Halaman Tujuan (Opsional)
+                  <input
+                    value={cms.announcement.link || ""}
+                    onChange={(e) => {
+                      actions.updateCmsAnnouncement({ link: e.target.value });
+                      triggerToast();
+                    }}
+                    placeholder="/vouchers atau /menu"
+                    className={fieldClass}
+                  />
+                </label>
+              </div>
+
+              {/* Announcement Bar Live Preview */}
+              <div className="pt-3">
+                <label className="text-xs font-semibold text-foreground">
+                  Live Preview Pengumuman
+                </label>
+                {cms.announcement.enabled ? (
+                  <div
+                    className={`mt-2 flex items-center justify-between gap-3 rounded-xl px-4 py-2.5 text-xs font-semibold ${
+                      cms.announcement.type === "promo"
+                        ? "border border-amber-500/30 bg-amber-500/15 text-amber-900 dark:text-amber-200"
+                        : cms.announcement.type === "warning"
+                          ? "border border-destructive/30 bg-destructive/15 text-destructive"
+                          : "border border-primary/30 bg-primary/10 text-primary"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      {cms.announcement.type === "warning" ? (
+                        <AlertCircle className="size-4 shrink-0" />
+                      ) : cms.announcement.type === "info" ? (
+                        <Info className="size-4 shrink-0" />
+                      ) : (
+                        <Sparkles className="size-4 shrink-0" />
+                      )}
+                      <span>{cms.announcement.text || "Belum ada teks pengumuman."}</span>
+                    </div>
+                    {cms.announcement.link && (
+                      <span className="text-[11px] underline">Lihat &rarr;</span>
+                    )}
+                  </div>
+                ) : (
+                  <div className="mt-2 rounded-xl border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
+                    Pengumuman sedang dinonaktifkan.
+                  </div>
+                )}
+              </div>
+            </div>
+          </SectionCard>
+        </div>
+      )}
+
+      {/* TAB 4: BANNER PROMO CAROUSEL (CRUD) */}
+      {activeTab === "promos" && (
+        <div className="space-y-6">
+          <div className="grid gap-6 lg:grid-cols-12">
+            {/* Form Tambah Promo */}
+            <div className="space-y-4 lg:col-span-5">
+              <SectionCard
+                title="Tambah Banner Promo Baru"
+                description="Banner promo interaktif yang berputar pada carousel beranda aplikasi."
+              >
+                <div className="space-y-3">
+                  <label className="block text-xs text-muted-foreground">
+                    Label Badge Promo
+                    <input
+                      value={promoBadge}
+                      onChange={(e) => setPromoBadge(e.target.value)}
+                      placeholder="SPECIAL / DISKON 20%"
+                      className={fieldClass}
+                    />
+                  </label>
+
+                  <label className="block text-xs text-muted-foreground">
+                    Judul Utama Promo
+                    <input
+                      value={promoTitle}
+                      onChange={(e) => setPromoTitle(e.target.value)}
+                      placeholder="Diskon 20% Semua Menu Bento"
+                      className={fieldClass}
+                    />
+                  </label>
+
+                  <label className="block text-xs text-muted-foreground">
+                    Subjudul / Keterangan
+                    <input
+                      value={promoSubtitle}
+                      onChange={(e) => setPromoSubtitle(e.target.value)}
+                      placeholder="Gunakan kode promo NANAMI20 saat checkout"
+                      className={fieldClass}
+                    />
+                  </label>
+
+                  <label className="block text-xs text-muted-foreground">
+                    Foto Banner (URL Opsional)
+                    <input
+                      value={promoImage}
+                      onChange={(e) => setPromoImage(e.target.value)}
+                      placeholder="https://contoh.com/banner.jpg (Kosongkan untuk default)"
+                      className={fieldClass}
+                    />
+                  </label>
+
+                  <button
+                    disabled={!promoTitle}
+                    onClick={() => {
+                      actions.savePromo({
+                        id: uid(),
+                        title: promoTitle.trim(),
+                        subtitle: promoSubtitle.trim(),
+                        badge: promoBadge.trim() || "PROMO",
+                        imageUrl: promoImage.trim() || undefined,
+                        active: true,
+                      });
+                      setPromoTitle("");
+                      setPromoSubtitle("");
+                      setPromoBadge("PROMO");
+                      setPromoImage("");
+                      triggerToast();
+                    }}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-xs font-bold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-40"
+                  >
+                    <Plus className="size-4" /> Simpan Banner Promo
+                  </button>
+                </div>
+              </SectionCard>
+            </div>
+
+            {/* List Promo */}
+            <div className="space-y-4 lg:col-span-7">
+              <SectionCard
+                title={`Daftar Promo Aktif (${promos.length})`}
+                description="Kelola urutan dan status tayang promo."
+              >
+                {promos.length === 0 ? (
+                  <p className="py-6 text-center text-xs text-muted-foreground">
+                    Belum ada promo. Tambahkan promo pertama di sebelah kiri.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {promos.map((p, idx) => (
+                      <div
+                        key={p.id}
+                        className="flex items-center justify-between gap-4 rounded-xl border border-border bg-card p-3.5 shadow-sm"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold text-primary">
+                              {p.badge}
+                            </span>
+                            <h4 className="truncate text-sm font-bold text-foreground">
+                              {p.title}
+                            </h4>
+                          </div>
+                          <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                            {p.subtitle}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              actions.deletePromo(p.id);
+                              triggerToast();
+                            }}
+                            className="rounded-lg p-2 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
+                            aria-label={`Hapus promo ${p.title}`}
+                          >
+                            <Trash2 className="size-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </SectionCard>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 5: LAYAR PEMBUKA (WELCOME SPLASH SCREEN) */}
+      {activeTab === "welcome" && (
+        <div className="grid gap-6 lg:grid-cols-12">
+          <div className="space-y-6 lg:col-span-7">
+            <SectionCard
+              title="Konfigurasi Layar Pembuka (Welcome Splash)"
+              description="Animasi pembuka yang muncul saat pelanggan pertama kali membuka aplikasi di perangkatnya."
+            >
+              <div className="space-y-4">
+                <div className="flex items-center justify-between rounded-xl border border-border bg-secondary/30 p-3.5">
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Aktifkan Layar Pembuka</p>
+                    <p className="text-xs text-muted-foreground">
+                      Tampilkan splash screen animasi logo saat sesi dimulai.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      actions.updateCmsWelcome({ enabled: !cms.welcomeScreen.enabled });
+                      triggerToast();
+                    }}
+                    className={`rounded-full px-4 py-1.5 text-xs font-bold transition ${
+                      cms.welcomeScreen.enabled
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {cms.welcomeScreen.enabled ? "AKTIF" : "NONAKTIF"}
+                  </button>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className="block text-xs text-muted-foreground">
+                    Judul Splash
+                    <input
+                      value={cms.welcomeScreen.title}
+                      onChange={(e) => {
+                        actions.updateCmsWelcome({ title: e.target.value });
+                        triggerToast();
+                      }}
+                      placeholder="nanami"
+                      className={fieldClass}
+                    />
+                  </label>
+                  <label className="block text-xs text-muted-foreground">
+                    Subjudul Splash
+                    <input
+                      value={cms.welcomeScreen.subtitle}
+                      onChange={(e) => {
+                        actions.updateCmsWelcome({ subtitle: e.target.value });
+                        triggerToast();
+                      }}
+                      placeholder="kitchen"
+                      className={fieldClass}
+                    />
+                  </label>
+                </div>
+
+                <div>
+                  <label className="block text-xs text-muted-foreground">
+                    Teks Slogan Splash
+                    <textarea
+                      rows={2}
+                      value={cms.welcomeScreen.slogan}
+                      onChange={(e) => {
+                        actions.updateCmsWelcome({ slogan: e.target.value });
+                        triggerToast();
+                      }}
+                      placeholder="Good Food.&#10;Made with Love"
+                      className={fieldClass}
+                    />
+                  </label>
+                </div>
+
+                <div>
+                  <label className="block text-xs text-muted-foreground">
+                    Durasi Otomatis (Detik)
+                    <input
+                      type="number"
+                      step="0.5"
+                      min="1"
+                      max="6"
+                      value={cms.welcomeScreen.durationSec}
+                      onChange={(e) => {
+                        actions.updateCmsWelcome({
+                          durationSec: parseFloat(e.target.value) || 2.6,
+                        });
+                        triggerToast();
+                      }}
+                      className={fieldClass}
+                    />
+                  </label>
+                </div>
+              </div>
+            </SectionCard>
+          </div>
+
+          {/* Welcome Screen Mockup */}
+          <div className="space-y-4 lg:col-span-5">
+            <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+              <div className="flex items-center justify-between border-b border-border pb-3">
+                <span className="flex items-center gap-1.5 text-xs font-bold text-foreground">
+                  <Eye className="size-4 text-primary" /> Preview Welcome Splash
+                </span>
+                <span className="text-[10px] text-muted-foreground">
+                  {cms.welcomeScreen.durationSec} Detik
+                </span>
+              </div>
+
+              {/* Realistic Splash Preview Box */}
+              <div className="mt-4 flex flex-col items-center justify-between overflow-hidden rounded-2xl bg-[oklch(0.16_0.01_60)] px-6 py-8 text-center text-white shadow-md">
+                <div className="flex flex-col items-center">
+                  <img
+                    src={cms.logoUrl || defaultLogo}
+                    alt="Logo preview"
+                    className="size-16 rounded-xl object-contain"
+                  />
+                  <h3 className="mt-2 font-display text-2xl italic tracking-tight text-[oklch(0.82_0.12_85)]">
+                    {cms.welcomeScreen.title || "nanami"}
+                  </h3>
+                  <p className="text-xs font-medium uppercase tracking-[0.45em] text-[oklch(0.82_0.12_85)]">
+                    {cms.welcomeScreen.subtitle || "kitchen"}
+                  </p>
+                  <p className="mt-4 whitespace-pre-line text-xs text-[oklch(0.92_0.01_80)]">
+                    {cms.welcomeScreen.slogan || "Good Food.\nMade with Love"}
+                  </p>
+                </div>
+
+                <div className="mt-6 w-full overflow-hidden rounded-xl">
+                  <img
+                    src={cms.welcomeScreen.imageUrl || cms.heroImage || heroImg}
+                    alt="Hero dish"
+                    className="h-24 w-full object-cover"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 6: KONTAK & MEDIA SOSIAL */}
+      {activeTab === "socials" && (
+        <div className="space-y-6">
+          <SectionCard
+            title="Tautan Media Sosial & Kontak Publik"
+            description="Tautan WhatsApp, Instagram, TikTok, dan Google Maps yang ditampilkan ke pelanggan."
+          >
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block text-xs text-muted-foreground">
+                Instagram Handle / URL
+                <input
+                  value={cms.socials.instagram}
+                  onChange={(e) => {
+                    actions.updateCmsSocials({ instagram: e.target.value });
+                    triggerToast();
+                  }}
+                  placeholder="@nanami.kitchen"
+                  className={fieldClass}
+                />
+              </label>
+
+              <label className="block text-xs text-muted-foreground">
+                TikTok Handle / URL
+                <input
+                  value={cms.socials.tiktok}
+                  onChange={(e) => {
+                    actions.updateCmsSocials({ tiktok: e.target.value });
+                    triggerToast();
+                  }}
+                  placeholder="@nanami.kitchen"
+                  className={fieldClass}
+                />
+              </label>
+
+              <label className="block text-xs text-muted-foreground">
+                WhatsApp Hotline Toko
+                <input
+                  value={cms.socials.whatsapp}
+                  onChange={(e) => {
+                    actions.updateCmsSocials({ whatsapp: e.target.value });
+                    actions.updateSettings({ whatsapp: e.target.value });
+                    triggerToast();
+                  }}
+                  placeholder="0812-3456-7890"
+                  className={fieldClass}
+                />
+              </label>
+
+              <label className="block text-xs text-muted-foreground">
+                Tautan Google Maps Lokasi
+                <input
+                  value={cms.socials.mapsUrl}
+                  onChange={(e) => {
+                    actions.updateCmsSocials({ mapsUrl: e.target.value });
+                    triggerToast();
+                  }}
+                  placeholder="https://maps.google.com/?q=..."
+                  className={fieldClass}
+                />
+              </label>
+            </div>
+
+            <div className="mt-4">
+              <label className="block text-xs text-muted-foreground">
+                Cerita / Bio Tentang Restoran
+                <textarea
+                  rows={3}
+                  value={cms.aboutStory}
+                  onChange={(e) => {
+                    actions.updateCms({ aboutStory: e.target.value });
+                    triggerToast();
+                  }}
+                  placeholder="Cerita singkat asal-usul, keistimewaan bento, dan komitmen rasa Nanami Kitchen..."
+                  className={fieldClass}
+                />
+              </label>
+            </div>
+          </SectionCard>
+        </div>
+      )}
+
+      {/* TAB 7: FAQ & BANTUAN PUBLIK (CRUD FAQ) */}
+      {activeTab === "faqs" && (
+        <div className="grid gap-6 lg:grid-cols-12">
+          {/* Form Tambah FAQ */}
+          <div className="space-y-4 lg:col-span-5">
+            <SectionCard
+              title="Tambah Pertanyaan (FAQ) Baru"
+              description="FAQ tampil di halaman bantuan pelanggan dan info checkout."
+            >
+              <div className="space-y-3">
+                <label className="block text-xs text-muted-foreground">
+                  Pertanyaan
+                  <input
+                    value={newQuestion}
+                    onChange={(e) => setNewQuestion(e.target.value)}
+                    placeholder="Contoh: Berapa minimal order untuk gratis ongkir?"
+                    className={fieldClass}
+                  />
+                </label>
+
+                <label className="block text-xs text-muted-foreground">
+                  Jawaban Lengkap
+                  <textarea
+                    rows={3}
+                    value={newAnswer}
+                    onChange={(e) => setNewAnswer(e.target.value)}
+                    placeholder="Tuliskan jawaban yang ramah dan jelas..."
+                    className={fieldClass}
+                  />
+                </label>
+
+                <button
+                  disabled={!newQuestion.trim() || !newAnswer.trim()}
+                  onClick={() => {
+                    actions.addCmsFaq({
+                      question: newQuestion,
+                      answer: newAnswer,
+                      active: true,
+                    });
+                    setNewQuestion("");
+                    setNewAnswer("");
+                    triggerToast();
+                  }}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-xs font-bold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-40"
+                >
+                  <Plus className="size-4" /> Simpan FAQ
+                </button>
+              </div>
+            </SectionCard>
+          </div>
+
+          {/* Daftar FAQ */}
+          <div className="space-y-4 lg:col-span-7">
+            <SectionCard
+              title={`Daftar FAQ Publik (${cms.faqs?.length || 0})`}
+              description="Pertanyaan umum yang dapat dibaca pelanggan."
+            >
+              {!cms.faqs || cms.faqs.length === 0 ? (
+                <p className="py-6 text-center text-xs text-muted-foreground">
+                  Belum ada daftar FAQ.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {cms.faqs.map((f) => (
+                    <div
+                      key={f.id}
+                      className="rounded-xl border border-border bg-card p-4 shadow-sm"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="space-y-1">
+                          <h4 className="text-sm font-bold text-foreground">{f.question}</h4>
+                          <p className="text-xs leading-relaxed text-muted-foreground">
+                            {f.answer}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => {
+                            actions.deleteCmsFaq(f.id);
+                            triggerToast();
+                          }}
+                          className="rounded-lg p-1.5 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
+                          aria-label={`Hapus FAQ ${f.question}`}
+                        >
+                          <Trash2 className="size-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </SectionCard>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

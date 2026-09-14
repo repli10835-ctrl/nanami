@@ -36,7 +36,10 @@ const COPY: Record<string, { title: string; body: string }> = {
     body: "Your courier has picked up the order and is heading to your address.",
   },
   Completed: { title: "Order Completed", body: "Enjoy your meal! Thank you for ordering." },
-  Cancelled: { title: "Order Cancelled", body: "This order was cancelled. Contact us on WhatsApp for help." },
+  Cancelled: {
+    title: "Order Cancelled",
+    body: "This order was cancelled. Contact us on WhatsApp for help.",
+  },
 };
 
 function stepsFor(order: Order) {
@@ -46,7 +49,11 @@ function stepsFor(order: Order) {
     { label: "Paid / Cooking", status: "Cooking" as OrderStatus, icon: CookingPot },
     delivery
       ? { label: "Out for Delivery", status: "Out for Delivery" as OrderStatus, icon: Bike }
-      : { label: "Ready for Pickup", status: "Ready for Pickup" as OrderStatus, icon: PackageCheck },
+      : {
+          label: "Ready for Pickup",
+          status: "Ready for Pickup" as OrderStatus,
+          icon: PackageCheck,
+        },
     { label: "Completed", status: "Completed" as OrderStatus, icon: Check },
   ];
 }
@@ -106,7 +113,8 @@ function Tracking() {
         <div>
           <p className="font-bold">{latest.code}</p>
           <p className="text-xs capitalize text-muted-foreground">
-            {latest.type} · {placed.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
+            {latest.type} ·{" "}
+            {placed.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
           </p>
         </div>
         <div className="text-right">
@@ -159,9 +167,7 @@ function Tracking() {
                 >
                   {step.label}
                 </p>
-                {current && (
-                  <p className="mt-0.5 text-sm text-muted-foreground">Current status</p>
-                )}
+                {current && <p className="mt-0.5 text-sm text-muted-foreground">Current status</p>}
               </div>
             </li>
           );

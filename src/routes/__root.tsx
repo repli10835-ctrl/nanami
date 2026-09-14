@@ -11,6 +11,8 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { AuthGuard } from "@/components/AuthGuard";
+import { RoleSwitcher } from "@/components/RoleSwitcher";
 
 function NotFoundComponent() {
   return (
@@ -119,6 +121,11 @@ function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var w=typeof window!=="undefined"?window:typeof globalThis!=="undefined"?globalThis:null;if(w){var p=Object.getPrototypeOf(w);var d=Object.getOwnPropertyDescriptor(w,"fetch")||(p?Object.getOwnPropertyDescriptor(p,"fetch"):null);if(d&&(!d.writable||!d.set)){var _f=w.fetch;Object.defineProperty(w,"fetch",{configurable:true,enumerable:true,get:function(){return _f;},set:function(v){_f=v;}});}}}catch(e){}})();`,
+          }}
+        />
         <HeadContent />
       </head>
       <body>
@@ -134,6 +141,24 @@ function RootComponent() {
 
   useEffect(() => {
     if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return;
+
+    // In development mode, unregister any service workers and clear cache to avoid stale SSR hydration mismatches
+    if (import.meta.env.DEV) {
+      navigator.serviceWorker.getRegistrations().then((regs) => {
+        for (const reg of regs) {
+          reg.unregister();
+        }
+      });
+      if (typeof caches !== "undefined") {
+        caches.keys().then((keys) => {
+          for (const key of keys) {
+            caches.delete(key);
+          }
+        });
+      }
+      return;
+    }
+
     const register = () => {
       navigator.serviceWorker.register("/sw.js").catch(() => {
         /* offline support is optional */
@@ -145,8 +170,11 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <AuthGuard>
+        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+        <Outlet />
+      </AuthGuard>
+      <RoleSwitcher />
     </QueryClientProvider>
   );
 }

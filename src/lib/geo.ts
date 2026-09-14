@@ -20,7 +20,12 @@ export function parseLatLng(input: string): LatLng | null {
     if (m) {
       const lat = Number(m[1]);
       const lng = Number(m[2]);
-      if (Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180) {
+      if (
+        Number.isFinite(lat) &&
+        Number.isFinite(lng) &&
+        Math.abs(lat) <= 90 &&
+        Math.abs(lng) <= 180
+      ) {
         return { lat, lng };
       }
     }

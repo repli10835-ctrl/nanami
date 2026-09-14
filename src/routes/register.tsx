@@ -66,20 +66,20 @@ function RegisterPage() {
       actions.updateProfile({ address: clean });
       actions.saveAddress(clean);
     }
-    navigate({ to: "/profile" });
+    navigate({ to: "/" });
   }
 
   if (profile.signedIn) {
     return (
-      <AppShell hideCartBar>
+      <AppShell hideCartBar hideBottomNav>
         <div className="py-16 text-center">
           <h1 className="text-xl font-bold">Kamu sudah punya akun aktif</h1>
           <p className="mt-2 text-sm text-muted-foreground">Masuk sebagai {profile.email}</p>
           <Link
-            to="/profile"
+            to="/"
             className="mt-6 inline-block rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground"
           >
-            Buka profil
+            Mulai Belanja
           </Link>
         </div>
       </AppShell>
@@ -87,12 +87,12 @@ function RegisterPage() {
   }
 
   return (
-    <AppShell hideCartBar>
+    <AppShell hideCartBar hideBottomNav>
       <div className="flex items-center gap-4">
-        <Link to="/" aria-label="Kembali" className="text-foreground">
+        <Link to="/login" aria-label="Kembali ke halaman masuk" className="text-foreground">
           <ArrowLeft className="size-6" />
         </Link>
-        <h1 className="text-2xl font-bold">Daftar</h1>
+        <h1 className="text-2xl font-bold">Daftar Akun</h1>
       </div>
 
       <img

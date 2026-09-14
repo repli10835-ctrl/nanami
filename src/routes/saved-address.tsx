@@ -68,7 +68,13 @@ function SavedAddressPage() {
         {/* Header */}
         <div className="flex items-center gap-4">
           <button
-            onClick={() => history.back()}
+            onClick={() => {
+              if (typeof window !== "undefined" && window.history.length > 1) {
+                window.history.back();
+              } else {
+                navigate({ to: "/checkout" });
+              }
+            }}
             aria-label="Back"
             className="text-foreground"
           >

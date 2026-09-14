@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Check, Printer } from "lucide-react";
-import { actions, rupiah, useStore, type Order, type OrderStatus } from "@/lib/store";
+import { actions, rupiah, useStore, type OrderStatus } from "@/lib/store";
+import { printReceipt } from "@/lib/receipt";
 
 const FLOW: OrderStatus[] = [
   "Pending Payment",
@@ -12,32 +13,6 @@ const FLOW: OrderStatus[] = [
 ];
 
 const FILTERS = ["Semua", ...FLOW] as const;
-
-export function printReceipt(order: Order) {
-  const w = window.open("", "_blank", "width=380,height=600");
-  if (!w) return;
-  const rows = order.lines
-    .map(
-      (l) =>
-        `<tr><td>${l.qty}x ${l.name}${
-          l.optionLabels.length ? `<br/><small>${l.optionLabels.join(", ")}</small>` : ""
-        }${l.note ? `<br/><small>note: ${l.note}</small>` : ""}</td><td align="right">${rupiah(
-          l.unitPrice * l.qty,
-        )}</td></tr>`,
-    )
-    .join("");
-  w.document.write(
-    `<pre style="font-family:monospace;font-size:12px">NANAMI KITCHEN\nOrder ${order.code}\n${new Date(
-      order.createdAt,
-    ).toLocaleString()}\n${order.type.toUpperCase()} · ${order.customer.name}\n</pre>` +
-      `<table style="width:100%;font-family:monospace;font-size:12px">${rows}</table>` +
-      `<pre style="font-family:monospace;font-size:12px">\nTotal ${rupiah(order.total)}\n${
-        order.paymentMethod
-      }</pre>`,
-  );
-  w.document.close();
-  w.print();
-}
 
 export function OrdersPanel({ readOnly = false }: { readOnly?: boolean }) {
   const orders = useStore((s) => s.orders);

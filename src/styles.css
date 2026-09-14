@@ -39,7 +39,7 @@
 }
 
 :root {
-  --radius: 1rem;
+  --radius: 0.75rem;
   --background: oklch(0.16 0.008 80);
   --foreground: oklch(0.97 0.01 90);
   --card: oklch(0.21 0.01 80);
@@ -88,7 +88,7 @@
 @utility shell {
   margin-inline: auto;
   width: 100%;
-  max-width: 30rem;
+  max-width: 100%;
 }
 
 @utility glow-card {

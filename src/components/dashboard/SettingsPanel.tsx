@@ -22,7 +22,9 @@ export function SettingsPanel({ scope = "admin" }: { scope?: "admin" | "owner" }
             {t.label}
             <span
               className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                settings[t.key] ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"
+                settings[t.key]
+                  ? "bg-success/15 text-success"
+                  : "bg-destructive/15 text-destructive"
               }`}
             >
               {settings[t.key] ? "Aktif" : "Nonaktif"}

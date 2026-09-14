@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ArrowRight, Clock, Printer, Utensils, X } from "lucide-react";
 import { actions, rupiah, useStore, type Order, type OrderStatus } from "@/lib/store";
-import { printReceipt } from "./OrdersPanel";
+import { printReceipt } from "@/lib/receipt";
 
 type Stage = {
   key: string;

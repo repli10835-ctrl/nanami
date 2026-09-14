@@ -1,14 +1,23 @@
 import { useEffect, useState } from "react";
-import logo from "@/assets/nanami-logo.png";
-import heroImg from "@/assets/hero.jpg";
+import defaultLogo from "@/assets/nanami-logo.png";
+import defaultHeroImg from "@/assets/hero.jpg";
+import { useStore } from "@/lib/store";
 
 export function WelcomeScreen({ onDone }: { onDone: () => void }) {
   const [leaving, setLeaving] = useState(false);
+  const cms = useStore((s) => s.cms);
+
+  const durationMs = Math.max(1000, (cms?.welcomeScreen?.durationSec ?? 2.6) * 1000);
+  const logoSrc = cms?.logoUrl || defaultLogo;
+  const heroSrc = cms?.welcomeScreen?.imageUrl || cms?.heroImage || defaultHeroImg;
+  const title = cms?.welcomeScreen?.title || cms?.brandName || "nanami";
+  const subtitle = cms?.welcomeScreen?.subtitle || cms?.brandSuffix || "kitchen";
+  const slogan = cms?.welcomeScreen?.slogan || "Good Food.\nMade with Love";
 
   useEffect(() => {
-    const t = setTimeout(() => setLeaving(true), 2600);
+    const t = setTimeout(() => setLeaving(true), durationMs);
     return () => clearTimeout(t);
-  }, []);
+  }, [durationMs]);
 
   useEffect(() => {
     if (!leaving) return;
@@ -25,28 +34,26 @@ export function WelcomeScreen({ onDone }: { onDone: () => void }) {
     >
       <div className="flex flex-1 flex-col items-center justify-center px-8 pt-16 text-center">
         <img
-          src={logo}
+          src={logoSrc}
           alt="Nanami Kitchen logo"
           width={816}
           height={816}
-          className="h-28 w-28 animate-in fade-in zoom-in-95 duration-700"
+          className="h-28 w-28 rounded-2xl object-contain animate-in fade-in zoom-in-95 duration-700"
         />
         <h1 className="mt-4 font-display text-5xl italic tracking-tight text-[oklch(0.82_0.12_85)]">
-          nanami
+          {title}
         </h1>
         <p className="mt-1 text-xl font-medium uppercase tracking-[0.45em] text-[oklch(0.82_0.12_85)]">
-          kitchen
+          {subtitle}
         </p>
-        <p className="mt-8 text-base leading-relaxed text-[oklch(0.92_0.01_80)]">
-          Good Food.
-          <br />
-          Made with Love
+        <p className="mt-8 whitespace-pre-line text-base leading-relaxed text-[oklch(0.92_0.01_80)]">
+          {slogan}
         </p>
       </div>
 
       <div className="relative h-[42vh] w-full">
         <img
-          src={heroImg}
+          src={heroSrc}
           alt="Signature bowl from Nanami Kitchen"
           className="h-full w-full object-cover"
         />
