@@ -5,13 +5,13 @@ import { rupiah, useStore } from "@/lib/store";
 export const Route = createFileRoute("/admin/customers")({
   head: () => ({
     meta: [
-      { title: "Data Pelanggan — Panel Admin Nanami Kitchen" },
+      { title: "Customer Data — Admin Panel Nanami Kitchen" },
       {
         name: "description",
-        content: "Daftar pelanggan Nanami Kitchen beserta jumlah pesanan dan total belanja.",
+        content: "Nanami Kitchen customer directory with order count and total spend.",
       },
-      { property: "og:title", content: "Data Pelanggan — Nanami Kitchen" },
-      { property: "og:description", content: "Pelanggan, jumlah pesanan, dan total belanja." },
+      { property: "og:title", content: "Customer Data — Nanami Kitchen" },
+      { property: "og:description", content: "Customers, order count, and total spend." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -39,21 +39,21 @@ function CustomersPage() {
   return (
     <DashboardShell
       role="admin"
-      title="Pelanggan"
-      subtitle={`${accounts.length} akun terdaftar · ${rows.length} pemesan`}
+      title="Customers"
+      subtitle={`${accounts.length} registered accounts · ${rows.length} active ordering customers`}
     >
-      <SectionCard title="Pelanggan teratas">
+      <SectionCard title="Top customers">
         {rows.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Belum ada pelanggan.</p>
+          <p className="text-xs text-muted-foreground">No customer records found.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="text-xs text-muted-foreground">
                 <tr>
-                  <th className="py-2">Nama</th>
+                  <th className="py-2">Name</th>
                   <th className="py-2">WhatsApp</th>
-                  <th className="py-2">Pesanan</th>
-                  <th className="py-2 text-right">Total belanja</th>
+                  <th className="py-2">Orders</th>
+                  <th className="py-2 text-right">Total Spend</th>
                 </tr>
               </thead>
               <tbody>
@@ -72,9 +72,9 @@ function CustomersPage() {
       </SectionCard>
 
       <div className="mt-4">
-        <SectionCard title="Akun terdaftar">
+        <SectionCard title="Registered accounts">
           {accounts.length === 0 ? (
-            <p className="text-xs text-muted-foreground">Belum ada akun.</p>
+            <p className="text-xs text-muted-foreground">No registered user accounts.</p>
           ) : (
             <ul className="space-y-2 text-sm">
               {accounts.map((a) => (

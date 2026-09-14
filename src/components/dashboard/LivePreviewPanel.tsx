@@ -61,13 +61,13 @@ const DEVICES: DevicePreset[] = [
 ];
 
 const APP_PAGES = [
-  { path: "/", label: "Beranda Toko" },
-  { path: "/vouchers", label: "Promo & Voucher" },
-  { path: "/cart", label: "Keranjang Belanja" },
-  { path: "/checkout", label: "Checkout & Alamat" },
-  { path: "/tracking", label: "Lacak Pesanan" },
-  { path: "/profile", label: "Profil Akun" },
-  { path: "/login", label: "Masuk / Daftar" },
+  { path: "/", label: "Store Home" },
+  { path: "/vouchers", label: "Promos & Vouchers" },
+  { path: "/cart", label: "Shopping Cart" },
+  { path: "/checkout", label: "Checkout & Address" },
+  { path: "/tracking", label: "Track Order" },
+  { path: "/profile", label: "User Profile" },
+  { path: "/login", label: "Login / Register" },
 ];
 
 export function LivePreviewPanel() {
@@ -134,19 +134,19 @@ export function LivePreviewPanel() {
           {/* Orientation toggle */}
           <button
             onClick={() => setIsLandscape((l) => !l)}
-            title="Putar Orientasi (Potret / Lanskap)"
+            title="Toggle Orientation (Portrait / Landscape)"
             className={`flex items-center gap-1.5 rounded-xl border border-border px-2.5 py-1.5 text-xs font-medium transition ${
               isLandscape ? "bg-secondary text-primary" : "text-muted-foreground hover:bg-secondary"
             }`}
           >
             <RotateCw className="size-3.5" />
-            <span className="hidden sm:inline">{isLandscape ? "Lanskap" : "Potret"}</span>
+            <span className="hidden sm:inline">{isLandscape ? "Landscape" : "Portrait"}</span>
           </button>
         </div>
 
         {/* Page Switcher */}
         <div className="flex items-center gap-2">
-          <label className="text-xs font-medium text-muted-foreground">Halaman:</label>
+          <label className="text-xs font-medium text-muted-foreground">Page:</label>
           <select
             value={currentPath}
             onChange={(e) => handleNavigate(e.target.value)}
@@ -178,7 +178,7 @@ export function LivePreviewPanel() {
 
           <button
             onClick={reloadIframe}
-            title="Muat Ulang Preview (Tes Splash Screen)"
+            title="Reload Preview (Test Splash Screen)"
             className="flex size-8 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition hover:bg-secondary hover:text-foreground"
           >
             <RefreshCw className="size-3.5" />
@@ -197,7 +197,7 @@ export function LivePreviewPanel() {
             target="_blank"
             rel="noreferrer"
             className="flex size-8 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition hover:bg-secondary hover:text-foreground"
-            title="Buka Halaman di Tab Baru"
+            title="Open Page in New Tab"
           >
             <ExternalLink className="size-3.5" />
           </a>

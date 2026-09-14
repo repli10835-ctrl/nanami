@@ -8,13 +8,13 @@ const DAY = 86400000;
 
 const dayLabel = (offset: number) => {
   const d = new Date(Date.now() - offset * DAY);
-  if (offset === 0) return "Hari ini";
-  if (offset === 1) return "Kemarin";
-  return d.toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "short" });
+  if (offset === 0) return "Today";
+  if (offset === 1) return "Yesterday";
+  return d.toLocaleDateString("en-ZA", { weekday: "long", day: "numeric", month: "short" });
 };
 
 const time = (ts: number) =>
-  new Date(ts).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+  new Date(ts).toLocaleTimeString("en-ZA", { hour: "2-digit", minute: "2-digit" });
 
 function OrderRow({ order }: { order: Order }) {
   return (
@@ -22,7 +22,7 @@ function OrderRow({ order }: { order: Order }) {
       <span className="w-14 shrink-0 text-xs text-muted-foreground">{time(order.createdAt)}</span>
       <span className="font-semibold">{order.code}</span>
       <span className="min-w-28 flex-1 truncate text-xs text-muted-foreground">
-        {order.customer.name || "Guest"} · {order.lines.reduce((t, l) => t + l.qty, 0)} item ·{" "}
+        {order.customer.name || "Guest"} · {order.lines.reduce((t, l) => t + l.qty, 0)} items ·{" "}
         {order.type}
       </span>
       <span className="text-xs font-semibold">{rupiah(order.total)}</span>
@@ -39,7 +39,7 @@ function OrderRow({ order }: { order: Order }) {
       </span>
       <button
         onClick={() => printReceipt(order)}
-        aria-label={`Cetak struk ${order.code}`}
+        aria-label={`Print receipt ${order.code}`}
         className="text-muted-foreground"
       >
         <Printer className="size-4" />
@@ -73,30 +73,30 @@ export function DailyOrdersPanel() {
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
-          label="Pesanan hari ini"
+          label="Today's orders"
           value={String(today.list.length)}
           hint={rupiah(today.revenue)}
         />
         <StatCard
-          label="Selesai hari ini"
+          label="Completed today"
           value={String(today.list.filter((o) => o.status === "Completed").length)}
-          hint="Sudah dituntaskan"
+          hint="Completed"
         />
         <StatCard
-          label="Batal hari ini"
+          label="Cancelled today"
           value={String(today.list.filter((o) => o.status === "Cancelled").length)}
-          hint="Perlu ditinjau"
+          hint="Needs review"
         />
-        <StatCard label="Omzet 7 hari" value={rupiah(week)} hint={`${weekCount} pesanan`} />
+        <StatCard label="7-day revenue" value={rupiah(week)} hint={`${weekCount} orders`} />
       </div>
 
       <section className="glow-card space-y-3 p-4">
         <div>
-          <h2 className="text-sm font-semibold">Pesanan hari ini</h2>
-          <p className="text-xs text-muted-foreground">Diurutkan dari yang terbaru.</p>
+          <h2 className="text-sm font-semibold">Today's orders</h2>
+          <p className="text-xs text-muted-foreground">Sorted newest first.</p>
         </div>
         {today.list.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Belum ada pesanan masuk hari ini.</p>
+          <p className="text-xs text-muted-foreground">No orders received today yet.</p>
         ) : (
           <ul className="space-y-2">
             {today.list.map((o) => (
@@ -108,8 +108,8 @@ export function DailyOrdersPanel() {
 
       <section className="glow-card space-y-2 p-4">
         <div>
-          <h2 className="text-sm font-semibold">Riwayat 7 hari terakhir</h2>
-          <p className="text-xs text-muted-foreground">Klik tanggal untuk melihat detail.</p>
+          <h2 className="text-sm font-semibold">Past 7 days history</h2>
+          <p className="text-xs text-muted-foreground">Click a date to view details.</p>
         </div>
         {days.slice(1).map((d) => (
           <div key={d.offset} className="rounded-xl border border-border bg-secondary/20">
@@ -120,13 +120,13 @@ export function DailyOrdersPanel() {
             >
               <span className="font-medium">{dayLabel(d.offset)}</span>
               <span className="text-xs text-muted-foreground">
-                {d.list.length} pesanan · {rupiah(d.revenue)}
+                {d.list.length} orders · {rupiah(d.revenue)}
               </span>
             </button>
             {openDay === d.offset && (
               <ul className="space-y-2 px-3 pb-3">
                 {d.list.length === 0 ? (
-                  <li className="text-xs text-muted-foreground">Tidak ada pesanan.</li>
+                  <li className="text-xs text-muted-foreground">No orders on this day.</li>
                 ) : (
                   d.list.map((o) => <OrderRow key={o.id} order={o} />)
                 )}

@@ -5,16 +5,16 @@ import { DailyOrdersPanel } from "@/components/dashboard/DailyOrdersPanel";
 export const Route = createFileRoute("/admin/orders")({
   head: () => ({
     meta: [
-      { title: "Pesanan Harian — Panel Admin Nanami Kitchen" },
+      { title: "Daily Orders — Admin Panel Nanami Kitchen" },
       {
         name: "description",
         content:
-          "Daftar pesanan harian Nanami Kitchen lengkap dengan riwayat tujuh hari terakhir dan cetak struk.",
+          "Nanami Kitchen daily order summary complete with 7-day history and receipt printing.",
       },
-      { property: "og:title", content: "Pesanan Harian — Panel Admin Nanami Kitchen" },
+      { property: "og:title", content: "Daily Orders — Admin Panel Nanami Kitchen" },
       {
         property: "og:description",
-        content: "Rekap pesanan harian dan riwayat singkat Nanami Kitchen.",
+        content: "Daily order recap and quick history for Nanami Kitchen.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -23,8 +23,8 @@ export const Route = createFileRoute("/admin/orders")({
   component: () => (
     <DashboardShell
       role="admin"
-      title="Pesanan harian"
-      subtitle="Rekap hari ini dan riwayat 7 hari terakhir"
+      title="Daily orders"
+      subtitle="Today's recap and past 7 days history"
     >
       <DailyOrdersPanel />
     </DashboardShell>

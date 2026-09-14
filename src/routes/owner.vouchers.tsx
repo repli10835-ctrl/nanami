@@ -7,13 +7,13 @@ import { actions, rupiah, uid, useStore } from "@/lib/store";
 export const Route = createFileRoute("/owner/vouchers")({
   head: () => ({
     meta: [
-      { title: "Promo & Voucher — Panel Owner Nanami Kitchen" },
+      { title: "Promos & Vouchers — Owner Panel Nanami Kitchen" },
       {
         name: "description",
-        content: "Buat dan kelola voucher diskon serta banner promo Nanami Kitchen.",
+        content: "Create and manage discount vouchers and promotional banners for Nanami Kitchen.",
       },
-      { property: "og:title", content: "Promo & Voucher — Nanami Kitchen" },
-      { property: "og:description", content: "Kelola voucher diskon dan banner promo." },
+      { property: "og:title", content: "Promos & Vouchers — Nanami Kitchen" },
+      { property: "og:description", content: "Manage discount vouchers and promo banners." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -33,44 +33,47 @@ function VouchersPage() {
   const [badge, setBadge] = useState("");
 
   return (
-    <DashboardShell role="owner" title="Promo & Voucher" subtitle="Kebijakan diskon toko">
+    <DashboardShell role="owner" title="Promos & Vouchers" subtitle="Store discount policies">
       <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
-        <SectionCard title="Buat voucher">
+        <SectionCard title="Create voucher">
           <label className="block text-xs text-muted-foreground">
-            Kode
+            Voucher Code
             <input
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
               className={fieldClass}
+              placeholder="e.g. NANAMI20"
             />
           </label>
           <label className="block text-xs text-muted-foreground">
-            Tipe
+            Discount Type
             <select
               value={type}
               onChange={(e) => setType(e.target.value as "percent" | "fixed")}
               className={fieldClass}
             >
-              <option value="percent">Persen (%)</option>
-              <option value="fixed">Potongan tetap (Rp)</option>
+              <option value="percent">Percentage (%)</option>
+              <option value="fixed">Fixed Amount (R)</option>
             </select>
           </label>
           <label className="block text-xs text-muted-foreground">
-            Nilai
+            Value
             <input
               value={value}
               inputMode="numeric"
               onChange={(e) => setValue(e.target.value)}
               className={fieldClass}
+              placeholder="e.g. 15 or 50"
             />
           </label>
           <label className="block text-xs text-muted-foreground">
-            Minimal belanja
+            Minimum Spend
             <input
               value={minSpend}
               inputMode="numeric"
               onChange={(e) => setMinSpend(e.target.value)}
               className={fieldClass}
+              placeholder="e.g. 150"
             />
           </label>
           <button
@@ -89,13 +92,13 @@ function VouchersPage() {
             }}
             className="w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-40"
           >
-            Simpan voucher
+            Save voucher
           </button>
         </SectionCard>
 
-        <SectionCard title="Voucher aktif">
+        <SectionCard title="Active vouchers">
           {vouchers.length === 0 ? (
-            <p className="text-xs text-muted-foreground">Belum ada voucher.</p>
+            <p className="text-xs text-muted-foreground">No vouchers available.</p>
           ) : (
             <ul className="space-y-2">
               {vouchers.map((v) => (
@@ -116,11 +119,11 @@ function VouchersPage() {
                       v.active ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"
                     }`}
                   >
-                    {v.active ? "Aktif" : "Nonaktif"}
+                    {v.active ? "Active" : "Inactive"}
                   </button>
                   <button
                     onClick={() => actions.deleteVoucher(v.code)}
-                    aria-label={`Hapus ${v.code}`}
+                    aria-label={`Delete ${v.code}`}
                     className="text-muted-foreground"
                   >
                     <Trash2 className="size-4" />
@@ -131,9 +134,9 @@ function VouchersPage() {
           )}
         </SectionCard>
 
-        <SectionCard title="Banner promo" description="Tampil di beranda pembeli.">
+        <SectionCard title="Promo banner" description="Appears on customer home screen.">
           <label className="block text-xs text-muted-foreground">
-            Judul
+            Title
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -141,7 +144,7 @@ function VouchersPage() {
             />
           </label>
           <label className="block text-xs text-muted-foreground">
-            Subjudul
+            Subtitle
             <input
               value={subtitle}
               onChange={(e) => setSubtitle(e.target.value)}
@@ -149,7 +152,7 @@ function VouchersPage() {
             />
           </label>
           <label className="block text-xs text-muted-foreground">
-            Badge
+            Badge Tag
             <input
               value={badge}
               onChange={(e) => setBadge(e.target.value)}
@@ -166,13 +169,13 @@ function VouchersPage() {
             }}
             className="w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-40"
           >
-            Tambah banner
+            Add banner
           </button>
         </SectionCard>
 
-        <SectionCard title="Daftar banner">
+        <SectionCard title="Banner list">
           {promos.length === 0 ? (
-            <p className="text-xs text-muted-foreground">Belum ada banner.</p>
+            <p className="text-xs text-muted-foreground">No banners active.</p>
           ) : (
             <ul className="space-y-2">
               {promos.map((p) => (
@@ -189,7 +192,7 @@ function VouchersPage() {
                   </span>
                   <button
                     onClick={() => actions.deletePromo(p.id)}
-                    aria-label={`Hapus ${p.title}`}
+                    aria-label={`Delete ${p.title}`}
                     className="text-muted-foreground"
                   >
                     <Trash2 className="size-4" />

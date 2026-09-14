@@ -104,9 +104,7 @@ function Profile() {
             <Sparkles className="size-3.5 text-primary" /> Loyalty points
           </p>
           <p className="mt-1 text-xl font-bold">{profile.points}</p>
-          <p className="text-xs text-muted-foreground">
-            {settings.pointsPer10k} point per Rp 10.000
-          </p>
+          <p className="text-xs text-muted-foreground">{settings.pointsPer10k} point per R 100</p>
         </div>
         <div className="glow-card p-4">
           <p className="text-xs text-muted-foreground">Orders placed</p>
@@ -199,7 +197,7 @@ function Profile() {
         }}
         className="mt-6 flex w-full items-center justify-center gap-2 rounded-full border border-border py-3.5 text-sm font-semibold"
       >
-        <LogOut className="size-4" /> Keluar (Sign out)
+        <LogOut className="size-4" /> Sign Out
       </button>
     </AppShell>
   );

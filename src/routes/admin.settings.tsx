@@ -5,19 +5,23 @@ import { SettingsPanel } from "@/components/dashboard/SettingsPanel";
 export const Route = createFileRoute("/admin/settings")({
   head: () => ({
     meta: [
-      { title: "Pengaturan Operasional — Panel Admin Nanami Kitchen" },
+      { title: "Operational Settings — Admin Panel Nanami Kitchen" },
       {
         name: "description",
-        content: "Atur jam buka, layanan delivery/pickup, ongkir dan kontak Nanami Kitchen.",
+        content:
+          "Configure opening hours, delivery/pickup service, fees and contact details for Nanami Kitchen.",
       },
-      { property: "og:title", content: "Pengaturan Operasional — Nanami Kitchen" },
-      { property: "og:description", content: "Jam buka, ongkir, dan kontak Nanami Kitchen." },
+      { property: "og:title", content: "Operational Settings — Nanami Kitchen" },
+      {
+        property: "og:description",
+        content: "Opening hours, delivery fees, and contact info for Nanami Kitchen.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
   }),
   component: () => (
-    <DashboardShell role="admin" title="Operasional" subtitle="Layanan, ongkir, dan pembayaran">
+    <DashboardShell role="admin" title="Operations" subtitle="Services, fees, and payments">
       <SettingsPanel />
     </DashboardShell>
   ),

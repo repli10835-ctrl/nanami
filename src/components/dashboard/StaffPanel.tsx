@@ -4,19 +4,19 @@ import { actions, uid, useStore, type StaffRole } from "@/lib/store";
 import { SectionCard, fieldClass } from "./DashboardShell";
 
 const ROLES: { value: StaffRole; label: string; desc: string }[] = [
-  { value: "owner", label: "Owner", desc: "Akses penuh termasuk keuangan dan tim" },
-  { value: "admin", label: "Admin", desc: "Operasional dapur, pesanan, dan stok" },
-  { value: "staff", label: "Staff", desc: "Bantu proses pesanan saja" },
+  { value: "owner", label: "Owner", desc: "Full access including finance and team management" },
+  { value: "admin", label: "Admin", desc: "Kitchen operations, order processing, and inventory" },
+  { value: "staff", label: "Staff", desc: "Order assistance and processing only" },
 ];
 
 const PERMISSIONS: { label: string; owner: boolean; admin: boolean; staff: boolean }[] = [
-  { label: "Lihat & proses pesanan", owner: true, admin: true, staff: true },
-  { label: "Ubah ketersediaan menu", owner: true, admin: true, staff: false },
-  { label: "Tambah / ubah / hapus menu", owner: true, admin: false, staff: false },
-  { label: "Kelola promo & voucher", owner: true, admin: false, staff: false },
-  { label: "Lihat laporan keuangan", owner: true, admin: true, staff: false },
-  { label: "Kelola akun & hak akses", owner: true, admin: false, staff: false },
-  { label: "Ubah pengaturan restoran", owner: true, admin: false, staff: false },
+  { label: "View & process orders", owner: true, admin: true, staff: true },
+  { label: "Toggle menu availability", owner: true, admin: true, staff: false },
+  { label: "Add / edit / delete menu items", owner: true, admin: false, staff: false },
+  { label: "Manage promos & vouchers", owner: true, admin: false, staff: false },
+  { label: "View financial reports", owner: true, admin: true, staff: false },
+  { label: "Manage team accounts & permissions", owner: true, admin: false, staff: false },
+  { label: "Edit restaurant settings", owner: true, admin: false, staff: false },
 ];
 
 export function StaffPanel() {
@@ -43,9 +43,9 @@ export function StaffPanel() {
 
   return (
     <div className="grid gap-4 xl:grid-cols-[340px_1fr] xl:items-start">
-      <SectionCard title="Undang anggota baru" description="Kirim akses ke email anggota tim.">
+      <SectionCard title="Invite new member" description="Send invite link to team member's email.">
         <label className="block text-xs text-muted-foreground">
-          Nama lengkap
+          Full name
           <input value={name} onChange={(e) => setName(e.target.value)} className={fieldClass} />
         </label>
         <label className="block text-xs text-muted-foreground">
@@ -58,7 +58,7 @@ export function StaffPanel() {
           />
         </label>
         <label className="block text-xs text-muted-foreground">
-          Nomor telepon
+          Phone number
           <input
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
@@ -85,12 +85,12 @@ export function StaffPanel() {
           onClick={invite}
           className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-40"
         >
-          <UserPlus className="size-4" /> Kirim undangan
+          <UserPlus className="size-4" /> Send invitation
         </button>
       </SectionCard>
 
       <div className="space-y-4">
-        <SectionCard title="Akun & staf" description={`${staff.length} anggota terdaftar.`}>
+        <SectionCard title="Accounts & staff" description={`${staff.length} registered members.`}>
           <ul className="space-y-2">
             {staff.map((m) => (
               <li
@@ -109,7 +109,7 @@ export function StaffPanel() {
                 </div>
                 <select
                   value={m.role}
-                  aria-label={`Peran ${m.name}`}
+                  aria-label={`Role ${m.name}`}
                   onChange={(e) => actions.updateStaff(m.id, { role: e.target.value as StaffRole })}
                   className="rounded-lg border border-input bg-secondary/40 px-2 py-1.5 text-xs"
                 >
@@ -125,11 +125,11 @@ export function StaffPanel() {
                     m.active ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"
                   }`}
                 >
-                  {m.active ? "Aktif" : "Nonaktif"}
+                  {m.active ? "Active" : "Inactive"}
                 </button>
                 <button
                   onClick={() => actions.deleteStaff(m.id)}
-                  aria-label={`Hapus ${m.name}`}
+                  aria-label={`Delete ${m.name}`}
                   className="text-muted-foreground"
                 >
                   <Trash2 className="size-4" />
@@ -139,12 +139,12 @@ export function StaffPanel() {
           </ul>
         </SectionCard>
 
-        <SectionCard title="Ringkasan hak akses" description="Apa yang bisa dilakukan tiap peran.">
+        <SectionCard title="Permission matrix" description="Capabilities granted to each role.">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="text-xs text-muted-foreground">
                 <tr>
-                  <th className="py-2">Kemampuan</th>
+                  <th className="py-2">Capability</th>
                   <th className="py-2 text-center">Owner</th>
                   <th className="py-2 text-center">Admin</th>
                   <th className="py-2 text-center">Staff</th>
@@ -161,7 +161,7 @@ export function StaffPanel() {
                           ok ? "text-success" : "text-muted-foreground"
                         }`}
                       >
-                        {ok ? "Ya" : "—"}
+                        {ok ? "Yes" : "—"}
                       </td>
                     ))}
                   </tr>

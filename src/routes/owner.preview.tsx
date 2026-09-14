@@ -5,13 +5,13 @@ import { LivePreviewPanel } from "@/components/dashboard/LivePreviewPanel";
 export const Route = createFileRoute("/owner/preview")({
   head: () => ({
     meta: [
-      { title: "Live Preview Aplikasi — Panel Owner Nanami Kitchen" },
+      { title: "App Live Preview — Owner Panel Nanami Kitchen" },
       {
         name: "description",
-        content: "Simulator live preview aplikasi restoran Nanami Kitchen multi-device.",
+        content: "Multi-device live preview simulator for Nanami Kitchen restaurant customer app.",
       },
       { property: "og:title", content: "Live Preview — Nanami Kitchen" },
-      { property: "og:description", content: "Simulator live preview aplikasi Nanami Kitchen." },
+      { property: "og:description", content: "Live preview simulator for Nanami Kitchen app." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -23,8 +23,8 @@ function OwnerPreviewPage() {
   return (
     <DashboardShell
       role="owner"
-      title="Live Preview Aplikasi"
-      subtitle="Uji tampilan aplikasi pembeli secara langsung pada berbagai ukuran layar perangkat"
+      title="App Live Preview"
+      subtitle="Test customer app appearance in real-time across multiple device screen sizes"
     >
       <LivePreviewPanel />
     </DashboardShell>

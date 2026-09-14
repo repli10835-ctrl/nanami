@@ -8,16 +8,16 @@ import { actions, useStore } from "@/lib/store";
 export const Route = createFileRoute("/register")({
   head: () => ({
     meta: [
-      { title: "Daftar Akun Baru — Nanami Kitchen" },
+      { title: "Create New Account — Nanami Kitchen" },
       {
         name: "description",
         content:
-          "Buat akun Nanami Kitchen dengan email dan password. Simpan nama, nomor WhatsApp, dan alamat pengiriman untuk checkout lebih cepat.",
+          "Create a Nanami Kitchen account with email and password. Save your name, WhatsApp number, and delivery address for faster checkout.",
       },
-      { property: "og:title", content: "Daftar Akun — Nanami Kitchen" },
+      { property: "og:title", content: "Create Account — Nanami Kitchen" },
       {
         property: "og:description",
-        content: "Daftar dengan email dan password untuk checkout lebih cepat.",
+        content: "Register with email and password for faster checkout.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -45,20 +45,20 @@ function RegisterPage() {
     e.preventDefault();
     setError("");
     if (name.trim().length < 2) {
-      setError("Nama lengkap minimal 2 karakter.");
+      setError("Full name must be at least 2 characters.");
       return;
     }
     if (!/^[0-9+\-\s()]{8,20}$/.test(phone.trim())) {
-      setError("Nomor WhatsApp tidak valid.");
+      setError("Invalid WhatsApp number.");
       return;
     }
     if (password !== confirm) {
-      setError("Konfirmasi password tidak sama.");
+      setError("Passwords do not match.");
       return;
     }
     const result = actions.signUp({ name, email, phone, password });
     if (!result.ok) {
-      setError(result.error ?? "Terjadi kesalahan.");
+      setError(result.error ?? "An error occurred.");
       return;
     }
     const clean = address.trim();
@@ -73,13 +73,13 @@ function RegisterPage() {
     return (
       <AppShell hideCartBar hideBottomNav>
         <div className="py-16 text-center">
-          <h1 className="text-xl font-bold">Kamu sudah punya akun aktif</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Masuk sebagai {profile.email}</p>
+          <h1 className="text-xl font-bold">You already have an active account</h1>
+          <p className="mt-2 text-sm text-muted-foreground">Signed in as {profile.email}</p>
           <Link
             to="/"
             className="mt-6 inline-block rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground"
           >
-            Mulai Belanja
+            Start Shopping
           </Link>
         </div>
       </AppShell>
@@ -89,26 +89,26 @@ function RegisterPage() {
   return (
     <AppShell hideCartBar hideBottomNav>
       <div className="flex items-center gap-4">
-        <Link to="/login" aria-label="Kembali ke halaman masuk" className="text-foreground">
+        <Link to="/login" aria-label="Back to sign in page" className="text-foreground">
           <ArrowLeft className="size-6" />
         </Link>
-        <h1 className="text-2xl font-bold">Daftar Akun</h1>
+        <h1 className="text-2xl font-bold">Create Account</h1>
       </div>
 
       <img
         src={logo}
-        alt="Logo Nanami Kitchen"
+        alt="Nanami Kitchen Logo"
         width={64}
         height={64}
         className="mx-auto mt-8 size-16"
       />
       <p className="mt-3 text-center text-sm text-muted-foreground">
-        Buat akun untuk checkout lebih cepat dan kumpulkan poin setiap pesanan.
+        Create an account for faster checkout and earn points with every order.
       </p>
 
       <form onSubmit={submit} className="mt-6 space-y-3">
         <label className="block text-xs text-muted-foreground">
-          Nama lengkap
+          Full Name
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -119,7 +119,7 @@ function RegisterPage() {
           />
         </label>
         <label className="block text-xs text-muted-foreground">
-          Nomor WhatsApp
+          WhatsApp Number
           <input
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
@@ -131,7 +131,7 @@ function RegisterPage() {
           />
         </label>
         <label className="block text-xs text-muted-foreground">
-          Alamat pengiriman (opsional)
+          Delivery Address (optional)
           <textarea
             value={address}
             onChange={(e) => setAddress(e.target.value)}
@@ -153,7 +153,7 @@ function RegisterPage() {
           />
         </label>
         <label className="block text-xs text-muted-foreground">
-          Password (min. 6 karakter)
+          Password (min. 6 characters)
           <span className="relative block">
             <input
               value={password}
@@ -168,7 +168,7 @@ function RegisterPage() {
             <button
               type="button"
               onClick={() => setShow((v) => !v)}
-              aria-label={show ? "Sembunyikan password" : "Tampilkan password"}
+              aria-label={show ? "Hide password" : "Show password"}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
             >
               {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -176,7 +176,7 @@ function RegisterPage() {
           </span>
         </label>
         <label className="block text-xs text-muted-foreground">
-          Ulangi password
+          Confirm Password
           <input
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
@@ -198,18 +198,18 @@ function RegisterPage() {
           disabled={!email || !password || !confirm || !name || !phone}
           className="!mt-6 w-full rounded-full bg-primary py-3.5 text-sm font-bold text-primary-foreground disabled:opacity-40"
         >
-          Buat akun
+          Create Account
         </button>
       </form>
 
       <p className="mt-5 text-center text-sm text-muted-foreground">
-        Sudah punya akun?{" "}
+        Already have an account?{" "}
         <Link to="/login" className="font-semibold text-primary">
-          Masuk di sini
+          Sign in here
         </Link>
       </p>
       <p className="mt-3 text-center text-xs text-muted-foreground">
-        Akun kamu tersimpan di perangkat ini saja.
+        Your account data is saved locally on this device.
       </p>
     </AppShell>
   );

@@ -219,7 +219,7 @@ const spice: OptionGroup = {
   choices: [
     { id: "mild", name: "Mild", price: 0 },
     { id: "medium", name: "Medium", price: 0 },
-    { id: "hot", name: "Extra Hot", price: 2000 },
+    { id: "hot", name: "Extra Hot", price: 5 },
   ],
 };
 
@@ -229,7 +229,7 @@ const size: OptionGroup = {
   type: "single",
   choices: [
     { id: "reg", name: "Regular", price: 0 },
-    { id: "large", name: "Large", price: 8000 },
+    { id: "large", name: "Large", price: 15 },
   ],
 };
 
@@ -238,18 +238,18 @@ const toppings: OptionGroup = {
   name: "Extra Toppings",
   type: "multi",
   choices: [
-    { id: "egg", name: "Fried Egg", price: 6000 },
-    { id: "cheese", name: "Mozzarella", price: 9000 },
-    { id: "sambal", name: "Extra Sambal", price: 3000 },
+    { id: "egg", name: "Fried Egg", price: 15 },
+    { id: "cheese", name: "Mozzarella Cheese", price: 20 },
+    { id: "sambal", name: "Extra Chili Sauce", price: 10 },
   ],
 };
 
 const seedMenu: MenuItem[] = [
   {
     id: "m1",
-    name: "Bento Ayam Teriyaki",
-    description: "Grilled teriyaki chicken with warm rice and pickles.",
-    price: 42000,
+    name: "Teriyaki Chicken Bento",
+    description: "Grilled teriyaki chicken with warm rice and Japanese pickles.",
+    price: 95,
     category: "Foods",
     image: food1,
     available: true,
@@ -259,9 +259,9 @@ const seedMenu: MenuItem[] = [
   },
   {
     id: "m2",
-    name: "Ayam Geprek Sambal",
-    description: "Crispy smashed chicken with fresh chili sambal.",
-    price: 38000,
+    name: "Crispy Smashed Chicken (Geprek)",
+    description: "Crispy smashed chicken served with fresh chili sambal.",
+    price: 85,
     category: "Foods",
     image: food2,
     available: true,
@@ -272,8 +272,8 @@ const seedMenu: MenuItem[] = [
   {
     id: "m3",
     name: "Iced Milk Tea",
-    description: "House brewed tea with fresh milk and palm sugar.",
-    price: 22000,
+    description: "House brewed tea with fresh milk and brown sugar.",
+    price: 35,
     category: "Drinks",
     image: food3,
     available: true,
@@ -285,7 +285,7 @@ const seedMenu: MenuItem[] = [
     id: "m4",
     name: "Crispy Snack Platter",
     description: "Golden fried bites served with signature dipping sauce.",
-    price: 30000,
+    price: 65,
     category: "Snacks",
     image: food4,
     available: true,
@@ -295,9 +295,9 @@ const seedMenu: MenuItem[] = [
   },
   {
     id: "m5",
-    name: "Combo Geprek + Tea",
-    description: "Ayam geprek, rice and an iced milk tea. Best value.",
-    price: 55000,
+    name: "Crispy Chicken & Tea Combo",
+    description: "Smashed chicken, fragrant rice, and iced milk tea.",
+    price: 110,
     category: "Combos",
     image: food2,
     available: true,
@@ -307,9 +307,9 @@ const seedMenu: MenuItem[] = [
   },
   {
     id: "m6",
-    name: "Sambal Jar 150ml",
-    description: "Take our sambal home. Fiery and fragrant.",
-    price: 18000,
+    name: "Signature Chili Jar (150ml)",
+    description: "Take our fiery chili sauce home. Fresh and spicy.",
+    price: 45,
     category: "Others",
     image: food2,
     available: true,
@@ -324,36 +324,33 @@ export const DEMO_ACCOUNTS: Account[] = [
     id: "demo-user",
     email: "user@nanami.id",
     password: "user123",
-    name: "Budi Pratama",
-    phone: "0812-9876-5432",
+    name: "David Smith",
+    phone: "0812345678",
     role: "user",
-    address: "Jl. Melati No. 12, Kebayoran Baru, Jakarta Selatan",
-    addresses: [
-      "Jl. Melati No. 12, Kebayoran Baru, Jakarta Selatan",
-      "Office Tower Lt. 14, SCBD, Jakarta Pusat",
-    ],
+    address: "12 Rosebank Road, Rosebank, Johannesburg",
+    addresses: ["12 Rosebank Road, Rosebank, Johannesburg", "Building 4, Sandton City, Sandton"],
     points: 350,
   },
   {
     id: "demo-admin",
     email: "admin@nanami.id",
     password: "admin123",
-    name: "Rina Astuti",
-    phone: "0812-3333-4444",
+    name: "Sarah Jenkins",
+    phone: "0823456789",
     role: "admin",
-    address: "Kitchen Nanami Kitchen, Jl. Radio Dalam",
-    addresses: ["Kitchen Nanami Kitchen, Jl. Radio Dalam"],
+    address: "Kitchen 2, Rosebank Mall, Johannesburg",
+    addresses: ["Kitchen 2, Rosebank Mall, Johannesburg"],
     points: 120,
   },
   {
     id: "demo-owner",
     email: "owner@nanami.id",
     password: "owner123",
-    name: "Nanami Putri",
-    phone: "0812-1111-2222",
+    name: "Nanami Miller",
+    phone: "0834567890",
     role: "owner",
-    address: "HQ Nanami Kitchen, Senopati",
-    addresses: ["HQ Nanami Kitchen, Senopati"],
+    address: "HQ Nanami Kitchen, Rosebank, Johannesburg",
+    addresses: ["HQ Nanami Kitchen, Rosebank, Johannesburg"],
     points: 1500,
   },
 ];
@@ -364,15 +361,15 @@ export const defaultCmsContent: CmsContent = {
   brandSuffix: "kitchen",
   tagline: "Good food, made with love.",
   description:
-    "Dapur bento, geprek, camilan, dan minuman lezat siap saji untuk keluarga dan rekan kerja.",
+    "Delicious bento boxes, crispy chicken, snacks, and refreshing handcrafted drinks made fresh for families and co-workers.",
   heroImage: "",
   heroTitleLine1: "Good Food.",
   heroTitleLine2: "Made with Love",
   heroSlogan: "Good Food. Made with Love",
-  heroCtaText: "Pesan Sekarang",
+  heroCtaText: "Order Now",
   announcement: {
     enabled: true,
-    text: "🎉 Promo Spesial: Diskon 20% semua menu dengan voucher NANAMI20!",
+    text: "🎉 Special Promo: Get 20% OFF all menu items with voucher code NANAMI20!",
     type: "promo",
     link: "/vouchers",
   },
@@ -387,38 +384,36 @@ export const defaultCmsContent: CmsContent = {
   socials: {
     instagram: "@nanami.kitchen",
     tiktok: "@nanami.kitchen",
-    whatsapp: "0812-3456-7890",
+    whatsapp: "27812345678",
     mapsUrl: "https://maps.google.com/?q=Nanami+Kitchen",
   },
   aboutStory:
-    "Nanami Kitchen menyajikan sajian bento Jepang autentik, aneka olahan geprek lezat pedas gurih, dan minuman segar yang diolah secara higienis menggunakan bahan-bahan pilihan berkualitas setiap hari.",
+    "Nanami Kitchen serves authentic Japanese bento boxes, fiery crispy smashed chicken, and refreshing handcrafted beverages prepared fresh daily using high-quality ingredients.",
   faqs: [
     {
       id: "faq-1",
-      question: "Berapa lama estimasi waktu masak dan pengantaran pesanan?",
+      question: "What is the estimated preparation and delivery time?",
       answer:
-        "Rata-rata pesanan dimasak dalam 15-20 menit. Pengantaran kurir disesuaikan dengan jarak outlet (sekitar 15-30 menit).",
+        "Orders are freshly cooked in 15–20 minutes. Delivery time depends on your distance (approx. 15–30 minutes).",
       active: true,
     },
     {
       id: "faq-2",
-      question: "Apakah Nanami Kitchen menyediakan opsi Pick-up (Ambil Sendiri)?",
-      answer:
-        "Ya, Anda dapat memilih metode Pick-up saat checkout tanpa dikenakan biaya ongkos kirim.",
+      question: "Does Nanami Kitchen offer a Pick-up (Takeaway) option?",
+      answer: "Yes, you can choose Pick-up at checkout with zero delivery fee.",
       active: true,
     },
     {
       id: "faq-3",
-      question: "Bagaimana cara menggunakan voucher diskon?",
-      answer:
-        "Buka menu Voucher, klik 'Gunakan' pada voucher yang Anda inginkan atau ketik kode voucher pada halaman Checkout.",
+      question: "How do I redeem a discount voucher?",
+      answer: "Go to Vouchers, tap 'Apply' on your voucher or enter the code during Checkout.",
       active: true,
     },
     {
       id: "faq-4",
-      question: "Metode pembayaran apa saja yang diterima?",
+      question: "Which payment methods are accepted?",
       answer:
-        "Kami menerima Transfer Bank (BCA), E-Wallet (GoPay, OVO, ShopeePay, DANA), dan Bayar di Tempat (COD / Cash on Pickup).",
+        "We accept Bank Transfer (EFT), E-Wallets / Capitec Pay, and Cash on Delivery / Pickup.",
       active: true,
     },
   ],
@@ -434,25 +429,25 @@ const defaultState: State = {
   orders: [],
   settings: {
     storeName: "Nanami Kitchen",
-    storeTagline: "Japanese comfort food, dibuat segar tiap hari",
-    storeAddress: "Jl. Melati Raya No. 12, Jakarta Selatan",
+    storeTagline: "Japanese comfort food, made fresh daily",
+    storeAddress: "12 Rosebank Road, Rosebank, Johannesburg",
     storeOpen: true,
     deliveryOn: true,
     pickupOn: true,
-    whatsapp: "628123456789",
-    baseFee: 8000,
-    feePerKm: 3000,
-    maxRadiusKm: 10,
-    storeMapsUrl: "https://www.google.com/maps?q=-6.261493,106.781194",
-    storeLat: -6.261493,
-    storeLng: 106.781194,
-    minFee: 8000,
-    freeDeliveryAbove: 0,
+    whatsapp: "27812345678",
+    baseFee: 25,
+    feePerKm: 5,
+    maxRadiusKm: 15,
+    storeMapsUrl: "https://www.google.com/maps?q=-26.146,28.043",
+    storeLat: -26.146,
+    storeLng: 28.043,
+    minFee: 25,
+    freeDeliveryAbove: 250,
     routeFactor: 1.3,
-    bankName: "BCA",
-    bankAccount: "1234567890",
-    bankHolder: "Nanami Kitchen",
-    ewallet: "0812-3456-789 (OVO / GoPay)",
+    bankName: "Standard Bank / FNB",
+    bankAccount: "62812345678",
+    bankHolder: "Nanami Kitchen Pty Ltd",
+    ewallet: "0812345678 (Capitec Pay / SnapScan)",
     openHours: "10:00 – 21:00 every day",
     pointsPer10k: 1,
     adminPassword: "nanami123",
@@ -477,20 +472,20 @@ const defaultState: State = {
     },
     {
       id: "p2",
-      title: "Free delivery over Rp 100.000",
-      subtitle: "Within 5 km of the kitchen",
+      title: "Free delivery over R 250",
+      subtitle: "Within 5 km radius of our kitchen",
       badge: "Delivery",
     },
     {
       id: "p3",
       title: "Earn points on every order",
-      subtitle: "1 point per Rp 10.000 spent",
+      subtitle: "1 point for every R 100 spent",
       badge: "Loyalty",
     },
   ],
   vouchers: [
     { code: "NANAMI20", type: "percent", value: 20, minSpend: 0, active: true },
-    { code: "HEMAT10K", type: "fixed", value: 10000, minSpend: 60000, active: true },
+    { code: "SAVE20RAND", type: "fixed", value: 20, minSpend: 100, active: true },
   ],
   voucherCode: "",
   accounts: DEMO_ACCOUNTS,
@@ -921,7 +916,11 @@ export function uid() {
 }
 
 export function rupiah(n: number) {
-  return "Rp " + n.toLocaleString("id-ID");
+  return "R " + Math.round(n).toLocaleString("en-ZA");
+}
+
+export function formatRand(n: number) {
+  return rupiah(n);
 }
 
 export function cartTotals(cart: CartLine[]) {
@@ -941,16 +940,16 @@ export function deliveryFeeFor(
   if (settings.freeDeliveryAbove > 0 && subtotal >= settings.freeDeliveryAbove) return 0;
   const km = Math.max(0, Math.ceil(distanceKm * 10) / 10);
   const fee = settings.baseFee + km * settings.feePerKm;
-  return Math.max(settings.minFee ?? 0, Math.round(fee / 500) * 500);
+  return Math.max(settings.minFee ?? 0, Math.round(fee));
 }
 
 export function cleanWhatsappNumber(raw?: string) {
-  if (!raw) return "6281234567890";
+  if (!raw) return "27812345678";
   let cleaned = raw.replace(/\D/g, "");
   if (cleaned.startsWith("0")) {
-    cleaned = "62" + cleaned.slice(1);
+    cleaned = "27" + cleaned.slice(1);
   }
-  return cleaned || "6281234567890";
+  return cleaned || "27812345678";
 }
 
 export function buildWhatsappMessage(order: Order) {
@@ -958,36 +957,36 @@ export function buildWhatsappMessage(order: Order) {
     .map(
       (l) =>
         `• *${l.qty}x ${l.name}*${l.optionLabels.length ? ` (${l.optionLabels.join(", ")})` : ""}${
-          l.note ? `\n  Catatan: ${l.note}` : ""
+          l.note ? `\n  Note: ${l.note}` : ""
         }\n  Subtotal: ${rupiah(l.unitPrice * l.qty)}`,
     )
     .join("\n\n");
 
   return [
-    `*PESANAN BARU #${order.code}*`,
+    `*NEW ORDER #${order.code}*`,
     `------------------------------------------`,
-    `👤 *DATA PEMBELI:*`,
-    `• Nama: ${order.customer.name}`,
-    `• No. WhatsApp: ${order.customer.phone}`,
-    `• Tipe Pesanan: ${order.type === "delivery" ? "🚚 Delivery (Pengiriman)" : "🛍️ Pickup (Ambil di Toko)"}`,
-    order.type === "delivery" ? `• Alamat Kirim: ${order.customer.address}` : "",
-    order.customer.deliveryNote ? `• Catatan Lokasi: ${order.customer.deliveryNote}` : "",
+    `👤 *CUSTOMER DETAILS:*`,
+    `• Name: ${order.customer.name}`,
+    `• WhatsApp No: ${order.customer.phone}`,
+    `• Order Type: ${order.type === "delivery" ? "🚚 Delivery" : "🛍️ Pickup (Takeaway)"}`,
+    order.type === "delivery" ? `• Delivery Address: ${order.customer.address}` : "",
+    order.customer.deliveryNote ? `• Location Note: ${order.customer.deliveryNote}` : "",
     `------------------------------------------`,
-    `🍱 *RINCIAN MENU YANG DIPESAN:*`,
+    `🍱 *ORDERED ITEMS:*`,
     lines,
     `------------------------------------------`,
-    `💵 *RINGKASAN BIAYA:*`,
-    `• Subtotal Menu: ${rupiah(order.subtotal)}`,
+    `💵 *PAYMENT SUMMARY:*`,
+    `• Items Subtotal: ${rupiah(order.subtotal)}`,
     order.discount
-      ? `• Diskon Voucher${order.voucherCode ? ` (${order.voucherCode})` : ""}: -${rupiah(order.discount)}`
+      ? `• Voucher Discount${order.voucherCode ? ` (${order.voucherCode})` : ""}: -${rupiah(order.discount)}`
       : "",
-    order.type === "delivery" ? `• Ongkos Kirim: ${rupiah(order.deliveryFee)}` : "",
-    `*💰 TOTAL BAYAR: ${rupiah(order.total)}*`,
+    order.type === "delivery" ? `• Delivery Fee: ${rupiah(order.deliveryFee)}` : "",
+    `*💰 TOTAL AMOUNT: ${rupiah(order.total)}*`,
     `------------------------------------------`,
-    `💳 *METODE PEMBAYARAN (MANUAL):*`,
+    `💳 *PAYMENT METHOD (MANUAL):*`,
     `• ${order.paymentMethod}`,
     "",
-    `_Halo Kak / Admin, saya telah melakukan pemesanan di atas. Mohon konfirmasi dan proses pesanan saya. Terima kasih!_`,
+    `_Hello Admin / Owner, I have placed the order above via Nanami Kitchen. Please confirm and process my order. Thank you!_`,
   ]
     .filter(Boolean)
     .join("\n");

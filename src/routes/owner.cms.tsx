@@ -5,13 +5,14 @@ import { CmsPanel } from "@/components/dashboard/CmsPanel";
 export const Route = createFileRoute("/owner/cms")({
   head: () => ({
     meta: [
-      { title: "CMS Konten & Logo — Panel Owner Nanami Kitchen" },
+      { title: "Content CMS & Branding — Owner Panel Nanami Kitchen" },
       {
         name: "description",
-        content: "Kelola konten publik, logo, slogan, banner promo, dan FAQ Nanami Kitchen.",
+        content:
+          "Manage public content, logo, tagline, promo banners, and FAQs for Nanami Kitchen.",
       },
-      { property: "og:title", content: "CMS Konten — Nanami Kitchen" },
-      { property: "og:description", content: "Kelola konten publik dan logo Nanami Kitchen." },
+      { property: "og:title", content: "Content CMS — Nanami Kitchen" },
+      { property: "og:description", content: "Manage public content and logo for Nanami Kitchen." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -23,8 +24,8 @@ function OwnerCmsPage() {
   return (
     <DashboardShell
       role="owner"
-      title="CMS Konten & Publik"
-      subtitle="Kelola logo, identitas visual, banner promo, hero slogan, dan informasi publik"
+      title="Content & Public CMS"
+      subtitle="Manage logo, visual identity, promo banners, hero tagline, and public details"
     >
       <CmsPanel />
     </DashboardShell>

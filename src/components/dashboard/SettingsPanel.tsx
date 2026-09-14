@@ -5,14 +5,14 @@ export function SettingsPanel({ scope = "admin" }: { scope?: "admin" | "owner" }
   const settings = useStore((s) => s.settings);
 
   const toggles = [
-    { key: "storeOpen" as const, label: "Toko buka" },
-    { key: "deliveryOn" as const, label: "Layanan delivery" },
-    { key: "pickupOn" as const, label: "Layanan pickup" },
+    { key: "storeOpen" as const, label: "Store open" },
+    { key: "deliveryOn" as const, label: "Delivery service" },
+    { key: "pickupOn" as const, label: "Pickup service" },
   ];
 
   return (
     <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
-      <SectionCard title="Operasional">
+      <SectionCard title="Store Operations">
         {toggles.map((t) => (
           <button
             key={t.key}
@@ -27,12 +27,12 @@ export function SettingsPanel({ scope = "admin" }: { scope?: "admin" | "owner" }
                   : "bg-destructive/15 text-destructive"
               }`}
             >
-              {settings[t.key] ? "Aktif" : "Nonaktif"}
+              {settings[t.key] ? "Active" : "Inactive"}
             </span>
           </button>
         ))}
         <label className="block text-xs text-muted-foreground">
-          Jam buka
+          Business hours
           <input
             value={settings.openHours}
             onChange={(e) => actions.updateSettings({ openHours: e.target.value })}
@@ -41,9 +41,9 @@ export function SettingsPanel({ scope = "admin" }: { scope?: "admin" | "owner" }
         </label>
       </SectionCard>
 
-      <SectionCard title="Aturan pengiriman">
+      <SectionCard title="Delivery Rules">
         <label className="block text-xs text-muted-foreground">
-          Ongkir dasar
+          Base delivery fee (R)
           <input
             value={settings.baseFee}
             inputMode="numeric"
@@ -52,7 +52,7 @@ export function SettingsPanel({ scope = "admin" }: { scope?: "admin" | "owner" }
           />
         </label>
         <label className="block text-xs text-muted-foreground">
-          Ongkir per km
+          Delivery fee per km (R)
           <input
             value={settings.feePerKm}
             inputMode="numeric"
@@ -61,7 +61,7 @@ export function SettingsPanel({ scope = "admin" }: { scope?: "admin" | "owner" }
           />
         </label>
         <label className="block text-xs text-muted-foreground">
-          Radius maksimal (km)
+          Max delivery radius (km)
           <input
             value={settings.maxRadiusKm}
             inputMode="numeric"
@@ -71,9 +71,9 @@ export function SettingsPanel({ scope = "admin" }: { scope?: "admin" | "owner" }
         </label>
       </SectionCard>
 
-      <SectionCard title="Pembayaran & kontak">
+      <SectionCard title="Payment & Contact">
         <label className="block text-xs text-muted-foreground">
-          Nomor WhatsApp
+          WhatsApp Hotline Number
           <input
             value={settings.whatsapp}
             onChange={(e) => actions.updateSettings({ whatsapp: e.target.value })}
@@ -81,7 +81,7 @@ export function SettingsPanel({ scope = "admin" }: { scope?: "admin" | "owner" }
           />
         </label>
         <label className="block text-xs text-muted-foreground">
-          Nama bank
+          Bank Name
           <input
             value={settings.bankName}
             onChange={(e) => actions.updateSettings({ bankName: e.target.value })}
@@ -89,7 +89,7 @@ export function SettingsPanel({ scope = "admin" }: { scope?: "admin" | "owner" }
           />
         </label>
         <label className="block text-xs text-muted-foreground">
-          Nomor rekening
+          Account Number
           <input
             value={settings.bankAccount}
             onChange={(e) => actions.updateSettings({ bankAccount: e.target.value })}
@@ -97,7 +97,7 @@ export function SettingsPanel({ scope = "admin" }: { scope?: "admin" | "owner" }
           />
         </label>
         <label className="block text-xs text-muted-foreground">
-          Atas nama
+          Account Holder Name
           <input
             value={settings.bankHolder}
             onChange={(e) => actions.updateSettings({ bankHolder: e.target.value })}
@@ -105,7 +105,7 @@ export function SettingsPanel({ scope = "admin" }: { scope?: "admin" | "owner" }
           />
         </label>
         <label className="block text-xs text-muted-foreground">
-          E-wallet
+          E-Wallet / Instant Pay Detail
           <input
             value={settings.ewallet}
             onChange={(e) => actions.updateSettings({ ewallet: e.target.value })}
@@ -115,9 +115,9 @@ export function SettingsPanel({ scope = "admin" }: { scope?: "admin" | "owner" }
       </SectionCard>
 
       {scope === "owner" && (
-        <SectionCard title="Loyalti & keamanan" description="Hanya dapat diubah oleh owner.">
+        <SectionCard title="Loyalty & Security" description="Only configurable by store owner.">
           <label className="block text-xs text-muted-foreground">
-            Poin per Rp10.000
+            Points earned per R 100 spent
             <input
               value={settings.pointsPer10k}
               inputMode="numeric"
@@ -128,7 +128,7 @@ export function SettingsPanel({ scope = "admin" }: { scope?: "admin" | "owner" }
             />
           </label>
           <label className="block text-xs text-muted-foreground">
-            Password panel admin
+            Admin Panel Password
             <input
               value={settings.adminPassword}
               onChange={(e) => actions.updateSettings({ adminPassword: e.target.value })}

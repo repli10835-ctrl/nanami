@@ -6,13 +6,17 @@ import { DashboardShell, SectionCard, fieldClass } from "@/components/dashboard/
 export const Route = createFileRoute("/owner/outlets")({
   head: () => ({
     meta: [
-      { title: "Outlet — Panel Owner Nanami Kitchen" },
+      { title: "Outlets — Owner Panel Nanami Kitchen" },
       {
         name: "description",
-        content: "Kelola daftar outlet Nanami Kitchen, jam operasional, dan status buka tutup.",
+        content:
+          "Manage Nanami Kitchen outlet locations, operational hours, and open/closed status.",
       },
-      { property: "og:title", content: "Outlet — Nanami Kitchen" },
-      { property: "og:description", content: "Daftar outlet dan jam operasional Nanami Kitchen." },
+      { property: "og:title", content: "Outlets — Nanami Kitchen" },
+      {
+        property: "og:description",
+        content: "Outlet directory and opening hours for Nanami Kitchen.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -25,16 +29,16 @@ type Outlet = { id: string; name: string; address: string; hours: string; open: 
 const SEED: Outlet[] = [
   {
     id: "1",
-    name: "Nanami Kitchen Pusat",
-    address: "Jl. Melati No. 12, Jakarta Selatan",
-    hours: "10.00 - 22.00",
+    name: "Nanami Kitchen Main Store",
+    address: "12 Rosebank Road, Rosebank, Johannesburg",
+    hours: "10:00 - 22:00",
     open: true,
   },
   {
     id: "2",
-    name: "Nanami Kitchen Cabang BSD",
-    address: "Ruko Emerald Blok B7, BSD",
-    hours: "11.00 - 21.00",
+    name: "Nanami Kitchen Sandton Branch",
+    address: "Building 4, Sandton City, Sandton",
+    hours: "11:00 - 21:00",
     open: false,
   },
 ];
@@ -46,15 +50,15 @@ function OutletsPage() {
   const [hours, setHours] = useState("");
 
   return (
-    <DashboardShell role="owner" title="Outlet" subtitle="Lokasi dan jam operasional">
+    <DashboardShell role="owner" title="Outlets" subtitle="Locations and operational hours">
       <div className="grid gap-4 lg:grid-cols-[320px_1fr] lg:items-start">
-        <SectionCard title="Tambah outlet">
+        <SectionCard title="Add outlet">
           <label className="block text-xs text-muted-foreground">
-            Nama outlet
+            Outlet name
             <input value={name} onChange={(e) => setName(e.target.value)} className={fieldClass} />
           </label>
           <label className="block text-xs text-muted-foreground">
-            Alamat
+            Address
             <input
               value={address}
               onChange={(e) => setAddress(e.target.value)}
@@ -62,11 +66,11 @@ function OutletsPage() {
             />
           </label>
           <label className="block text-xs text-muted-foreground">
-            Jam operasional
+            Operating hours
             <input
               value={hours}
               onChange={(e) => setHours(e.target.value)}
-              placeholder="10.00 - 22.00"
+              placeholder="10:00 - 22:00"
               className={fieldClass}
             />
           </label>
@@ -79,7 +83,7 @@ function OutletsPage() {
                   id: String(Date.now()),
                   name,
                   address,
-                  hours: hours || "10.00 - 22.00",
+                  hours: hours || "10:00 - 22:00",
                   open: true,
                 },
               ]);
@@ -89,7 +93,7 @@ function OutletsPage() {
             }}
             className="w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-40"
           >
-            Simpan outlet
+            Save outlet
           </button>
         </SectionCard>
 
@@ -113,10 +117,10 @@ function OutletsPage() {
                     o.open ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"
                   }`}
                 >
-                  {o.open ? "Buka" : "Tutup"}
+                  {o.open ? "Open" : "Closed"}
                 </button>
               </div>
-              <p className="text-xs text-muted-foreground">Jam: {o.hours}</p>
+              <p className="text-xs text-muted-foreground">Hours: {o.hours}</p>
             </div>
           ))}
         </div>

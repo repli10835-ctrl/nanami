@@ -29,7 +29,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
       return;
     }
 
-    if (pathname.startsWith("/owner") && profile.role !== "owner") {
+    if (pathname.startsWith("/owner") && profile.role !== "owner" && profile.role !== "admin") {
       navigate({ to: "/admin", replace: true });
       return;
     }
@@ -57,7 +57,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
   }
 
   // Role authorization checks
-  if (pathname.startsWith("/owner") && profile.role !== "owner") {
+  if (pathname.startsWith("/owner") && profile.role !== "owner" && profile.role !== "admin") {
     return <RoleUnauthorizedGate requiredRole="owner" currentRole={profile.role ?? "user"} />;
   }
 
@@ -85,10 +85,10 @@ function UnauthenticatedGate({ pathname }: { pathname: string }) {
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 text-center">
       <div className="mx-auto max-w-sm rounded-3xl border border-border bg-card p-6 shadow-xl">
         <img src={logo} alt="Nanami Kitchen" width={64} height={64} className="mx-auto size-16" />
-        <h2 className="mt-4 text-xl font-bold">Harap Masuk Terlebih Dahulu</h2>
+        <h2 className="mt-4 text-xl font-bold">Please Sign In First</h2>
         <p className="mt-2 text-xs text-muted-foreground">
-          Untuk menjaga keamanan pesanan dan data dapur, seluruh halaman Nanami Kitchen hanya dapat
-          diakses setelah login.
+          To protect order safety and store data, Nanami Kitchen pages are accessible after logging
+          in.
         </p>
 
         <div className="mt-6 flex flex-col gap-2.5">
@@ -97,19 +97,19 @@ function UnauthenticatedGate({ pathname }: { pathname: string }) {
             search={pathname !== "/" ? { redirect: pathname } : undefined}
             className="flex w-full items-center justify-center gap-2 rounded-full bg-primary py-3 text-sm font-bold text-primary-foreground shadow-sm hover:opacity-95"
           >
-            <LogIn className="size-4" /> Masuk Sekarang
+            <LogIn className="size-4" /> Sign In Now
           </Link>
           <Link
             to="/register"
             className="flex w-full items-center justify-center gap-2 rounded-full border border-border bg-secondary/40 py-2.5 text-xs font-semibold text-foreground hover:bg-secondary/70"
           >
-            Buat Akun Baru
+            Create New Account
           </Link>
         </div>
 
         <div className="mt-6 border-t border-border pt-4">
           <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
-            Atau Masuk Cepat Akun Demo:
+            Or Quick Switch Demo Account:
           </p>
           <div className="mt-3 grid grid-cols-3 gap-2">
             <button
@@ -165,11 +165,11 @@ function RoleUnauthorizedGate({
           <ShieldAlert className="size-6" />
         </div>
         <h2 className="mt-4 text-lg font-bold">
-          Akses Khusus {requiredRole === "owner" ? "Owner" : "Admin / Staf"}
+          Restricted to {requiredRole === "owner" ? "Owner" : "Admin / Staff"} Access
         </h2>
         <p className="mt-2 text-xs text-muted-foreground">
-          Akun Anda saat ini ({currentRole}) tidak memiliki izin untuk membuka halaman{" "}
-          {requiredRole}.
+          Your current account ({currentRole}) does not have permission to access {requiredRole}{" "}
+          pages.
         </p>
 
         <div className="mt-6 flex flex-col gap-2">
@@ -185,14 +185,14 @@ function RoleUnauthorizedGate({
             ) : (
               <ChefHat className="size-4" />
             )}
-            Beralih ke Demo {requiredRole.toUpperCase()}
+            Switch to Demo {requiredRole.toUpperCase()}
           </button>
 
           <Link
             to="/"
             className="flex w-full items-center justify-center gap-2 rounded-full border border-border bg-secondary/40 py-2.5 text-xs font-semibold text-foreground hover:bg-secondary/70"
           >
-            <Store className="size-3.5" /> Kembali ke Menu Pembeli
+            <Store className="size-3.5" /> Return to Customer Store
           </Link>
 
           <button
@@ -202,7 +202,7 @@ function RoleUnauthorizedGate({
             }}
             className="mt-1 text-xs text-muted-foreground hover:text-foreground"
           >
-            Ganti Akun Lain (Keluar)
+            Sign Out & Switch Account
           </button>
         </div>
       </div>

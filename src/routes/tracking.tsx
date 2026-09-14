@@ -114,13 +114,13 @@ function Tracking() {
           <p className="font-bold">{latest.code}</p>
           <p className="text-xs capitalize text-muted-foreground">
             {latest.type} ·{" "}
-            {placed.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
+            {placed.toLocaleTimeString("en-ZA", { hour: "2-digit", minute: "2-digit" })}
           </p>
         </div>
         <div className="text-right">
           <p className="font-bold">{rupiah(latest.total)}</p>
           <p className="text-xs text-muted-foreground">
-            ETA {eta.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
+            ETA {eta.toLocaleTimeString("en-ZA", { hour: "2-digit", minute: "2-digit" })}
           </p>
         </div>
       </div>

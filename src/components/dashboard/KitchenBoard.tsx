@@ -14,40 +14,40 @@ type Stage = {
 const STAGES: Stage[] = [
   {
     key: "incoming",
-    label: "Masuk",
-    hint: "Menunggu konfirmasi bayar",
+    label: "Incoming",
+    hint: "Awaiting payment confirmation",
     statuses: ["Pending Payment"],
-    next: { label: "Mulai masak", status: () => "Cooking" },
+    next: { label: "Start cooking", status: () => "Cooking" },
   },
   {
     key: "cooking",
-    label: "Sedang diproses",
-    hint: "Dapur sedang memasak",
+    label: "In Progress",
+    hint: "Kitchen is preparing items",
     statuses: ["Cooking"],
     next: {
-      label: "Tandai siap",
+      label: "Mark ready",
       status: (o) => (o.type === "delivery" ? "Out for Delivery" : "Ready for Pickup"),
     },
   },
   {
     key: "ready",
-    label: "Siap",
-    hint: "Siap diantar / diambil",
+    label: "Ready",
+    hint: "Ready for delivery / pickup",
     statuses: ["Out for Delivery", "Ready for Pickup"],
-    next: { label: "Selesaikan", status: () => "Completed" },
+    next: { label: "Complete order", status: () => "Completed" },
   },
   {
     key: "done",
-    label: "Selesai",
-    hint: "Pesanan tuntas hari ini",
+    label: "Completed",
+    hint: "Fulfilled today",
     statuses: ["Completed"],
   },
 ];
 
 function waiting(createdAt: number) {
   const mins = Math.max(0, Math.round((Date.now() - createdAt) / 60000));
-  if (mins < 60) return `${mins} menit`;
-  return `${Math.floor(mins / 60)} jam ${mins % 60} menit`;
+  if (mins < 60) return `${mins} mins`;
+  return `${Math.floor(mins / 60)}h ${mins % 60}m`;
 }
 
 function OrderCard({ order, stage }: { order: Order; stage: Stage }) {
@@ -98,16 +98,16 @@ function OrderCard({ order, stage }: { order: Order; stage: Stage }) {
         )}
         <button
           onClick={() => printReceipt(order)}
-          className="flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-semibold text-muted-foreground"
+          className="flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-semibold text-muted-foreground hover:bg-secondary"
         >
-          <Printer className="size-3.5" /> Struk
+          <Printer className="size-3.5" /> Receipt
         </button>
         {stage.key !== "done" && (
           <button
             onClick={() => actions.setOrderStatus(order.id, "Cancelled")}
-            className="flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-semibold text-destructive"
+            className="flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-semibold text-destructive hover:bg-destructive/10"
           >
-            <X className="size-3.5" /> Batalkan
+            <X className="size-3.5" /> Cancel
           </button>
         )}
       </div>
@@ -190,7 +190,7 @@ function EmptyStage({ label }: { label: string }) {
   return (
     <div className="flex flex-col items-center gap-1.5 rounded-xl border border-dashed border-border px-3 py-8 text-center">
       <Utensils className="size-4 text-muted-foreground" />
-      <p className="text-xs text-muted-foreground">Belum ada pesanan di tahap {label}.</p>
+      <p className="text-xs text-muted-foreground">No orders in {label} stage.</p>
     </div>
   );
 }

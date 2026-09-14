@@ -21,22 +21,22 @@ export function ReportsPanel() {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard label="Hari ini" value={rupiah(sum(today))} hint={`${today.length} pesanan`} />
-        <StatCard label="7 hari" value={rupiah(sum(week))} hint={`${week.length} pesanan`} />
-        <StatCard label="30 hari" value={rupiah(sum(month))} hint={`${month.length} pesanan`} />
-        <StatCard label="Rata-rata order" value={rupiah(Math.round(avg))} hint="Semua waktu" />
+        <StatCard label="Today" value={rupiah(sum(today))} hint={`${today.length} orders`} />
+        <StatCard label="7 Days" value={rupiah(sum(week))} hint={`${week.length} orders`} />
+        <StatCard label="30 Days" value={rupiah(sum(month))} hint={`${month.length} orders`} />
+        <StatCard label="Average Order" value={rupiah(Math.round(avg))} hint="All time" />
       </div>
 
-      <SectionCard title="Menu terlaris">
+      <SectionCard title="Top Selling Items">
         {best.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Belum ada penjualan.</p>
+          <p className="text-xs text-muted-foreground">No sales recorded yet.</p>
         ) : (
           <ul className="space-y-2.5">
             {best.map(([n, q]) => (
               <li key={n}>
                 <div className="flex justify-between text-sm">
                   <span>{n}</span>
-                  <span className="text-muted-foreground">{q} terjual</span>
+                  <span className="text-muted-foreground">{q} sold</span>
                 </div>
                 <div className="mt-1 h-1.5 rounded-full bg-secondary">
                   <div

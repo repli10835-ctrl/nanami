@@ -6,16 +6,16 @@ import { actions, useStore } from "@/lib/store";
 export const Route = createFileRoute("/owner/settings")({
   head: () => ({
     meta: [
-      { title: "Pengaturan Toko — Panel Owner Nanami Kitchen" },
+      { title: "Store Settings — Owner Panel Nanami Kitchen" },
       {
         name: "description",
         content:
-          "Atur identitas restoran, jam operasional, layanan antar, biaya, dan rekening pembayaran Nanami Kitchen.",
+          "Configure restaurant identity, operating hours, delivery options, fees, and payment accounts for Nanami Kitchen.",
       },
-      { property: "og:title", content: "Pengaturan Toko — Panel Owner Nanami Kitchen" },
+      { property: "og:title", content: "Store Settings — Owner Panel Nanami Kitchen" },
       {
         property: "og:description",
-        content: "Konfigurasi identitas dan operasional restoran Nanami Kitchen.",
+        content: "Configuration for restaurant identity and operations at Nanami Kitchen.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -30,16 +30,16 @@ function OwnerSettings() {
   return (
     <DashboardShell
       role="owner"
-      title="Pengaturan toko"
-      subtitle="Identitas restoran dan konfigurasi layanan"
+      title="Store Settings"
+      subtitle="Restaurant identity and service options"
     >
       <div className="space-y-4">
         <SectionCard
-          title="Identitas restoran"
-          description="Nama dan alamat yang tampil di aplikasi pembeli."
+          title="Restaurant Identity"
+          description="Name and address displayed on the customer app."
         >
           <label className="block text-xs text-muted-foreground">
-            Nama restoran
+            Restaurant name
             <input
               value={settings.storeName}
               onChange={(e) => actions.updateSettings({ storeName: e.target.value })}
@@ -55,7 +55,7 @@ function OwnerSettings() {
             />
           </label>
           <label className="block text-xs text-muted-foreground">
-            Alamat
+            Address
             <textarea
               value={settings.storeAddress}
               onChange={(e) => actions.updateSettings({ storeAddress: e.target.value })}

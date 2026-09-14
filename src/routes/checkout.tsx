@@ -530,10 +530,10 @@ function Checkout() {
                 </svg>
               </span>
               <div>
-                <h3 className="text-lg font-bold text-wa">Kirim Pesanan ke WhatsApp</h3>
+                <h3 className="text-lg font-bold text-wa">Send Order to WhatsApp</h3>
                 <p className="mt-1 text-xs sm:text-sm leading-relaxed text-foreground/80">
-                  Data pemesan, rincian menu, alamat, dan total pembayaran akan terkirim secara
-                  otomatis ke WhatsApp Owner:{" "}
+                  Customer details, ordered items, delivery address, and total amount will be sent
+                  automatically to the Owner&apos;s WhatsApp:{" "}
                   <span className="font-bold text-wa font-mono">
                     +{cleanWhatsappNumber(settings.whatsapp)}
                   </span>
@@ -542,37 +542,39 @@ function Checkout() {
             </div>
 
             <div className="mt-4 rounded-xl border border-border/60 bg-background/60 p-3 text-xs space-y-1">
-              <p className="font-semibold text-foreground">Format Pesanan Yang Terkirim:</p>
+              <p className="font-semibold text-foreground">Order Message Summary:</p>
               <ul className="list-disc list-inside text-muted-foreground space-y-0.5">
                 <li>
-                  Detail Pembeli ({name || "Nama"} - {phone || "No. WA"})
+                  Customer ({name || "Name"} - {phone || "WhatsApp No"})
                 </li>
                 <li>
                   {orderType === "delivery"
-                    ? `Alamat Kirim: ${address}`
-                    : "Pilihan: Takeaway / Pickup"}
+                    ? `Delivery Address: ${address}`
+                    : "Choice: Takeaway / Pickup"}
                 </li>
-                <li>Rincian {cart.length} Item Menu & Opsi Pilihan</li>
-                <li>Subtotal & Total Bayar ({rupiah(total)})</li>
-                <li>Metode Pembayaran ({PAYMENT_LABELS[payment]})</li>
+                <li>
+                  {cart.length} Item{cart.length !== 1 ? "s" : ""} & selected options
+                </li>
+                <li>Total Amount ({rupiah(total)})</li>
+                <li>Payment Method ({PAYMENT_LABELS[payment]})</li>
               </ul>
             </div>
 
             {!valid && (
               <p className="mt-4 rounded-lg bg-destructive/15 px-3 py-2 text-xs text-destructive">
                 {detailsMissing
-                  ? "Lengkapi nama dan nomor WhatsApp Anda di langkah sebelumnya."
+                  ? "Please fill in your name and WhatsApp number in the previous step."
                   : outOfRange
-                    ? `Alamat di luar jangkauan delivery (maksimal ${settings.maxRadiusKm} km).`
-                    : "Keranjang Anda kosong."}
+                    ? `Outside delivery radius (max ${settings.maxRadiusKm} km).`
+                    : "Your cart is empty."}
               </p>
             )}
             <button
               disabled={!valid}
               onClick={submit}
-              className="mt-5 w-full rounded-2xl bg-[linear-gradient(135deg,var(--wa),oklch(0.7_0.17_158))] py-4 text-sm font-bold text-wa-foreground shadow-[0_8px_24px_-8px_var(--color-wa)] hover:brightness-105 active:scale-[0.99] transition disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none"
+              className="mt-5 w-full rounded-2xl bg-[linear-gradient(135deg,var(--wa),oklch(0.7_0.17_158))] py-4 text-sm font-bold text-wa-foreground shadow-[0_8px_24px_-8px_var(--color-wa)] transition hover:brightness-105 active:scale-[0.99] disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none"
             >
-              Kirim Pesanan Via WhatsApp &rarr;
+              Send Order via WhatsApp &rarr;
             </button>
           </section>
         </>

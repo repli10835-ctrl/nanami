@@ -3,18 +3,18 @@ import { CheckCheck, Search } from "lucide-react";
 import { actions, rupiah, useStore, CATEGORIES, type Category } from "@/lib/store";
 import { StatCard } from "./DashboardShell";
 
-const FILTERS = ["Semua", ...CATEGORIES] as const;
+const FILTERS = ["All", ...CATEGORIES] as const;
 
 export function StockPanel() {
   const menu = useStore((s) => s.menu);
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState<(typeof FILTERS)[number]>("Semua");
+  const [category, setCategory] = useState<(typeof FILTERS)[number]>("All");
 
   const list = useMemo(
     () =>
       menu.filter(
         (m) =>
-          (category === "Semua" || m.category === (category as Category)) &&
+          (category === "All" || m.category === (category as Category)) &&
           m.name.toLowerCase().includes(query.trim().toLowerCase()),
       ),
     [menu, category, query],
@@ -25,13 +25,13 @@ export function StockPanel() {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard label="Total item" value={String(menu.length)} hint="Di katalog" />
-        <StatCard label="Tersedia" value={String(menu.length - soldOut)} hint="Bisa dipesan" />
-        <StatCard label="Habis" value={String(soldOut)} hint="Disembunyikan pembeli" />
+        <StatCard label="Total Items" value={String(menu.length)} hint="In catalog" />
+        <StatCard label="Available" value={String(menu.length - soldOut)} hint="Orderable" />
+        <StatCard label="Sold Out" value={String(soldOut)} hint="Hidden from store" />
         <StatCard
-          label="Kategori"
+          label="Categories"
           value={String(new Set(menu.map((m) => m.category)).size)}
-          hint="Kelompok menu"
+          hint="Menu groups"
         />
       </div>
 
@@ -41,8 +41,8 @@ export function StockPanel() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Cari nama menu..."
-            aria-label="Cari nama menu"
+            placeholder="Search menu name..."
+            aria-label="Search menu name"
             className="w-full rounded-xl border border-input bg-secondary/40 py-2.5 pl-9 pr-3 text-sm outline-none focus:border-primary"
           />
         </label>
@@ -50,7 +50,7 @@ export function StockPanel() {
           onClick={() => actions.setAllAvailability(true)}
           className="flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2.5 text-xs font-bold text-primary-foreground"
         >
-          <CheckCheck className="size-4" /> Tandai semua tersedia
+          <CheckCheck className="size-4" /> Mark All Available
         </button>
       </div>
 
@@ -72,7 +72,7 @@ export function StockPanel() {
 
       {list.length === 0 ? (
         <p className="py-10 text-center text-sm text-muted-foreground">
-          Tidak ada menu yang cocok dengan pencarian.
+          No menu items matched your search.
         </p>
       ) : (
         <div className="grid gap-2 md:grid-cols-2">
@@ -91,7 +91,7 @@ export function StockPanel() {
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold">{m.name}</p>
                 <p className="text-xs text-muted-foreground">
-                  {m.category} · {rupiah(m.price)} · {m.prepMinutes} menit
+                  {m.category} · {rupiah(m.price)} · {m.prepMinutes} mins
                 </p>
               </div>
               <div className="flex shrink-0 overflow-hidden rounded-xl border border-border">
@@ -102,7 +102,7 @@ export function StockPanel() {
                     m.available ? "bg-success/20 text-success" : "text-muted-foreground"
                   }`}
                 >
-                  Tersedia
+                  Available
                 </button>
                 <button
                   onClick={() => actions.setAvailability(m.id, false)}
@@ -111,7 +111,7 @@ export function StockPanel() {
                     !m.available ? "bg-destructive/20 text-destructive" : "text-muted-foreground"
                   }`}
                 >
-                  Habis
+                  Sold Out
                 </button>
               </div>
             </div>

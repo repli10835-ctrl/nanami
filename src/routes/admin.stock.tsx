@@ -5,16 +5,16 @@ import { StockPanel } from "@/components/dashboard/StockPanel";
 export const Route = createFileRoute("/admin/stock")({
   head: () => ({
     meta: [
-      { title: "Stok Menu Harian — Panel Admin Nanami Kitchen" },
+      { title: "Daily Menu Stock — Admin Panel Nanami Kitchen" },
       {
         name: "description",
         content:
-          "Atur ketersediaan menu harian Nanami Kitchen: tandai item tersedia atau habis dalam sekali sentuh.",
+          "Manage daily Nanami Kitchen menu availability: toggle items available or sold out with one click.",
       },
-      { property: "og:title", content: "Stok Menu Harian — Panel Admin Nanami Kitchen" },
+      { property: "og:title", content: "Daily Menu Stock — Admin Panel Nanami Kitchen" },
       {
         property: "og:description",
-        content: "Kontrol stok harian dan ketersediaan menu Nanami Kitchen.",
+        content: "Control daily stock and item availability for Nanami Kitchen.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -23,8 +23,8 @@ export const Route = createFileRoute("/admin/stock")({
   component: () => (
     <DashboardShell
       role="admin"
-      title="Stok menu harian"
-      subtitle="Tandai item yang tersedia atau habis hari ini"
+      title="Daily menu stock"
+      subtitle="Mark items as available or sold out today"
     >
       <StockPanel />
     </DashboardShell>

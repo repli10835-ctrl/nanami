@@ -8,7 +8,7 @@ const ROLES = [
     key: "user" as const,
     to: "/",
     label: "User",
-    sublabel: "Pembeli",
+    sublabel: "Customer",
     icon: ShoppingBag,
     match: (p: string) => !p.startsWith("/admin") && !p.startsWith("/owner"),
   },
@@ -16,7 +16,7 @@ const ROLES = [
     key: "admin" as const,
     to: "/admin",
     label: "Admin",
-    sublabel: "Dapur",
+    sublabel: "Kitchen",
     icon: ChefHat,
     match: (p: string) => p.startsWith("/admin"),
   },
@@ -24,7 +24,7 @@ const ROLES = [
     key: "owner" as const,
     to: "/owner",
     label: "Owner",
-    sublabel: "Pemilik",
+    sublabel: "Owner",
     icon: Crown,
     match: (p: string) => p.startsWith("/owner"),
   },
@@ -57,11 +57,13 @@ export function RoleSwitcher() {
     return (
       <button
         onClick={() => setOpen(true)}
-        aria-label="Tampilkan pengalih akun demo"
+        aria-label="Show demo account switcher"
         className="fixed bottom-24 right-3 z-50 flex items-center gap-1.5 rounded-full border border-border bg-popover/95 px-3 py-2 text-xs font-semibold text-foreground shadow-lg backdrop-blur"
       >
         <Zap className="size-3.5 text-primary fill-primary" />
-        <span className="capitalize">{profile.signedIn ? (profile.role ?? "Demo") : "Masuk"}</span>
+        <span className="capitalize">
+          {profile.signedIn ? (profile.role ?? "Demo") : "Sign In"}
+        </span>
       </button>
     );
   }
@@ -71,11 +73,11 @@ export function RoleSwitcher() {
       <div className="mb-2 flex items-center justify-between gap-2 px-1">
         <div className="flex items-center gap-1 text-[11px] font-bold text-foreground">
           <Zap className="size-3.5 text-primary fill-primary" />
-          <span>Akun Demo Cepat</span>
+          <span>Quick Demo Accounts</span>
         </div>
         <button
           onClick={() => setOpen(false)}
-          aria-label="Sembunyikan pengalih role"
+          aria-label="Hide role switcher"
           className="text-muted-foreground hover:text-foreground"
         >
           <X className="size-3.5" />
@@ -116,7 +118,7 @@ export function RoleSwitcher() {
       {profile.signedIn && (
         <div className="mt-2 flex items-center justify-between border-t border-border/60 pt-1.5 px-1 text-[10px] text-muted-foreground">
           <span className="truncate max-w-[170px]">
-            Masuk: <strong className="text-foreground">{profile.name.split(" ")[0]}</strong> (
+            Logged in: <strong className="text-foreground">{profile.name.split(" ")[0]}</strong> (
             {profile.role})
           </span>
           <button
@@ -127,7 +129,7 @@ export function RoleSwitcher() {
             }}
             className="text-primary hover:underline font-semibold"
           >
-            Keluar
+            Sign out
           </button>
         </div>
       )}

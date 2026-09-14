@@ -6,13 +6,13 @@ import { rupiah, useStore } from "@/lib/store";
 export const Route = createFileRoute("/owner/finance")({
   head: () => ({
     meta: [
-      { title: "Laporan Keuangan — Panel Owner Nanami Kitchen" },
+      { title: "Financial Reports — Owner Panel Nanami Kitchen" },
       {
         name: "description",
-        content: "Omzet, metode pembayaran, dan rekap keuangan Nanami Kitchen untuk owner.",
+        content: "Revenue, payment methods breakdown, and financial summary for Nanami Kitchen.",
       },
-      { property: "og:title", content: "Laporan Keuangan — Nanami Kitchen" },
-      { property: "og:description", content: "Omzet dan rekap pembayaran Nanami Kitchen." },
+      { property: "og:title", content: "Financial Reports — Nanami Kitchen" },
+      { property: "og:description", content: "Revenue and payment recap for Nanami Kitchen." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -32,13 +32,13 @@ function FinancePage() {
   const discount = paid.reduce((t, o) => t + o.discount, 0);
 
   return (
-    <DashboardShell role="owner" title="Keuangan" subtitle="Rekap pemasukan dan potongan">
+    <DashboardShell role="owner" title="Finance" subtitle="Revenue breakdown and deductions">
       <ReportsPanel />
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2 lg:items-start">
-        <SectionCard title="Metode pembayaran">
+        <SectionCard title="Payment methods">
           {methods.size === 0 ? (
-            <p className="text-xs text-muted-foreground">Belum ada transaksi.</p>
+            <p className="text-xs text-muted-foreground">No transactions recorded yet.</p>
           ) : (
             <ul className="space-y-2 text-sm">
               {[...methods.entries()].map(([m, v]) => (
@@ -56,13 +56,13 @@ function FinancePage() {
           )}
         </SectionCard>
 
-        <SectionCard title="Komponen lain">
+        <SectionCard title="Other components">
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Total ongkir tertagih</span>
+            <span className="text-muted-foreground">Total delivery fees collected</span>
             <span className="font-semibold">{rupiah(delivery)}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Total diskon voucher</span>
+            <span className="text-muted-foreground">Total voucher discounts</span>
             <span className="font-semibold text-destructive">-{rupiah(discount)}</span>
           </div>
         </SectionCard>

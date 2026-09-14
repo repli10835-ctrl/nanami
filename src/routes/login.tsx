@@ -21,16 +21,16 @@ export const Route = createFileRoute("/login")({
   }),
   head: () => ({
     meta: [
-      { title: "Masuk Akun — Nanami Kitchen" },
+      { title: "Sign In — Nanami Kitchen" },
       {
         name: "description",
         content:
-          "Masuk ke akun Nanami Kitchen dengan email dan password untuk melacak pesanan, menyimpan alamat, dan mengumpulkan poin.",
+          "Sign in to your Nanami Kitchen account with email and password to track orders, save addresses, and earn points.",
       },
-      { property: "og:title", content: "Masuk Akun — Nanami Kitchen" },
+      { property: "og:title", content: "Sign In — Nanami Kitchen" },
       {
         property: "og:description",
-        content: "Masuk dengan email dan password untuk melacak pesanan dan poin loyalitas.",
+        content: "Sign in with email and password to track orders and loyalty points.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -102,11 +102,7 @@ function LoginPage() {
 
   if (profile.signedIn) {
     const roleLabel =
-      profile.role === "owner"
-        ? "Owner (Pemilik)"
-        : profile.role === "admin"
-          ? "Admin Dapur"
-          : "Pembeli / User";
+      profile.role === "owner" ? "Owner" : profile.role === "admin" ? "Kitchen Admin" : "Customer";
 
     return (
       <AppShell hideCartBar hideBottomNav>
@@ -120,7 +116,7 @@ function LoginPage() {
               <ShoppingBag className="size-10" />
             )}
           </div>
-          <h1 className="mt-4 text-2xl font-bold">Anda Sudah Masuk</h1>
+          <h1 className="mt-4 text-2xl font-bold">You are Already Signed In</h1>
           <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
             <Sparkles className="size-3.5" />
             <span>{roleLabel}</span>
@@ -133,7 +129,7 @@ function LoginPage() {
               onClick={() => handleDirectRoute(profile.role)}
               className="w-full rounded-full bg-primary py-3.5 text-sm font-bold text-primary-foreground shadow-sm transition hover:opacity-95"
             >
-              Lanjutkan ke Halaman Utama
+              Continue to Home Page
             </button>
             <button
               onClick={() => {
@@ -143,13 +139,13 @@ function LoginPage() {
               }}
               className="flex w-full items-center justify-center gap-2 rounded-full border border-border bg-secondary/30 py-3 text-sm font-semibold text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
             >
-              <LogOut className="size-4" /> Ganti Akun / Keluar
+              <LogOut className="size-4" /> Switch Account / Sign Out
             </button>
           </div>
 
           <div className="mt-10 border-t border-border pt-6 text-left">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Atau Beralih ke Akun Demo Lain:
+              Or Switch to Another Demo Account:
             </p>
             <div className="mt-3 grid gap-2.5">
               {DEMO_ACCOUNTS.filter(
@@ -176,7 +172,7 @@ function LoginPage() {
                     </div>
                   </div>
                   <span className="rounded-lg bg-primary/10 px-2.5 py-1 text-[10px] font-bold text-primary">
-                    Beralih
+                    Switch
                   </span>
                 </button>
               ))}
@@ -198,9 +194,9 @@ function LoginPage() {
             height={64}
             className="mx-auto size-16 rounded-2xl object-contain drop-shadow"
           />
-          <h1 className="mt-3 text-2xl font-bold tracking-tight">Masuk ke {storeName}</h1>
+          <h1 className="mt-3 text-2xl font-bold tracking-tight">Sign In to {storeName}</h1>
           <p className="mt-1.5 text-xs text-muted-foreground">
-            Silakan masuk untuk mengakses menu makanan, keranjang, pesanan, atau panel operasional.
+            Please sign in to access menu items, cart, orders, or operational dashboard.
           </p>
         </div>
 
@@ -209,14 +205,14 @@ function LoginPage() {
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 text-xs font-bold text-primary">
               <Zap className="size-4 fill-primary" />
-              <span>Pilihan Akun Demo (1-Klik Masuk)</span>
+              <span>Quick Demo Accounts (1-Click Login)</span>
             </div>
             <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold text-primary">
-              Siap Pakai
+              Ready
             </span>
           </div>
           <p className="mt-1 text-[11px] text-muted-foreground">
-            Klik tombol di bawah untuk langsung mencoba aplikasi sesuai peran yang diinginkan:
+            Click a button below to quickly try the app with the selected role:
           </p>
 
           <div className="mt-3 space-y-2.5">
@@ -229,9 +225,9 @@ function LoginPage() {
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-foreground">User / Pembeli</span>
+                      <span className="text-xs font-bold text-foreground">User / Customer</span>
                       <span className="rounded bg-blue-500/15 px-1.5 py-0.2 text-[10px] font-semibold text-blue-500">
-                        Katalog & Pesan
+                        Catalog & Orders
                       </span>
                     </div>
                     <p className="text-[11px] text-muted-foreground">
@@ -247,14 +243,14 @@ function LoginPage() {
                   onClick={() => handleQuickDemoLogin("user")}
                   className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-primary py-2 text-xs font-bold text-primary-foreground shadow-sm hover:opacity-90"
                 >
-                  <LogIn className="size-3.5" /> Masuk sebagai Pembeli
+                  <LogIn className="size-3.5" /> Sign In as Customer
                 </button>
                 <button
                   type="button"
                   onClick={() => handleFillDemo("user@nanami.id", "user123")}
                   className="rounded-xl border border-border bg-secondary/40 px-3 py-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
                 >
-                  Isi Form
+                  Fill Form
                 </button>
               </div>
             </div>
@@ -268,9 +264,9 @@ function LoginPage() {
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-foreground">Admin / Dapur</span>
+                      <span className="text-xs font-bold text-foreground">Admin / Kitchen</span>
                       <span className="rounded bg-amber-500/15 px-1.5 py-0.2 text-[10px] font-semibold text-amber-500">
-                        Papan Dapur
+                        Kitchen Board
                       </span>
                     </div>
                     <p className="text-[11px] text-muted-foreground">
@@ -286,14 +282,14 @@ function LoginPage() {
                   onClick={() => handleQuickDemoLogin("admin")}
                   className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-amber-500 py-2 text-xs font-bold text-white shadow-sm hover:opacity-90"
                 >
-                  <ChefHat className="size-3.5" /> Masuk sebagai Admin
+                  <ChefHat className="size-3.5" /> Sign In as Admin
                 </button>
                 <button
                   type="button"
                   onClick={() => handleFillDemo("admin@nanami.id", "admin123")}
                   className="rounded-xl border border-border bg-secondary/40 px-3 py-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
                 >
-                  Isi Form
+                  Fill Form
                 </button>
               </div>
             </div>
@@ -307,9 +303,9 @@ function LoginPage() {
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-foreground">Owner / Pemilik</span>
+                      <span className="text-xs font-bold text-foreground">Owner</span>
                       <span className="rounded bg-purple-500/15 px-1.5 py-0.2 text-[10px] font-semibold text-purple-500">
-                        Laporan & Outlet
+                        Reports & Management
                       </span>
                     </div>
                     <p className="text-[11px] text-muted-foreground">
@@ -325,14 +321,14 @@ function LoginPage() {
                   onClick={() => handleQuickDemoLogin("owner")}
                   className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-purple-600 py-2 text-xs font-bold text-white shadow-sm hover:opacity-90"
                 >
-                  <Crown className="size-3.5" /> Masuk sebagai Owner
+                  <Crown className="size-3.5" /> Sign In as Owner
                 </button>
                 <button
                   type="button"
                   onClick={() => handleFillDemo("owner@nanami.id", "owner123")}
                   className="rounded-xl border border-border bg-secondary/40 px-3 py-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
                 >
-                  Isi Form
+                  Fill Form
                 </button>
               </div>
             </div>
@@ -345,7 +341,7 @@ function LoginPage() {
             <div className="w-full border-t border-border" />
           </div>
           <span className="relative bg-background px-3 text-[11px] font-medium text-muted-foreground uppercase">
-            Atau Masuk dengan Email
+            Or Sign In with Email
           </span>
         </div>
 
@@ -357,7 +353,7 @@ function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               type="email"
-              placeholder="nama@email.com atau akun demo di atas"
+              placeholder="name@email.com or demo account above"
               autoComplete="email"
               maxLength={255}
               required
@@ -371,7 +367,7 @@ function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 type={show ? "text" : "password"}
-                placeholder="Kata sandi akun"
+                placeholder="Account password"
                 autoComplete="current-password"
                 maxLength={72}
                 required
@@ -380,7 +376,7 @@ function LoginPage() {
               <button
                 type="button"
                 onClick={() => setShow((v) => !v)}
-                aria-label={show ? "Sembunyikan password" : "Tampilkan password"}
+                aria-label={show ? "Hide password" : "Show password"}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
                 {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -399,14 +395,14 @@ function LoginPage() {
             disabled={!email || !password}
             className="!mt-5 w-full rounded-full bg-primary py-3.5 text-sm font-bold text-primary-foreground shadow-sm transition hover:opacity-95 disabled:opacity-40"
           >
-            Masuk
+            Sign In
           </button>
         </form>
 
         <p className="mt-5 text-center text-xs text-muted-foreground">
-          Belum memiliki akun?{" "}
+          Don't have an account yet?{" "}
           <Link to="/register" className="font-semibold text-primary underline underline-offset-2">
-            Daftar akun baru
+            Register new account
           </Link>
         </p>
       </div>

@@ -12,12 +12,12 @@ const FLOW: OrderStatus[] = [
   "Cancelled",
 ];
 
-const FILTERS = ["Semua", ...FLOW] as const;
+const FILTERS = ["All", ...FLOW] as const;
 
 export function OrdersPanel({ readOnly = false }: { readOnly?: boolean }) {
   const orders = useStore((s) => s.orders);
-  const [filter, setFilter] = useState<(typeof FILTERS)[number]>("Semua");
-  const list = filter === "Semua" ? orders : orders.filter((o) => o.status === filter);
+  const [filter, setFilter] = useState<(typeof FILTERS)[number]>("All");
+  const list = filter === "All" ? orders : orders.filter((o) => o.status === filter);
 
   return (
     <div className="space-y-4">
@@ -38,7 +38,7 @@ export function OrdersPanel({ readOnly = false }: { readOnly?: boolean }) {
       </div>
 
       {list.length === 0 ? (
-        <p className="py-10 text-center text-sm text-muted-foreground">Belum ada pesanan.</p>
+        <p className="py-10 text-center text-sm text-muted-foreground">No orders found.</p>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {list.map((o) => (
@@ -74,14 +74,14 @@ export function OrdersPanel({ readOnly = false }: { readOnly?: boolean }) {
                     onClick={() => actions.setOrderStatus(o.id, "Cooking")}
                     className="flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground"
                   >
-                    <Check className="size-3.5" /> Tandai lunas
+                    <Check className="size-3.5" /> Mark Paid
                   </button>
                 )}
                 <button
                   onClick={() => printReceipt(o)}
-                  className="flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold"
+                  className="flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold hover:bg-secondary"
                 >
-                  <Printer className="size-3.5" /> Cetak
+                  <Printer className="size-3.5" /> Print
                 </button>
                 {!readOnly && (
                   <select

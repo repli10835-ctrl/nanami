@@ -5,14 +5,14 @@ import { rupiah, useStore } from "@/lib/store";
 export const Route = createFileRoute("/owner/audit")({
   head: () => ({
     meta: [
-      { title: "Log Aktivitas — Panel Owner Nanami Kitchen" },
+      { title: "Activity Logs — Owner Panel Nanami Kitchen" },
       {
         name: "description",
         content:
-          "Riwayat aktivitas sistem Nanami Kitchen: pesanan, perubahan status, dan pengaturan.",
+          "Nanami Kitchen system activity history: orders, status changes, and settings updates.",
       },
-      { property: "og:title", content: "Log Aktivitas — Nanami Kitchen" },
-      { property: "og:description", content: "Riwayat aktivitas sistem Nanami Kitchen." },
+      { property: "og:title", content: "Activity Logs — Nanami Kitchen" },
+      { property: "og:description", content: "Nanami Kitchen system activity log." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -24,17 +24,17 @@ function AuditPage() {
   const orders = useStore((s) => s.orders);
   const entries = orders.slice(0, 30).map((o) => ({
     id: o.id,
-    time: new Date(o.createdAt).toLocaleString(),
+    time: new Date(o.createdAt).toLocaleString("en-ZA"),
     actor: o.customer.name || "Guest",
-    action: `Membuat pesanan ${o.code} (${rupiah(o.total)})`,
+    action: `Created order ${o.code} (${rupiah(o.total)})`,
     status: o.status,
   }));
 
   return (
-    <DashboardShell role="owner" title="Log Aktivitas" subtitle="Jejak transaksi terbaru">
-      <SectionCard title="Riwayat">
+    <DashboardShell role="owner" title="Activity Logs" subtitle="Recent transaction history trace">
+      <SectionCard title="Audit History">
         {entries.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Belum ada aktivitas tercatat.</p>
+          <p className="text-xs text-muted-foreground">No recorded activity yet.</p>
         ) : (
           <ul className="space-y-2">
             {entries.map((e) => (

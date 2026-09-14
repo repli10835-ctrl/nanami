@@ -5,14 +5,14 @@ import { rupiah, useStore } from "@/lib/store";
 export const Route = createFileRoute("/owner/")({
   head: () => ({
     meta: [
-      { title: "Ringkasan Bisnis — Panel Owner Nanami Kitchen" },
+      { title: "Business Overview — Owner Panel Nanami Kitchen" },
       {
         name: "description",
         content:
-          "Performa bisnis Nanami Kitchen: penjualan harian, mingguan, bulanan, jumlah pesanan, dan menu terlaris.",
+          "Nanami Kitchen business performance: daily, weekly, monthly sales, order volume, and top sellers.",
       },
-      { property: "og:title", content: "Ringkasan Bisnis — Panel Owner Nanami Kitchen" },
-      { property: "og:description", content: "Ringkasan performa bisnis Nanami Kitchen." },
+      { property: "og:title", content: "Business Overview — Owner Panel Nanami Kitchen" },
+      { property: "og:description", content: "Business performance overview for Nanami Kitchen." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -52,7 +52,7 @@ function OwnerHome() {
       .filter((o) => o.createdAt >= from && o.createdAt < from + DAY)
       .reduce((t, o) => t + o.total, 0);
     return {
-      label: new Date(from).toLocaleDateString("id-ID", { weekday: "short" }),
+      label: new Date(from).toLocaleDateString("en-ZA", { weekday: "short" }),
       total,
     };
   });
@@ -61,50 +61,50 @@ function OwnerHome() {
   return (
     <DashboardShell
       role="owner"
-      title="Ringkasan bisnis"
-      subtitle="Akses penuh ke seluruh sistem Nanami Kitchen"
+      title="Business Overview"
+      subtitle="Full control and insights for Nanami Kitchen"
       actions={
         <Link
           to="/owner/menu"
           className="rounded-full bg-primary px-3.5 py-2 text-xs font-bold text-primary-foreground"
         >
-          Kelola katalog
+          Manage catalog
         </Link>
       }
     >
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard label="Penjualan hari ini" value={rupiah(today)} hint="24 jam terakhir" />
-        <StatCard label="Penjualan 7 hari" value={rupiah(week)} hint="Minggu berjalan" />
+        <StatCard label="Today's Sales" value={rupiah(today)} hint="Past 24 hours" />
+        <StatCard label="7-Day Sales" value={rupiah(week)} hint="Current week" />
         <StatCard
-          label="Penjualan 30 hari"
+          label="30-Day Sales"
           value={rupiah(month)}
-          hint={`${monthOrders.length} pesanan`}
+          hint={`${monthOrders.length} orders`}
         />
-        <StatCard label="Rata-rata per pesanan" value={rupiah(avg)} hint="30 hari terakhir" />
+        <StatCard label="Average Order Value" value={rupiah(avg)} hint="Past 30 days" />
       </div>
 
       <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard label="Total pesanan" value={String(orders.length)} hint="Sepanjang waktu" />
+        <StatCard label="Total Orders" value={String(orders.length)} hint="All time" />
         <StatCard
-          label="Pesanan dibatalkan"
+          label="Cancelled Orders"
           value={String(orders.filter((o) => o.status === "Cancelled").length)}
-          hint="Perlu ditinjau"
+          hint="Requires review"
         />
-        <StatCard label="Item katalog" value={String(menu.length)} hint="Semua kategori" />
+        <StatCard label="Catalog Items" value={String(menu.length)} hint="All categories" />
         <StatCard
-          label="Tim & pelanggan"
+          label="Team & Customers"
           value={`${staff.length} / ${accounts.length}`}
-          hint="Staf / akun pembeli"
+          hint="Staff / Customer accounts"
         />
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2 lg:items-start">
-        <SectionCard title="Tren penjualan" description="Total penjualan 7 hari terakhir.">
+        <SectionCard title="Sales Trend" description="Total sales over the past 7 days.">
           <div className="flex h-40 items-end gap-2">
             {trend.map((t) => (
               <div key={t.label} className="flex flex-1 flex-col items-center gap-1.5">
                 <span className="text-[10px] text-muted-foreground">
-                  {t.total ? Math.round(t.total / 1000) + "k" : "0"}
+                  {t.total ? "R" + Math.round(t.total) : "R0"}
                 </span>
                 <div
                   className="w-full rounded-t-lg bg-primary/70"
@@ -116,9 +116,9 @@ function OwnerHome() {
           </div>
         </SectionCard>
 
-        <SectionCard title="Menu terlaris" description="Berdasarkan jumlah porsi terjual.">
+        <SectionCard title="Top Sellers" description="Based on total portions sold.">
           {best.length === 0 ? (
-            <p className="text-xs text-muted-foreground">Belum ada penjualan tercatat.</p>
+            <p className="text-xs text-muted-foreground">No recorded sales yet.</p>
           ) : (
             <ul className="space-y-2 text-sm">
               {best.map(([name, qty], i) => (
@@ -130,7 +130,7 @@ function OwnerHome() {
                     {i + 1}
                   </span>
                   <span className="flex-1 truncate">{name}</span>
-                  <span className="text-xs text-muted-foreground">{qty} porsi</span>
+                  <span className="text-xs text-muted-foreground">{qty} portions</span>
                 </li>
               ))}
             </ul>
@@ -140,13 +140,13 @@ function OwnerHome() {
 
       <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {[
-          { to: "/owner/menu", label: "CRUD katalog menu" },
-          { to: "/owner/staff", label: "Akun & staf" },
-          { to: "/owner/settings", label: "Pengaturan toko" },
-          { to: "/owner/shipping", label: "Tarif ongkir" },
-          { to: "/owner/finance", label: "Laporan keuangan" },
-          { to: "/owner/vouchers", label: "Promo & voucher" },
-          { to: "/owner/audit", label: "Log aktivitas" },
+          { to: "/owner/menu", label: "Catalog CRUD" },
+          { to: "/owner/staff", label: "Accounts & Staff" },
+          { to: "/owner/settings", label: "Store Settings" },
+          { to: "/owner/shipping", label: "Delivery Rates" },
+          { to: "/owner/finance", label: "Financial Reports" },
+          { to: "/owner/vouchers", label: "Promos & Vouchers" },
+          { to: "/owner/audit", label: "Activity Logs" },
         ].map((l) => (
           <Link
             key={l.to}

@@ -62,7 +62,7 @@ function Vouchers() {
         <div>
           <p className="text-sm font-semibold">{profile.points} loyalty points</p>
           <p className="text-xs text-muted-foreground">
-            Earn {settings.pointsPer10k} point for every Rp 10.000 you spend.
+            Earn {settings.pointsPer10k} point for every R 100 you spend.
           </p>
         </div>
       </div>

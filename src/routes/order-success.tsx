@@ -5,15 +5,15 @@ import { buildWhatsappMessage, cleanWhatsappNumber, rupiah, useStore } from "@/l
 export const Route = createFileRoute("/order-success")({
   head: () => ({
     meta: [
-      { title: "Pesanan Berhasil — Nanami Kitchen" },
+      { title: "Order Placed — Nanami Kitchen" },
       {
         name: "description",
-        content: "Pesanan Anda telah berhasil dibuat dan dikirimkan ke WhatsApp Owner.",
+        content: "Your order has been placed successfully and sent to the owner's WhatsApp.",
       },
-      { property: "og:title", content: "Pesanan Berhasil — Nanami Kitchen" },
+      { property: "og:title", content: "Order Placed — Nanami Kitchen" },
       {
         property: "og:description",
-        content: "Pesanan Anda telah berhasil dikirimkan ke WhatsApp.",
+        content: "Your order details have been sent to WhatsApp.",
       },
     ],
   }),
@@ -31,12 +31,12 @@ function OrderSuccess() {
     return (
       <div className="min-h-screen bg-background px-4 pt-5">
         <div className="shell flex min-h-screen flex-col items-center justify-center pb-10 text-center">
-          <p className="text-muted-foreground">Tidak ada data pesanan terbaru.</p>
+          <p className="text-muted-foreground">No recent order found.</p>
           <Link
             to="/"
             className="mt-4 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground"
           >
-            Kembali ke Beranda
+            Back to Home
           </Link>
         </div>
       </div>
@@ -83,10 +83,10 @@ function OrderSuccess() {
           </div>
 
           <h1 className="mt-6 text-2xl font-bold text-foreground sm:text-3xl">
-            Pesanan Berhasil Terbuat!
+            Order Successfully Placed!
           </h1>
           <p className="mt-2 text-sm sm:text-base text-muted-foreground max-w-sm">
-            Rincian menu dan data pemesan telah disiapkan untuk WhatsApp Owner (
+            Order details and customer information are prepared for the Owner&apos;s WhatsApp (
             <span className="font-semibold text-foreground">+{targetWa}</span>).
           </p>
         </div>
@@ -94,15 +94,15 @@ function OrderSuccess() {
         {/* Order summary card */}
         <section className="mt-6 rounded-3xl border border-border bg-card p-5">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Nomor Pesanan</span>
+            <span className="text-sm text-muted-foreground">Order No.</span>
             <span className="text-base font-bold text-foreground">#{order.code}</span>
           </div>
           <div className="mt-3 flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Pembayaran</span>
+            <span className="text-sm text-muted-foreground">Payment Method</span>
             <span className="text-sm font-semibold text-foreground">{order.paymentMethod}</span>
           </div>
           <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
-            <span className="text-base text-muted-foreground">Total Tagihan</span>
+            <span className="text-base text-muted-foreground">Total Amount</span>
             <span className="text-2xl font-bold text-foreground">{rupiah(order.total)}</span>
           </div>
         </section>
@@ -116,19 +116,19 @@ function OrderSuccess() {
             className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[linear-gradient(135deg,var(--wa),oklch(0.7_0.17_158))] py-3.5 text-sm font-bold text-wa-foreground shadow-[0_8px_24px_-8px_var(--color-wa)] transition hover:brightness-105"
           >
             <MessageSquare className="size-5" />
-            Buka WhatsApp Owner Lagi
+            Re-open Owner WhatsApp Chat
           </a>
           <button
             onClick={() => navigate({ to: "/orders" })}
             className="w-full rounded-2xl bg-secondary py-3.5 text-sm font-bold text-foreground hover:bg-secondary/80"
           >
-            Lihat Riwayat Pesanan Saya
+            View My Order History
           </button>
           <Link
             to="/"
             className="flex w-full items-center justify-center rounded-2xl border border-border bg-transparent py-3 text-sm font-semibold text-muted-foreground transition hover:text-foreground"
           >
-            Kembali ke Beranda
+            Back to Home
           </Link>
         </div>
       </div>

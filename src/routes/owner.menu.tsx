@@ -5,14 +5,14 @@ import { MenuCrudPanel } from "@/components/dashboard/MenuCrudPanel";
 export const Route = createFileRoute("/owner/menu")({
   head: () => ({
     meta: [
-      { title: "Katalog Menu — Panel Owner Nanami Kitchen" },
+      { title: "Menu Catalog — Owner Panel Nanami Kitchen" },
       {
         name: "description",
         content:
-          "Tambah, ubah, dan hapus item katalog Nanami Kitchen lengkap dengan kategori, harga, dan gambar.",
+          "Add, edit, and delete Nanami Kitchen menu catalog items complete with category, price, and image.",
       },
-      { property: "og:title", content: "Katalog Menu — Panel Owner Nanami Kitchen" },
-      { property: "og:description", content: "Kelola penuh katalog menu Nanami Kitchen." },
+      { property: "og:title", content: "Menu Catalog — Owner Panel Nanami Kitchen" },
+      { property: "og:description", content: "Full menu catalog management for Nanami Kitchen." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -20,8 +20,8 @@ export const Route = createFileRoute("/owner/menu")({
   component: () => (
     <DashboardShell
       role="owner"
-      title="Katalog menu"
-      subtitle="Tambah, ubah, dan hapus item beserta harga dan gambar"
+      title="Menu catalog"
+      subtitle="Add, edit, and delete items along with prices and images"
     >
       <MenuCrudPanel />
     </DashboardShell>

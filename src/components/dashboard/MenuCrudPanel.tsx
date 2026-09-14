@@ -57,7 +57,7 @@ const toDraft = (m: MenuItem): Draft => ({
 export function MenuCrudPanel() {
   const menu = useStore((s) => s.menu);
   const [draft, setDraft] = useState<Draft>(emptyDraft);
-  const [filter, setFilter] = useState<"Semua" | Category>("Semua");
+  const [filter, setFilter] = useState<"All" | Category>("All");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -88,8 +88,9 @@ export function MenuCrudPanel() {
     reader.readAsDataURL(file);
   };
   const patch = (p: Partial<Draft>) => setDraft((d) => ({ ...d, ...p }));
-  const list = filter === "Semua" ? menu : menu.filter((m) => m.category === filter);
+  const list = filter === "All" ? menu : menu.filter((m) => m.category === filter);
   const valid = draft.name.trim().length > 0 && Number(draft.price) > 0;
+  const editing = Boolean(draft.id);
 
   const save = () => {
     const existing = menu.find((m) => m.id === draft.id);
@@ -115,36 +116,36 @@ export function MenuCrudPanel() {
     <div className="grid gap-4 xl:grid-cols-[360px_1fr] xl:items-start">
       <div className="space-y-4">
         <SectionCard
-          title={editing ? "Ubah item menu" : "Tambah item menu"}
+          title={editing ? "Edit menu item" : "Add menu item"}
           description={
             editing
-              ? "Perubahan langsung tampil di halaman pembeli."
-              : "Isi detail item, lalu simpan ke katalog."
+              ? "Changes will appear immediately on the customer app."
+              : "Fill in item details to save to catalog."
           }
         >
           <label className="block text-xs text-muted-foreground">
-            Nama item
+            Item name
             <input
               value={draft.name}
               onChange={(e) => patch({ name: e.target.value })}
-              placeholder="Bento Ayam Teriyaki"
+              placeholder="Teriyaki Chicken Bento"
               className={fieldClass}
             />
           </label>
 
           <div className="grid grid-cols-2 gap-3">
             <label className="block text-xs text-muted-foreground">
-              Harga (Rp)
+              Price (R)
               <input
                 value={draft.price}
                 onChange={(e) => patch({ price: e.target.value.replace(/\D/g, "") })}
                 inputMode="numeric"
-                placeholder="42000"
+                placeholder="95"
                 className={fieldClass}
               />
             </label>
             <label className="block text-xs text-muted-foreground">
-              Waktu masak (menit)
+              Prep time (mins)
               <input
                 value={draft.prepMinutes}
                 onChange={(e) => patch({ prepMinutes: e.target.value.replace(/\D/g, "") })}
@@ -155,7 +156,7 @@ export function MenuCrudPanel() {
           </div>
 
           <label className="block text-xs text-muted-foreground">
-            Kategori
+            Category
             <select
               value={draft.category}
               onChange={(e) => patch({ category: e.target.value as Category })}
@@ -170,18 +171,18 @@ export function MenuCrudPanel() {
           </label>
 
           <label className="block text-xs text-muted-foreground">
-            Deskripsi
+            Description
             <textarea
               value={draft.description}
               onChange={(e) => patch({ description: e.target.value })}
               rows={3}
-              placeholder="Ayam teriyaki panggang dengan nasi hangat."
+              placeholder="Grilled teriyaki chicken with warm rice and pickles."
               className={fieldClass}
             />
           </label>
 
           <label className="block text-xs text-muted-foreground">
-            Label (pisahkan dengan koma)
+            Badges (comma-separated)
             <input
               value={draft.badges}
               onChange={(e) => patch({ badges: e.target.value })}
@@ -191,7 +192,7 @@ export function MenuCrudPanel() {
           </label>
 
           <div className="space-y-2.5 text-xs text-muted-foreground">
-            <span className="font-semibold text-foreground">Gambar Menu</span>
+            <span className="font-semibold text-foreground">Menu Image</span>
 
             <input
               type="file"
@@ -220,17 +221,17 @@ export function MenuCrudPanel() {
                 <Upload className="size-5" />
               </div>
               <p className="mt-2 text-xs font-bold text-foreground">
-                Upload Gambar Dari Perangkat (HP / Laptop)
+                Upload Image From Device (Phone / Laptop)
               </p>
               <p className="mt-0.5 text-[11px] text-muted-foreground">
-                Klik atau tarik gambar ke sini (JPG, PNG, WEBP)
+                Click or drag image file here (JPG, PNG, WEBP)
               </p>
             </div>
 
             {/* Preset Picker */}
             <div>
               <span className="text-[11px] text-muted-foreground">
-                Atau pilih dari preset bawaan:
+                Or select from default presets:
               </span>
               <div className="mt-1.5 flex flex-wrap gap-2">
                 {GALLERY.map((src, i) => (
@@ -238,7 +239,7 @@ export function MenuCrudPanel() {
                     key={src}
                     type="button"
                     onClick={() => patch({ image: src })}
-                    aria-label={`Pilih preset gambar ${i + 1}`}
+                    aria-label={`Select preset image ${i + 1}`}
                     aria-pressed={draft.image === src}
                     className={`size-12 overflow-hidden rounded-xl border-2 transition ${
                       draft.image === src
@@ -254,13 +255,13 @@ export function MenuCrudPanel() {
 
             {/* Image URL input fallback */}
             <label className="block text-[11px] text-muted-foreground pt-1">
-              Atau tempel URL gambar:
+              Or paste an image URL:
               <div className="mt-1 flex items-center gap-2">
                 <ImagePlus className="size-4 shrink-0 text-muted-foreground" />
                 <input
                   value={draft.image}
                   onChange={(e) => patch({ image: e.target.value })}
-                  placeholder="https://... (URL Gambar)"
+                  placeholder="https://... (Image URL)"
                   className="w-full rounded-xl border border-input bg-secondary/40 px-3 py-2 text-xs outline-none focus:border-primary"
                 />
               </div>
@@ -271,7 +272,7 @@ export function MenuCrudPanel() {
             onClick={() => patch({ available: !draft.available })}
             className="flex w-full items-center justify-between rounded-xl border border-border bg-secondary/40 px-3 py-2.5 text-sm"
           >
-            Status ketersediaan
+            Availability status
             <span
               className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
                 draft.available
@@ -279,7 +280,7 @@ export function MenuCrudPanel() {
                   : "bg-destructive/15 text-destructive"
               }`}
             >
-              {draft.available ? "Tersedia" : "Habis"}
+              {draft.available ? "Available" : "Sold out"}
             </span>
           </button>
 
@@ -289,7 +290,7 @@ export function MenuCrudPanel() {
               onClick={save}
               className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-40"
             >
-              <Plus className="size-4" /> {editing ? "Simpan perubahan" : "Tambah ke katalog"}
+              <Plus className="size-4" /> {editing ? "Save changes" : "Add to catalog"}
             </button>
             {editing && (
               <button
@@ -302,7 +303,10 @@ export function MenuCrudPanel() {
           </div>
         </SectionCard>
 
-        <SectionCard title="Pratinjau kartu pembeli" description="Tampilan item di halaman menu.">
+        <SectionCard
+          title="Customer Card Preview"
+          description="How the item appears on the menu page."
+        >
           <div className="w-44 overflow-hidden rounded-2xl border border-border bg-card">
             {draft.image ? (
               <img src={draft.image} alt="" className="h-28 w-full object-cover" />
@@ -310,9 +314,9 @@ export function MenuCrudPanel() {
               <div className="h-28 w-full bg-secondary" />
             )}
             <div className="space-y-1 p-3">
-              <p className="text-sm font-semibold">{draft.name || "Nama item"}</p>
+              <p className="text-sm font-semibold">{draft.name || "Item name"}</p>
               <p className="text-xs text-muted-foreground">
-                {draft.price ? rupiah(Number(draft.price)) : "Rp 0"}
+                {draft.price ? rupiah(Number(draft.price)) : "R 0"}
               </p>
             </div>
           </div>
@@ -321,7 +325,7 @@ export function MenuCrudPanel() {
 
       <div className="space-y-3">
         <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1">
-          {(["Semua", ...CATEGORIES] as const).map((f) => (
+          {(["All", ...CATEGORIES] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
@@ -367,18 +371,18 @@ export function MenuCrudPanel() {
                       : "bg-destructive/15 text-destructive"
                   }`}
                 >
-                  {m.available ? "Tersedia" : "Habis"}
+                  {m.available ? "Available" : "Sold Out"}
                 </span>
                 <button
                   onClick={() => setDraft(toDraft(m))}
-                  aria-label={`Ubah ${m.name}`}
+                  aria-label={`Edit ${m.name}`}
                   className="rounded-lg border border-border p-1.5 text-muted-foreground hover:text-foreground"
                 >
                   <Pencil className="size-3.5" />
                 </button>
                 <button
                   onClick={() => actions.deleteMenuItem(m.id)}
-                  aria-label={`Hapus ${m.name}`}
+                  aria-label={`Delete ${m.name}`}
                   className="rounded-lg border border-border p-1.5 text-destructive hover:bg-destructive/10"
                 >
                   <Trash2 className="size-3.5" />

@@ -24,26 +24,32 @@ export type DashboardRole = "admin" | "owner";
 type NavItem = { to: string; label: string; icon: typeof LayoutDashboard };
 
 const ADMIN_NAV: NavItem[] = [
-  { to: "/admin", label: "Papan Dapur", icon: LayoutDashboard },
-  { to: "/admin/orders", label: "Pesanan Harian", icon: ClipboardList },
-  { to: "/admin/stock", label: "Stok Menu", icon: UtensilsCrossed },
-  { to: "/admin/customers", label: "Pelanggan", icon: Users },
-  { to: "/admin/reports", label: "Laporan", icon: BarChart3 },
-  { to: "/admin/settings", label: "Operasional", icon: Settings },
+  { to: "/admin", label: "Overview & Kitchen", icon: LayoutDashboard },
+  { to: "/admin/menu", label: "Menu Catalog (CRUD)", icon: UtensilsCrossed },
+  { to: "/admin/orders", label: "Daily Orders", icon: ClipboardList },
+  { to: "/admin/stock", label: "Stock Availability", icon: UtensilsCrossed },
+  { to: "/admin/customers", label: "Customers", icon: Users },
+  { to: "/owner/vouchers", label: "Promos & Vouchers", icon: Ticket },
+  { to: "/owner/cms", label: "Content & CMS", icon: LayoutTemplate },
+  { to: "/owner/outlets", label: "Outlets Directory", icon: Store },
+  { to: "/owner/staff", label: "Accounts & Staff", icon: ShieldCheck },
+  { to: "/owner/shipping", label: "Delivery Rates", icon: Truck },
+  { to: "/admin/reports", label: "Reports & Analytics", icon: BarChart3 },
+  { to: "/admin/settings", label: "Operations & Settings", icon: Settings },
 ];
 
 const OWNER_NAV: NavItem[] = [
-  { to: "/owner", label: "Ringkasan", icon: LayoutDashboard },
-  { to: "/owner/finance", label: "Keuangan", icon: Coins },
-  { to: "/owner/menu", label: "Katalog", icon: UtensilsCrossed },
-  { to: "/owner/cms", label: "CMS Konten", icon: LayoutTemplate },
+  { to: "/owner", label: "Overview", icon: LayoutDashboard },
+  { to: "/owner/finance", label: "Finance", icon: Coins },
+  { to: "/owner/menu", label: "Catalog", icon: UtensilsCrossed },
+  { to: "/owner/cms", label: "Content CMS", icon: LayoutTemplate },
   { to: "/owner/preview", label: "Live Preview", icon: Smartphone },
-  { to: "/owner/vouchers", label: "Promo & Voucher", icon: Ticket },
-  { to: "/owner/staff", label: "Akun & Staf", icon: ShieldCheck },
-  { to: "/owner/outlets", label: "Outlet", icon: Store },
-  { to: "/owner/shipping", label: "Tarif Ongkir", icon: Truck },
-  { to: "/owner/settings", label: "Pengaturan Toko", icon: Settings },
-  { to: "/owner/audit", label: "Log Aktivitas", icon: ScrollText },
+  { to: "/owner/vouchers", label: "Promos & Vouchers", icon: Ticket },
+  { to: "/owner/staff", label: "Accounts & Staff", icon: ShieldCheck },
+  { to: "/owner/outlets", label: "Outlets", icon: Store },
+  { to: "/owner/shipping", label: "Delivery Rates", icon: Truck },
+  { to: "/owner/settings", label: "Store Settings", icon: Settings },
+  { to: "/owner/audit", label: "Activity Logs", icon: ScrollText },
 ];
 
 export function DashboardShell({
@@ -107,10 +113,10 @@ export function DashboardShell({
 
         <div className="mt-auto space-y-1 px-1 pt-6 text-xs">
           <Link to={role === "owner" ? "/admin" : "/owner"} className="block text-muted-foreground">
-            Buka panel {role === "owner" ? "Admin" : "Owner"}
+            Switch to {role === "owner" ? "Admin" : "Owner"} panel
           </Link>
           <Link to="/" className="block text-muted-foreground">
-            Kembali ke aplikasi pembeli
+            Back to customer app
           </Link>
         </div>
       </aside>

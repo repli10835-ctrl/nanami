@@ -114,7 +114,7 @@ export function CmsPanel() {
   const handleResetCms = () => {
     if (
       window.confirm(
-        "Apakah Anda yakin ingin mengembalikan seluruh konten publik ke konfigurasi awal bawaan Nanami Kitchen?",
+        "Are you sure you want to reset all public content to Nanami Kitchen's original default configuration?",
       )
     ) {
       actions.resetCms();
@@ -134,7 +134,8 @@ export function CmsPanel() {
             <h2 className="text-base font-bold text-foreground">Content Management System (CMS)</h2>
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
-            Kelola identitas visual, logo, banner promo, teks pengumuman, dan informasi publik toko.
+            Manage store visual identity, logo, promo banners, announcement text, and public store
+            information.
           </p>
         </div>
 
@@ -144,14 +145,14 @@ export function CmsPanel() {
             className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-xs font-bold text-primary-foreground shadow-sm transition hover:bg-primary/90"
           >
             <Smartphone className="size-3.5" />
-            Buka Live Preview
+            Open Live Preview
           </Link>
           <button
             onClick={handleResetCms}
             className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground transition hover:bg-secondary"
           >
             <RefreshCw className="size-3.5" />
-            Reset Default
+            Reset Defaults
           </button>
         </div>
       </div>
@@ -159,20 +160,20 @@ export function CmsPanel() {
       {/* Save indicator toast */}
       {saveToast && (
         <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-xl border border-success/30 bg-success/20 px-4 py-3 text-sm font-bold text-success shadow-lg backdrop-blur">
-          <Check className="size-4" /> Perubahan berhasil tersimpan!
+          <Check className="size-4" /> Changes saved successfully!
         </div>
       )}
 
       {/* Tabs Navigation */}
       <div className="no-scrollbar flex gap-1.5 overflow-x-auto rounded-2xl border border-border bg-secondary/20 p-1.5">
         {[
-          { key: "branding", label: "Logo & Identitas", icon: Palette },
+          { key: "branding", label: "Logo & Identity", icon: Palette },
           { key: "hero", label: "Hero Banner", icon: LayoutTemplate },
-          { key: "announcement", label: "Pengumuman", icon: Volume2 },
-          { key: "promos", label: "Banner Promo", icon: Tag },
-          { key: "welcome", label: "Layar Pembuka", icon: Sparkles },
-          { key: "socials", label: "Kontak & Medsos", icon: Share2 },
-          { key: "faqs", label: "FAQ & Bantuan", icon: HelpCircle },
+          { key: "announcement", label: "Announcement", icon: Volume2 },
+          { key: "promos", label: "Promo Banners", icon: Tag },
+          { key: "welcome", label: "Welcome Screen", icon: Sparkles },
+          { key: "socials", label: "Contact & Socials", icon: Share2 },
+          { key: "faqs", label: "FAQ & Help", icon: HelpCircle },
         ].map(({ key, label, icon: Icon }) => (
           <button
             key={key}
@@ -194,13 +195,15 @@ export function CmsPanel() {
         <div className="grid gap-6 lg:grid-cols-12">
           <div className="space-y-6 lg:col-span-7">
             <SectionCard
-              title="Logo Utama Aplikasi"
-              description="Logo yang tampil di header aplikasi pelanggan, panel staf, dan invoice pesanan."
+              title="Main App Logo"
+              description="Logo displayed on customer app header, staff panel, and order invoices."
             >
               <div className="space-y-4">
                 {/* Logo Preset Picker */}
                 <div>
-                  <label className="text-xs font-semibold text-foreground">Pilih Dari Preset</label>
+                  <label className="text-xs font-semibold text-foreground">
+                    Select From Presets
+                  </label>
                   <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
                     {LOGO_PRESETS.map((p) => {
                       const isSelected = (cms.logoUrl || defaultLogo) === p.url;
@@ -233,7 +236,7 @@ export function CmsPanel() {
                 <div className="grid gap-3 pt-2 sm:grid-cols-2">
                   <div>
                     <label className="text-xs font-semibold text-foreground">
-                      Upload Dari Komputer / HP
+                      Upload From Computer / Phone
                     </label>
                     <input
                       type="file"
@@ -248,17 +251,17 @@ export function CmsPanel() {
                       onClick={() => logoInputRef.current?.click()}
                       className="mt-1.5 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-secondary/30 px-3 py-2.5 text-xs font-semibold text-muted-foreground transition hover:border-primary hover:text-foreground"
                     >
-                      <Upload className="size-4" /> Upload File Gambar
+                      <Upload className="size-4" /> Upload Image File
                     </button>
                   </div>
 
                   <div>
                     <label className="text-xs font-semibold text-foreground">
-                      Atau Tautan Gambar (URL)
+                      Or Image URL Link
                     </label>
                     <input
                       type="url"
-                      placeholder="https://contoh.com/logo.png"
+                      placeholder="https://example.com/logo.png"
                       value={cms.logoUrl}
                       onChange={(e) => {
                         actions.updateCms({ logoUrl: e.target.value });
@@ -272,12 +275,12 @@ export function CmsPanel() {
             </SectionCard>
 
             <SectionCard
-              title="Nama & Tipografi Brand"
-              description="Format teks nama restoran pada header tampilan aplikasi."
+              title="Brand Name & Typography"
+              description="Format of restaurant title text in app header."
             >
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="block text-xs text-muted-foreground">
-                  Nama Utama (Display Style)
+                  Primary Name (Display Style)
                   <input
                     value={cms.brandName}
                     onChange={(e) => {
@@ -288,12 +291,12 @@ export function CmsPanel() {
                     className={fieldClass}
                   />
                   <span className="mt-1 text-[10px] text-muted-foreground">
-                    Contoh: &quot;nanami&quot; (Font display serif tebal)
+                    Example: &quot;nanami&quot; (Bold italic display serif font)
                   </span>
                 </label>
 
                 <label className="block text-xs text-muted-foreground">
-                  Sub-nama / Suffix
+                  Sub-name / Suffix
                   <input
                     value={cms.brandSuffix}
                     onChange={(e) => {
@@ -304,14 +307,14 @@ export function CmsPanel() {
                     className={fieldClass}
                   />
                   <span className="mt-1 text-[10px] text-muted-foreground">
-                    Contoh: &quot;kitchen&quot; (Teks huruf kapital tracking renggang)
+                    Example: &quot;kitchen&quot; (Tracked uppercase text)
                   </span>
                 </label>
               </div>
 
               <div className="mt-3">
                 <label className="block text-xs text-muted-foreground">
-                  Slogan Singkat (Tagline)
+                  Short Tagline
                   <input
                     value={cms.tagline}
                     onChange={(e) => {
@@ -333,10 +336,10 @@ export function CmsPanel() {
               <div className="flex items-center justify-between border-b border-border pb-3">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
                   <Eye className="size-4 text-primary" />
-                  Live Preview Header Pelanggan
+                  Customer Header Live Preview
                 </div>
                 <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
-                  Sinkron Instan
+                  Instant Sync
                 </span>
               </div>
 
@@ -365,7 +368,7 @@ export function CmsPanel() {
               </div>
 
               <p className="mt-3 text-[11px] text-muted-foreground">
-                Tagline aktif: <strong className="text-foreground">{cms.tagline}</strong>
+                Active Tagline: <strong className="text-foreground">{cms.tagline}</strong>
               </p>
             </div>
           </div>
@@ -377,13 +380,13 @@ export function CmsPanel() {
         <div className="grid gap-6 lg:grid-cols-12">
           <div className="space-y-6 lg:col-span-7">
             <SectionCard
-              title="Gambar Hero Banner Utama"
-              description="Visual utama yang menjadi daya tarik pada bagian atas beranda dan splash pembuka."
+              title="Main Hero Banner Image"
+              description="Primary image featured at the top of home screen and welcome splash."
             >
               <div className="space-y-4">
                 <div>
                   <label className="text-xs font-semibold text-foreground">
-                    Pilih Dari Koleksi Gambar
+                    Select From Image Library
                   </label>
                   <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
                     {HERO_PRESETS.map((p) => {
@@ -418,7 +421,7 @@ export function CmsPanel() {
                 <div className="grid gap-3 pt-2 sm:grid-cols-2">
                   <div>
                     <label className="text-xs font-semibold text-foreground">
-                      Upload Foto Sendiri
+                      Upload Own Photo
                     </label>
                     <input
                       type="file"
@@ -433,17 +436,17 @@ export function CmsPanel() {
                       onClick={() => heroInputRef.current?.click()}
                       className="mt-1.5 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-secondary/30 px-3 py-2.5 text-xs font-semibold text-muted-foreground transition hover:border-primary hover:text-foreground"
                     >
-                      <Upload className="size-4" /> Upload Foto Hero
+                      <Upload className="size-4" /> Upload Hero Photo
                     </button>
                   </div>
 
                   <div>
                     <label className="text-xs font-semibold text-foreground">
-                      Atau Tautan URL Gambar
+                      Or Image URL Link
                     </label>
                     <input
                       type="url"
-                      placeholder="https://contoh.com/hero-dish.jpg"
+                      placeholder="https://example.com/hero-dish.jpg"
                       value={cms.heroImage}
                       onChange={(e) => {
                         actions.updateCms({ heroImage: e.target.value });
@@ -457,12 +460,12 @@ export function CmsPanel() {
             </SectionCard>
 
             <SectionCard
-              title="Teks Judul & Call To Action (CTA)"
-              description="Pesan utama yang menyapa pembeli di layar beranda."
+              title="Headline & Call To Action (CTA)"
+              description="Primary message greeting customers on home screen."
             >
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="block text-xs text-muted-foreground">
-                  Judul Baris 1
+                  Headline Line 1
                   <input
                     value={cms.heroTitleLine1}
                     onChange={(e) => {
@@ -474,7 +477,7 @@ export function CmsPanel() {
                   />
                 </label>
                 <label className="block text-xs text-muted-foreground">
-                  Judul Baris 2
+                  Headline Line 2
                   <input
                     value={cms.heroTitleLine2}
                     onChange={(e) => {
@@ -489,20 +492,20 @@ export function CmsPanel() {
 
               <div className="grid gap-4 pt-3 sm:grid-cols-2">
                 <label className="block text-xs text-muted-foreground">
-                  Teks Tombol CTA
+                  CTA Button Text
                   <input
                     value={cms.heroCtaText}
                     onChange={(e) => {
                       actions.updateCms({ heroCtaText: e.target.value });
                       triggerToast();
                     }}
-                    placeholder="Pesan Sekarang"
+                    placeholder="Order Now"
                     className={fieldClass}
                   />
                 </label>
 
                 <label className="block text-xs text-muted-foreground">
-                  Slogan Lengkap
+                  Full Slogan
                   <input
                     value={cms.heroSlogan}
                     onChange={(e) => {
@@ -525,7 +528,7 @@ export function CmsPanel() {
                   <Eye className="size-4 text-primary" /> Live Preview Hero Card
                 </span>
                 <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
-                  Tampilan Pelanggan
+                  Customer View
                 </span>
               </div>
 
@@ -549,7 +552,7 @@ export function CmsPanel() {
                     <p className="mt-1 text-xs text-muted-foreground">{cms.tagline}</p>
                     <div className="mt-3">
                       <span className="inline-block rounded-full bg-primary px-3.5 py-1.5 text-xs font-bold text-primary-foreground shadow-sm">
-                        {cms.heroCtaText || "Pesan Sekarang"} &rarr;
+                        {cms.heroCtaText || "Order Now"} &rarr;
                       </span>
                     </div>
                   </div>
@@ -560,19 +563,19 @@ export function CmsPanel() {
         </div>
       )}
 
-      {/* TAB 3: PENGUMUMAN PUBLIK (ANNOUNCEMENT BAR) */}
+      {/* TAB 3: ANNOUNCEMENT BAR */}
       {activeTab === "announcement" && (
         <div className="space-y-6">
           <SectionCard
             title="Running Announcement Bar"
-            description="Pita pengumuman yang muncul di bagian paling atas aplikasi untuk menginfokan promo, jam buka khusus, atau pengumuman penting."
+            description="Banner ribbon at the top of app to highlight promos, special hours, or notice."
           >
             <div className="space-y-4">
               <div className="flex items-center justify-between rounded-xl border border-border bg-secondary/30 p-3.5">
                 <div>
-                  <p className="text-sm font-semibold text-foreground">Status Pita Pengumuman</p>
+                  <p className="text-sm font-semibold text-foreground">Announcement Bar Status</p>
                   <p className="text-xs text-muted-foreground">
-                    Tampilkan banner pengumuman di atas halaman Beranda pembeli.
+                    Display announcement banner on customer home screen top.
                   </p>
                 </div>
                 <button
@@ -586,21 +589,21 @@ export function CmsPanel() {
                       : "bg-muted text-muted-foreground"
                   }`}
                 >
-                  {cms.announcement.enabled ? "AKTIF" : "NONAKTIF"}
+                  {cms.announcement.enabled ? "ACTIVE" : "INACTIVE"}
                 </button>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-3">
                 <div className="sm:col-span-2">
                   <label className="block text-xs text-muted-foreground">
-                    Teks Pengumuman
+                    Announcement Text
                     <input
                       value={cms.announcement.text}
                       onChange={(e) => {
                         actions.updateCmsAnnouncement({ text: e.target.value });
                         triggerToast();
                       }}
-                      placeholder="🎉 Promo Hari Ini: Diskon 20% dengan kode..."
+                      placeholder="🎉 Today's Promo: 20% discount with code..."
                       className={fieldClass}
                     />
                   </label>
@@ -608,7 +611,7 @@ export function CmsPanel() {
 
                 <div>
                   <label className="block text-xs text-muted-foreground">
-                    Tipe Tampilan
+                    Display Type
                     <select
                       value={cms.announcement.type}
                       onChange={(e) => {
@@ -619,9 +622,9 @@ export function CmsPanel() {
                       }}
                       className={fieldClass}
                     >
-                      <option value="promo">Promo (Aksen Emas / Primer)</option>
-                      <option value="info">Informasi (Biru / Netral)</option>
-                      <option value="warning">Penting / Perhatian (Oranye)</option>
+                      <option value="promo">Promo (Gold / Primary Accent)</option>
+                      <option value="info">Info (Blue / Neutral)</option>
+                      <option value="warning">Important / Alert (Orange)</option>
                     </select>
                   </label>
                 </div>
@@ -629,14 +632,14 @@ export function CmsPanel() {
 
               <div>
                 <label className="block text-xs text-muted-foreground">
-                  Tautan / Halaman Tujuan (Opsional)
+                  Target Link / Page (Optional)
                   <input
                     value={cms.announcement.link || ""}
                     onChange={(e) => {
                       actions.updateCmsAnnouncement({ link: e.target.value });
                       triggerToast();
                     }}
-                    placeholder="/vouchers atau /menu"
+                    placeholder="/vouchers or /menu"
                     className={fieldClass}
                   />
                 </label>
@@ -645,7 +648,7 @@ export function CmsPanel() {
               {/* Announcement Bar Live Preview */}
               <div className="pt-3">
                 <label className="text-xs font-semibold text-foreground">
-                  Live Preview Pengumuman
+                  Announcement Live Preview
                 </label>
                 {cms.announcement.enabled ? (
                   <div
@@ -665,15 +668,15 @@ export function CmsPanel() {
                       ) : (
                         <Sparkles className="size-4 shrink-0" />
                       )}
-                      <span>{cms.announcement.text || "Belum ada teks pengumuman."}</span>
+                      <span>{cms.announcement.text || "No announcement text configured."}</span>
                     </div>
                     {cms.announcement.link && (
-                      <span className="text-[11px] underline">Lihat &rarr;</span>
+                      <span className="text-[11px] underline">View &rarr;</span>
                     )}
                   </div>
                 ) : (
                   <div className="mt-2 rounded-xl border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
-                    Pengumuman sedang dinonaktifkan.
+                    Announcement bar is currently disabled.
                   </div>
                 )}
               </div>
@@ -689,43 +692,43 @@ export function CmsPanel() {
             {/* Form Tambah Promo */}
             <div className="space-y-4 lg:col-span-5">
               <SectionCard
-                title="Tambah Banner Promo Baru"
-                description="Banner promo interaktif yang berputar pada carousel beranda aplikasi."
+                title="Add New Promo Banner"
+                description="Interactive banner rotating on home screen promo carousel."
               >
                 <div className="space-y-3">
                   <label className="block text-xs text-muted-foreground">
-                    Label Badge Promo
+                    Promo Tag Badge
                     <input
                       value={promoBadge}
                       onChange={(e) => setPromoBadge(e.target.value)}
-                      placeholder="SPECIAL / DISKON 20%"
+                      placeholder="SPECIAL / 20% OFF"
                       className={fieldClass}
                     />
                   </label>
 
                   <label className="block text-xs text-muted-foreground">
-                    Judul Utama Promo
+                    Main Promo Title
                     <input
                       value={promoTitle}
                       onChange={(e) => setPromoTitle(e.target.value)}
-                      placeholder="Diskon 20% Semua Menu Bento"
+                      placeholder="20% Off All Bento Items"
                       className={fieldClass}
                     />
                   </label>
 
                   <label className="block text-xs text-muted-foreground">
-                    Subjudul / Keterangan
+                    Subtitle / Description
                     <input
                       value={promoSubtitle}
                       onChange={(e) => setPromoSubtitle(e.target.value)}
-                      placeholder="Gunakan kode promo NANAMI20 saat checkout"
+                      placeholder="Use promo code NANAMI20 at checkout"
                       className={fieldClass}
                     />
                   </label>
 
                   <div className="space-y-2">
                     <label className="text-xs font-semibold text-foreground">
-                      Foto Banner Promo
+                      Promo Banner Photo
                     </label>
                     <input
                       type="file"
@@ -740,12 +743,12 @@ export function CmsPanel() {
                         onClick={() => promoInputRef.current?.click()}
                         className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-secondary/30 px-3 py-2 text-xs font-semibold text-muted-foreground transition hover:border-primary hover:text-foreground"
                       >
-                        <Upload className="size-4" /> Upload Dari Device
+                        <Upload className="size-4" /> Upload From Device
                       </button>
                       <input
                         value={promoImage}
                         onChange={(e) => setPromoImage(e.target.value)}
-                        placeholder="Atau tempel URL (https://...)"
+                        placeholder="Or paste URL (https://...)"
                         className={fieldClass}
                       />
                     </div>
@@ -770,7 +773,7 @@ export function CmsPanel() {
                     }}
                     className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-xs font-bold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-40"
                   >
-                    <Plus className="size-4" /> Simpan Banner Promo
+                    <Plus className="size-4" /> Save Promo Banner
                   </button>
                 </div>
               </SectionCard>
@@ -779,16 +782,16 @@ export function CmsPanel() {
             {/* List Promo */}
             <div className="space-y-4 lg:col-span-7">
               <SectionCard
-                title={`Daftar Promo Aktif (${promos.length})`}
-                description="Kelola urutan dan status tayang promo."
+                title={`Active Promo Banners (${promos.length})`}
+                description="Manage display status and active promo items."
               >
                 {promos.length === 0 ? (
                   <p className="py-6 text-center text-xs text-muted-foreground">
-                    Belum ada promo. Tambahkan promo pertama di sebelah kiri.
+                    No promo banners. Add your first promo banner using the form on the left.
                   </p>
                 ) : (
                   <div className="space-y-3">
-                    {promos.map((p, idx) => (
+                    {promos.map((p) => (
                       <div
                         key={p.id}
                         className="flex items-center justify-between gap-4 rounded-xl border border-border bg-card p-3.5 shadow-sm"
@@ -814,7 +817,7 @@ export function CmsPanel() {
                               triggerToast();
                             }}
                             className="rounded-lg p-2 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
-                            aria-label={`Hapus promo ${p.title}`}
+                            aria-label={`Delete promo ${p.title}`}
                           >
                             <Trash2 className="size-4" />
                           </button>
@@ -829,20 +832,20 @@ export function CmsPanel() {
         </div>
       )}
 
-      {/* TAB 5: LAYAR PEMBUKA (WELCOME SPLASH SCREEN) */}
+      {/* TAB 5: WELCOME SPLASH SCREEN */}
       {activeTab === "welcome" && (
         <div className="grid gap-6 lg:grid-cols-12">
           <div className="space-y-6 lg:col-span-7">
             <SectionCard
-              title="Konfigurasi Layar Pembuka (Welcome Splash)"
-              description="Animasi pembuka yang muncul saat pelanggan pertama kali membuka aplikasi di perangkatnya."
+              title="Welcome Splash Screen Config"
+              description="Opening splash animation when customers first launch the app."
             >
               <div className="space-y-4">
                 <div className="flex items-center justify-between rounded-xl border border-border bg-secondary/30 p-3.5">
                   <div>
-                    <p className="text-sm font-semibold text-foreground">Aktifkan Layar Pembuka</p>
+                    <p className="text-sm font-semibold text-foreground">Enable Welcome Screen</p>
                     <p className="text-xs text-muted-foreground">
-                      Tampilkan splash screen animasi logo saat sesi dimulai.
+                      Show animated splash screen logo on session startup.
                     </p>
                   </div>
                   <button
@@ -856,13 +859,13 @@ export function CmsPanel() {
                         : "bg-muted text-muted-foreground"
                     }`}
                   >
-                    {cms.welcomeScreen.enabled ? "AKTIF" : "NONAKTIF"}
+                    {cms.welcomeScreen.enabled ? "ACTIVE" : "INACTIVE"}
                   </button>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="block text-xs text-muted-foreground">
-                    Judul Splash
+                    Splash Title
                     <input
                       value={cms.welcomeScreen.title}
                       onChange={(e) => {
@@ -874,7 +877,7 @@ export function CmsPanel() {
                     />
                   </label>
                   <label className="block text-xs text-muted-foreground">
-                    Subjudul Splash
+                    Splash Subtitle
                     <input
                       value={cms.welcomeScreen.subtitle}
                       onChange={(e) => {
@@ -889,7 +892,7 @@ export function CmsPanel() {
 
                 <div>
                   <label className="block text-xs text-muted-foreground">
-                    Teks Slogan Splash
+                    Splash Slogan Text
                     <textarea
                       rows={2}
                       value={cms.welcomeScreen.slogan}
@@ -905,7 +908,7 @@ export function CmsPanel() {
 
                 <div>
                   <label className="block text-xs text-muted-foreground">
-                    Durasi Otomatis (Detik)
+                    Auto Duration (Seconds)
                     <input
                       type="number"
                       step="0.5"
@@ -925,7 +928,7 @@ export function CmsPanel() {
 
                 <div className="space-y-2 pt-2 border-t border-border">
                   <label className="text-xs font-semibold text-foreground">
-                    Gambar Splash / Banner Pembuka
+                    Splash Image / Opening Banner
                   </label>
                   <input
                     type="file"
@@ -944,7 +947,7 @@ export function CmsPanel() {
                       onClick={() => welcomeInputRef.current?.click()}
                       className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-secondary/30 px-3 py-2 text-xs font-semibold text-muted-foreground transition hover:border-primary hover:text-foreground"
                     >
-                      <Upload className="size-4" /> Upload Foto Splash
+                      <Upload className="size-4" /> Upload Splash Photo
                     </button>
                     <input
                       value={cms.welcomeScreen.imageUrl || ""}
@@ -952,7 +955,7 @@ export function CmsPanel() {
                         actions.updateCmsWelcome({ imageUrl: e.target.value });
                         triggerToast();
                       }}
-                      placeholder="Atau tempel URL gambar (https://...)"
+                      placeholder="Or paste image URL (https://...)"
                       className={fieldClass}
                     />
                   </div>
@@ -969,7 +972,7 @@ export function CmsPanel() {
                   <Eye className="size-4 text-primary" /> Preview Welcome Splash
                 </span>
                 <span className="text-[10px] text-muted-foreground">
-                  {cms.welcomeScreen.durationSec} Detik
+                  {cms.welcomeScreen.durationSec} Seconds
                 </span>
               </div>
 
@@ -1005,12 +1008,12 @@ export function CmsPanel() {
         </div>
       )}
 
-      {/* TAB 6: KONTAK & MEDIA SOSIAL */}
+      {/* TAB 6: CONTACT & SOCIALS */}
       {activeTab === "socials" && (
         <div className="space-y-6">
           <SectionCard
-            title="Tautan Media Sosial & Kontak Publik"
-            description="Tautan WhatsApp, Instagram, TikTok, dan Google Maps yang ditampilkan ke pelanggan."
+            title="Social Links & Public Contact"
+            description="WhatsApp hotline, Instagram, TikTok, and Google Maps links shown to customers."
           >
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block text-xs text-muted-foreground">
@@ -1040,7 +1043,7 @@ export function CmsPanel() {
               </label>
 
               <label className="block text-xs text-muted-foreground">
-                WhatsApp Hotline Toko
+                Store WhatsApp Hotline
                 <input
                   value={cms.socials.whatsapp}
                   onChange={(e) => {
@@ -1048,13 +1051,13 @@ export function CmsPanel() {
                     actions.updateSettings({ whatsapp: e.target.value });
                     triggerToast();
                   }}
-                  placeholder="0812-3456-7890"
+                  placeholder="+27 82 123 4567"
                   className={fieldClass}
                 />
               </label>
 
               <label className="block text-xs text-muted-foreground">
-                Tautan Google Maps Lokasi
+                Google Maps Location Link
                 <input
                   value={cms.socials.mapsUrl}
                   onChange={(e) => {
@@ -1069,7 +1072,7 @@ export function CmsPanel() {
 
             <div className="mt-4">
               <label className="block text-xs text-muted-foreground">
-                Cerita / Bio Tentang Restoran
+                About Restaurant Story / Bio
                 <textarea
                   rows={3}
                   value={cms.aboutStory}
@@ -1077,7 +1080,7 @@ export function CmsPanel() {
                     actions.updateCms({ aboutStory: e.target.value });
                     triggerToast();
                   }}
-                  placeholder="Cerita singkat asal-usul, keistimewaan bento, dan komitmen rasa Nanami Kitchen..."
+                  placeholder="Short story about Nanami Kitchen's origin, authentic Japanese bento recipes, and culinary passion..."
                   className={fieldClass}
                 />
               </label>
@@ -1086,33 +1089,33 @@ export function CmsPanel() {
         </div>
       )}
 
-      {/* TAB 7: FAQ & BANTUAN PUBLIK (CRUD FAQ) */}
+      {/* TAB 7: FAQ & HELP (CRUD FAQ) */}
       {activeTab === "faqs" && (
         <div className="grid gap-6 lg:grid-cols-12">
-          {/* Form Tambah FAQ */}
+          {/* Form Add FAQ */}
           <div className="space-y-4 lg:col-span-5">
             <SectionCard
-              title="Tambah Pertanyaan (FAQ) Baru"
-              description="FAQ tampil di halaman bantuan pelanggan dan info checkout."
+              title="Add New FAQ"
+              description="FAQs appear on customer help page and checkout info."
             >
               <div className="space-y-3">
                 <label className="block text-xs text-muted-foreground">
-                  Pertanyaan
+                  Question
                   <input
                     value={newQuestion}
                     onChange={(e) => setNewQuestion(e.target.value)}
-                    placeholder="Contoh: Berapa minimal order untuk gratis ongkir?"
+                    placeholder="e.g. What is the minimum spend for free delivery?"
                     className={fieldClass}
                   />
                 </label>
 
                 <label className="block text-xs text-muted-foreground">
-                  Jawaban Lengkap
-                  <textarea
+                  Detailed Answer
+                  <input
                     rows={3}
                     value={newAnswer}
                     onChange={(e) => setNewAnswer(e.target.value)}
-                    placeholder="Tuliskan jawaban yang ramah dan jelas..."
+                    placeholder="Write a clear and friendly response..."
                     className={fieldClass}
                   />
                 </label>
@@ -1131,22 +1134,20 @@ export function CmsPanel() {
                   }}
                   className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-xs font-bold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-40"
                 >
-                  <Plus className="size-4" /> Simpan FAQ
+                  <Plus className="size-4" /> Save FAQ
                 </button>
               </div>
             </SectionCard>
           </div>
 
-          {/* Daftar FAQ */}
+          {/* List FAQ */}
           <div className="space-y-4 lg:col-span-7">
             <SectionCard
-              title={`Daftar FAQ Publik (${cms.faqs?.length || 0})`}
-              description="Pertanyaan umum yang dapat dibaca pelanggan."
+              title={`Public FAQ List (${cms.faqs?.length || 0})`}
+              description="Common questions viewable by customers."
             >
               {!cms.faqs || cms.faqs.length === 0 ? (
-                <p className="py-6 text-center text-xs text-muted-foreground">
-                  Belum ada daftar FAQ.
-                </p>
+                <p className="py-6 text-center text-xs text-muted-foreground">No FAQs added yet.</p>
               ) : (
                 <div className="space-y-3">
                   {cms.faqs.map((f) => (
@@ -1167,7 +1168,7 @@ export function CmsPanel() {
                             triggerToast();
                           }}
                           className="rounded-lg p-1.5 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
-                          aria-label={`Hapus FAQ ${f.question}`}
+                          aria-label={`Delete FAQ ${f.question}`}
                         >
                           <Trash2 className="size-4" />
                         </button>

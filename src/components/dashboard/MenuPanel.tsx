@@ -12,13 +12,16 @@ export function MenuPanel({ canDelete = true }: { canDelete?: boolean }) {
 
   return (
     <div className="grid gap-4 lg:grid-cols-[320px_1fr] lg:items-start">
-      <SectionCard title="Tambah menu" description="Item baru langsung muncul di halaman pembeli.">
+      <SectionCard
+        title="Add Item"
+        description="New menu items appear immediately in the customer store."
+      >
         <label className="block text-xs text-muted-foreground">
-          Nama item
+          Item Name
           <input value={name} onChange={(e) => setName(e.target.value)} className={fieldClass} />
         </label>
         <label className="block text-xs text-muted-foreground">
-          Harga
+          Price
           <input
             value={price}
             onChange={(e) => setPrice(e.target.value)}
@@ -28,7 +31,7 @@ export function MenuPanel({ canDelete = true }: { canDelete?: boolean }) {
           />
         </label>
         <label className="block text-xs text-muted-foreground">
-          Deskripsi
+          Description
           <input
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -36,7 +39,7 @@ export function MenuPanel({ canDelete = true }: { canDelete?: boolean }) {
           />
         </label>
         <label className="block text-xs text-muted-foreground">
-          Kategori
+          Category
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value as Category)}
@@ -70,7 +73,7 @@ export function MenuPanel({ canDelete = true }: { canDelete?: boolean }) {
           }}
           className="w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-40"
         >
-          Simpan item
+          Save Item
         </button>
       </SectionCard>
 
@@ -89,13 +92,13 @@ export function MenuPanel({ canDelete = true }: { canDelete?: boolean }) {
                 m.available ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"
               }`}
             >
-              <Power className="size-3.5" /> {m.available ? "Tersedia" : "Habis"}
+              <Power className="size-3.5" /> {m.available ? "Available" : "Sold Out"}
             </button>
             {canDelete && (
               <button
                 onClick={() => actions.deleteMenuItem(m.id)}
-                aria-label={`Hapus ${m.name}`}
-                className="text-muted-foreground"
+                aria-label={`Delete ${m.name}`}
+                className="text-muted-foreground hover:text-destructive"
               >
                 <Trash2 className="size-4" />
               </button>
