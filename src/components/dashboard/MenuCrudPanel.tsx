@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { ImagePlus, Pencil, Plus, Trash2, X } from "lucide-react";
+import { useState, useRef } from "react";
+import { ImagePlus, Pencil, Plus, Trash2, Upload, X } from "lucide-react";
 import {
   actions,
   rupiah,
@@ -59,7 +59,34 @@ export function MenuCrudPanel() {
   const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [filter, setFilter] = useState<"Semua" | Category>("Semua");
 
-  const editing = Boolean(draft.id);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        patch({ image: reader.result });
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (!file || !file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        patch({ image: reader.result });
+      }
+    };
+    reader.readAsDataURL(file);
+  };
   const patch = (p: Partial<Draft>) => setDraft((d) => ({ ...d, ...p }));
   const list = filter === "Semua" ? menu : menu.filter((m) => m.category === filter);
   const valid = draft.name.trim().length > 0 && Number(draft.price) > 0;
@@ -163,31 +190,80 @@ export function MenuCrudPanel() {
             />
           </label>
 
-          <div className="text-xs text-muted-foreground">
-            Gambar
-            <div className="mt-1.5 flex flex-wrap gap-2">
-              {GALLERY.map((src) => (
-                <button
-                  key={src}
-                  onClick={() => patch({ image: src })}
-                  aria-label="Pilih gambar"
-                  aria-pressed={draft.image === src}
-                  className={`size-14 overflow-hidden rounded-xl border-2 ${
-                    draft.image === src ? "border-primary" : "border-transparent"
-                  }`}
-                >
-                  <img src={src} alt="" className="size-full object-cover" />
-                </button>
-              ))}
+          <div className="space-y-2.5 text-xs text-muted-foreground">
+            <span className="font-semibold text-foreground">Gambar Menu</span>
+
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/*"
+              className="hidden"
+              onChange={handleFileUpload}
+            />
+
+            {/* Dropzone & Upload Button */}
+            <div
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDragging(true);
+              }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+              className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-4 text-center transition ${
+                isDragging
+                  ? "border-primary bg-primary/10"
+                  : "border-border bg-secondary/30 hover:border-primary/60 hover:bg-secondary/50"
+              }`}
+            >
+              <div className="flex size-10 items-center justify-center rounded-full bg-primary/15 text-primary">
+                <Upload className="size-5" />
+              </div>
+              <p className="mt-2 text-xs font-bold text-foreground">
+                Upload Gambar Dari Perangkat (HP / Laptop)
+              </p>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">
+                Klik atau tarik gambar ke sini (JPG, PNG, WEBP)
+              </p>
             </div>
-            <label className="mt-2 flex items-center gap-2">
-              <ImagePlus className="size-4" />
-              <input
-                value={draft.image}
-                onChange={(e) => patch({ image: e.target.value })}
-                placeholder="Tempel alamat gambar (https://...)"
-                className="mt-0 w-full rounded-xl border border-input bg-secondary/40 px-3 py-2.5 text-sm outline-none focus:border-primary"
-              />
+
+            {/* Preset Picker */}
+            <div>
+              <span className="text-[11px] text-muted-foreground">
+                Atau pilih dari preset bawaan:
+              </span>
+              <div className="mt-1.5 flex flex-wrap gap-2">
+                {GALLERY.map((src, i) => (
+                  <button
+                    key={src}
+                    type="button"
+                    onClick={() => patch({ image: src })}
+                    aria-label={`Pilih preset gambar ${i + 1}`}
+                    aria-pressed={draft.image === src}
+                    className={`size-12 overflow-hidden rounded-xl border-2 transition ${
+                      draft.image === src
+                        ? "border-primary ring-2 ring-primary/30"
+                        : "border-transparent hover:border-border"
+                    }`}
+                  >
+                    <img src={src} alt="" className="size-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Image URL input fallback */}
+            <label className="block text-[11px] text-muted-foreground pt-1">
+              Atau tempel URL gambar:
+              <div className="mt-1 flex items-center gap-2">
+                <ImagePlus className="size-4 shrink-0 text-muted-foreground" />
+                <input
+                  value={draft.image}
+                  onChange={(e) => patch({ image: e.target.value })}
+                  placeholder="https://... (URL Gambar)"
+                  className="w-full rounded-xl border border-input bg-secondary/40 px-3 py-2 text-xs outline-none focus:border-primary"
+                />
+              </div>
             </label>
           </div>
 
@@ -260,9 +336,12 @@ export function MenuCrudPanel() {
           ))}
         </div>
 
-        <div className="grid gap-2 lg:grid-cols-2">
+        <div className="grid gap-2.5 sm:grid-cols-1 md:grid-cols-2">
           {list.map((m) => (
-            <div key={m.id} className="glow-card flex items-center gap-3 p-3">
+            <div
+              key={m.id}
+              className="glow-card flex flex-wrap sm:flex-nowrap items-center gap-3 p-3"
+            >
               {m.image ? (
                 <img
                   src={m.image}
@@ -280,27 +359,31 @@ export function MenuCrudPanel() {
                 </p>
                 <p className="truncate text-[11px] text-muted-foreground">{m.description}</p>
               </div>
-              <span
-                className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                  m.available ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"
-                }`}
-              >
-                {m.available ? "Tersedia" : "Habis"}
-              </span>
-              <button
-                onClick={() => setDraft(toDraft(m))}
-                aria-label={`Ubah ${m.name}`}
-                className="shrink-0 rounded-lg border border-border p-1.5 text-muted-foreground"
-              >
-                <Pencil className="size-4" />
-              </button>
-              <button
-                onClick={() => actions.deleteMenuItem(m.id)}
-                aria-label={`Hapus ${m.name}`}
-                className="shrink-0 rounded-lg border border-border p-1.5 text-destructive"
-              >
-                <Trash2 className="size-4" />
-              </button>
+              <div className="flex items-center gap-1.5 shrink-0 ml-auto sm:ml-0">
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                    m.available
+                      ? "bg-success/15 text-success"
+                      : "bg-destructive/15 text-destructive"
+                  }`}
+                >
+                  {m.available ? "Tersedia" : "Habis"}
+                </span>
+                <button
+                  onClick={() => setDraft(toDraft(m))}
+                  aria-label={`Ubah ${m.name}`}
+                  className="rounded-lg border border-border p-1.5 text-muted-foreground hover:text-foreground"
+                >
+                  <Pencil className="size-3.5" />
+                </button>
+                <button
+                  onClick={() => actions.deleteMenuItem(m.id)}
+                  aria-label={`Hapus ${m.name}`}
+                  className="rounded-lg border border-border p-1.5 text-destructive hover:bg-destructive/10"
+                >
+                  <Trash2 className="size-3.5" />
+                </button>
+              </div>
             </div>
           ))}
         </div>

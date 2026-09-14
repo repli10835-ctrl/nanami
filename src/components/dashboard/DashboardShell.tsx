@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import {
   BarChart3,
   ClipboardList,
@@ -62,6 +62,7 @@ export function DashboardShell({
   const nav = role === "owner" ? OWNER_NAV : ADMIN_NAV;
   const roleLabel = role === "owner" ? "Owner" : "Admin";
   const { cms, settings } = useStore((s) => ({ cms: s.cms, settings: s.settings }));
+  const { pathname } = useLocation();
   const displayLogo = cms?.logoUrl || defaultLogo;
   const storeName = settings?.storeName || "Nanami Kitchen";
 
@@ -82,20 +83,26 @@ export function DashboardShell({
           </div>
         </div>
 
-        <nav className="mt-6 space-y-1">
-          {nav.map(({ to, label, icon: Icon }) => (
-            <Link
-              key={to}
-              to={to}
-              activeOptions={{ exact: to === "/admin" || to === "/owner" }}
-              activeProps={{ className: "bg-primary/15 text-primary" }}
-              inactiveProps={{ className: "text-muted-foreground hover:bg-secondary/50" }}
-              className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium"
-            >
-              <Icon className="size-4" />
-              {label}
-            </Link>
-          ))}
+        <nav suppressHydrationWarning className="mt-6 space-y-1">
+          {nav.map(({ to, label, icon: Icon }) => {
+            const isActive =
+              to === "/admin" || to === "/owner" ? pathname === to : pathname.startsWith(to);
+            return (
+              <Link
+                key={to}
+                to={to}
+                suppressHydrationWarning
+                className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+                  isActive
+                    ? "bg-primary/15 text-primary"
+                    : "text-muted-foreground hover:bg-secondary/50"
+                }`}
+              >
+                <Icon className="size-4" />
+                {label}
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="mt-auto space-y-1 px-1 pt-6 text-xs">
@@ -109,39 +116,42 @@ export function DashboardShell({
       </aside>
 
       <div className="lg:pl-60">
-        <header className="sticky top-0 z-30 border-b border-border bg-background/90 px-4 py-4 backdrop-blur">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
+        <header className="sticky top-0 z-30 border-b border-border bg-background/90 px-3 sm:px-6 py-3 sm:py-4 backdrop-blur">
+          <div className="flex flex-wrap items-center justify-between gap-2.5">
+            <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <h1 className="text-xl font-bold">{title}</h1>
-                <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                <h1 className="truncate text-lg sm:text-xl font-bold">{title}</h1>
+                <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] sm:text-[11px] font-semibold text-primary shrink-0">
                   {roleLabel}
                 </span>
               </div>
-              {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
+              {subtitle && <p className="truncate text-xs text-muted-foreground">{subtitle}</p>}
             </div>
-            {actions}
+            {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
           </div>
 
-          <div className="no-scrollbar -mx-1 mt-3 flex gap-2 overflow-x-auto px-1 lg:hidden">
-            {nav.map(({ to, label }) => (
-              <Link
-                key={to}
-                to={to}
-                activeOptions={{ exact: to === "/admin" || to === "/owner" }}
-                activeProps={{ className: "bg-primary text-primary-foreground" }}
-                inactiveProps={{
-                  className: "border border-border bg-secondary/40 text-muted-foreground",
-                }}
-                className="shrink-0 rounded-full px-3.5 py-2 text-xs font-semibold"
-              >
-                {label}
-              </Link>
-            ))}
+          <div className="no-scrollbar -mx-3 sm:-mx-6 mt-2.5 flex gap-1.5 overflow-x-auto px-3 sm:px-6 lg:hidden">
+            {nav.map(({ to, label }) => {
+              const isActive =
+                to === "/admin" || to === "/owner" ? pathname === to : pathname.startsWith(to);
+              return (
+                <Link
+                  key={to}
+                  to={to}
+                  className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition ${
+                    isActive
+                      ? "bg-primary text-primary-foreground shadow-xs font-bold"
+                      : "border border-border bg-secondary/40 text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {label}
+                </Link>
+              );
+            })}
           </div>
         </header>
 
-        <main className="px-4 py-5 pb-16">{children}</main>
+        <main className="px-3 sm:px-6 py-4 sm:py-6 pb-20">{children}</main>
       </div>
     </div>
   );

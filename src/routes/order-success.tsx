@@ -1,19 +1,19 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Check } from "lucide-react";
-import { rupiah, useStore } from "@/lib/store";
+import { Check, MessageSquare } from "lucide-react";
+import { buildWhatsappMessage, cleanWhatsappNumber, rupiah, useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/order-success")({
   head: () => ({
     meta: [
-      { title: "Order Placed — Nanami Kitchen" },
+      { title: "Pesanan Berhasil — Nanami Kitchen" },
       {
         name: "description",
-        content: "Your Nanami Kitchen order has been placed and sent to WhatsApp.",
+        content: "Pesanan Anda telah berhasil dibuat dan dikirimkan ke WhatsApp Owner.",
       },
-      { property: "og:title", content: "Order Placed — Nanami Kitchen" },
+      { property: "og:title", content: "Pesanan Berhasil — Nanami Kitchen" },
       {
         property: "og:description",
-        content: "Your order has been sent to WhatsApp.",
+        content: "Pesanan Anda telah berhasil dikirimkan ke WhatsApp.",
       },
     ],
   }),
@@ -22,31 +22,36 @@ export const Route = createFileRoute("/order-success")({
 
 function OrderSuccess() {
   const navigate = useNavigate();
-  const order = useStore((s) => s.orders[0]);
+  const { order, settings } = useStore((s) => ({
+    order: s.orders[0],
+    settings: s.settings,
+  }));
 
   if (!order) {
     return (
       <div className="min-h-screen bg-background px-4 pt-5">
         <div className="shell flex min-h-screen flex-col items-center justify-center pb-10 text-center">
-          <p className="text-muted-foreground">No recent order found.</p>
+          <p className="text-muted-foreground">Tidak ada data pesanan terbaru.</p>
           <Link
             to="/"
             className="mt-4 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground"
           >
-            Back to Home
+            Kembali ke Beranda
           </Link>
         </div>
       </div>
     );
   }
 
+  const targetWa = cleanWhatsappNumber(settings.whatsapp);
+  const waUrl = `https://wa.me/${targetWa}?text=${encodeURIComponent(buildWhatsappMessage(order))}`;
+
   return (
-    <div className="min-h-screen bg-background px-4 pt-10">
+    <div className="min-h-screen bg-background px-4 pt-8">
       <div className="shell flex min-h-screen flex-col pb-10">
         {/* Success icon with confetti */}
-        <div className="relative flex flex-col items-center pt-8">
+        <div className="relative flex flex-col items-center pt-6 text-center">
           <div className="relative">
-            {/* Confetti pieces */}
             <span
               aria-hidden
               className="absolute -left-10 top-2 size-2 rotate-45 rounded-sm bg-primary"
@@ -71,55 +76,59 @@ function OrderSuccess() {
               aria-hidden
               className="absolute -right-10 top-12 size-2.5 rotate-45 rounded-sm bg-primary/80"
             />
-            <span
-              aria-hidden
-              className="absolute left-1/2 -top-8 size-2 -translate-x-1/2 rotate-12 rounded-sm bg-[oklch(0.7_0.1_90)]"
-            />
-            <span
-              aria-hidden
-              className="absolute -left-4 top-16 size-1.5 rotate-45 rounded-full bg-[oklch(0.8_0.1_85)]"
-            />
-            <span
-              aria-hidden
-              className="absolute -right-3 top-16 size-1.5 rotate-12 rounded-full bg-primary/70"
-            />
 
-            <div className="flex size-28 items-center justify-center rounded-full bg-primary shadow-[0_0_40px_-8px_var(--color-primary)]">
-              <Check className="size-14 text-primary-foreground" strokeWidth={3} />
+            <div className="flex size-24 sm:size-28 items-center justify-center rounded-full bg-primary shadow-[0_0_40px_-8px_var(--color-primary)]">
+              <Check className="size-12 sm:size-14 text-primary-foreground" strokeWidth={3} />
             </div>
           </div>
 
-          <h1 className="mt-8 text-3xl font-bold text-foreground">Order Placed!</h1>
-          <p className="mt-3 text-center text-base text-muted-foreground">
-            Your order has been sent to WhatsApp.
+          <h1 className="mt-6 text-2xl font-bold text-foreground sm:text-3xl">
+            Pesanan Berhasil Terbuat!
+          </h1>
+          <p className="mt-2 text-sm sm:text-base text-muted-foreground max-w-sm">
+            Rincian menu dan data pemesan telah disiapkan untuk WhatsApp Owner (
+            <span className="font-semibold text-foreground">+{targetWa}</span>).
           </p>
         </div>
 
         {/* Order summary card */}
-        <section className="mt-10 rounded-3xl border border-border bg-card p-6">
+        <section className="mt-6 rounded-3xl border border-border bg-card p-5">
           <div className="flex items-center justify-between">
-            <span className="text-base text-muted-foreground">Order No.</span>
-            <span className="text-lg font-semibold text-foreground">#{order.code}</span>
+            <span className="text-sm text-muted-foreground">Nomor Pesanan</span>
+            <span className="text-base font-bold text-foreground">#{order.code}</span>
           </div>
-          <div className="mt-5 flex items-center justify-between border-t border-border pt-5">
-            <span className="text-base text-muted-foreground">Total</span>
+          <div className="mt-3 flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Pembayaran</span>
+            <span className="text-sm font-semibold text-foreground">{order.paymentMethod}</span>
+          </div>
+          <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
+            <span className="text-base text-muted-foreground">Total Tagihan</span>
             <span className="text-2xl font-bold text-foreground">{rupiah(order.total)}</span>
           </div>
         </section>
 
         {/* Actions */}
-        <div className="mt-auto space-y-4 pt-10">
+        <div className="mt-auto space-y-3 pt-8">
+          <a
+            href={waUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[linear-gradient(135deg,var(--wa),oklch(0.7_0.17_158))] py-3.5 text-sm font-bold text-wa-foreground shadow-[0_8px_24px_-8px_var(--color-wa)] transition hover:brightness-105"
+          >
+            <MessageSquare className="size-5" />
+            Buka WhatsApp Owner Lagi
+          </a>
           <button
             onClick={() => navigate({ to: "/orders" })}
-            className="w-full rounded-2xl bg-primary py-4 text-base font-bold text-primary-foreground shadow-[0_8px_24px_-8px_var(--color-primary)]"
+            className="w-full rounded-2xl bg-secondary py-3.5 text-sm font-bold text-foreground hover:bg-secondary/80"
           >
-            View Order Details
+            Lihat Riwayat Pesanan Saya
           </button>
           <Link
             to="/"
-            className="flex w-full items-center justify-center rounded-2xl border-2 border-primary bg-transparent py-4 text-base font-bold text-foreground transition-colors hover:bg-primary/10"
+            className="flex w-full items-center justify-center rounded-2xl border border-border bg-transparent py-3 text-sm font-semibold text-muted-foreground transition hover:text-foreground"
           >
-            Back to Home
+            Kembali ke Beranda
           </Link>
         </div>
       </div>

@@ -21,15 +21,15 @@ export function OrdersPanel({ readOnly = false }: { readOnly?: boolean }) {
 
   return (
     <div className="space-y-4">
-      <div className="no-scrollbar flex gap-2 overflow-x-auto">
+      <div className="no-scrollbar -mx-3 sm:mx-0 flex gap-1.5 overflow-x-auto px-3 sm:px-0">
         {FILTERS.map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`shrink-0 rounded-full px-3.5 py-2 text-xs font-semibold ${
+            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
               filter === f
-                ? "bg-primary text-primary-foreground"
-                : "border border-border bg-secondary/40 text-muted-foreground"
+                ? "bg-primary text-primary-foreground shadow-xs font-bold"
+                : "border border-border bg-secondary/40 text-muted-foreground hover:text-foreground"
             }`}
           >
             {f}
@@ -40,7 +40,7 @@ export function OrdersPanel({ readOnly = false }: { readOnly?: boolean }) {
       {list.length === 0 ? (
         <p className="py-10 text-center text-sm text-muted-foreground">Belum ada pesanan.</p>
       ) : (
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {list.map((o) => (
             <div key={o.id} className="glow-card space-y-3 p-4">
               <div className="flex items-start justify-between">

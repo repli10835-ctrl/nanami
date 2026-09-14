@@ -6,6 +6,7 @@ import {
   actions,
   buildWhatsappMessage,
   cartTotals,
+  cleanWhatsappNumber,
   deliveryFeeFor,
   discountFor,
   findVoucher,
@@ -141,10 +142,9 @@ function Checkout() {
       customer: { name, phone, address, deliveryNote },
     });
     actions.updateProfile({ name, phone, address });
-    window.open(
-      `https://wa.me/${settings.whatsapp}?text=${encodeURIComponent(buildWhatsappMessage(order))}`,
-      "_blank",
-    );
+    const targetWa = cleanWhatsappNumber(settings.whatsapp);
+    const textMsg = encodeURIComponent(buildWhatsappMessage(order));
+    window.open(`https://wa.me/${targetWa}?text=${textMsg}`, "_blank");
     navigate({ to: "/order-success" });
   }
 
@@ -386,38 +386,44 @@ function Checkout() {
                 <span className="mr-2 font-semibold text-foreground">1.</span>
                 Transfer to the following account:
               </p>
-              <div className="mt-3 flex items-center gap-4 rounded-2xl border border-border bg-card p-5">
+              <div className="mt-3 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4 sm:p-5">
                 <div className="min-w-0 flex-1">
                   {payment === "bank" ? (
                     <>
                       <p className="flex items-center gap-2">
-                        <span className="flex size-9 items-center justify-center rounded-full bg-primary/15 text-xs font-black text-primary">
+                        <span className="flex size-8 sm:size-9 items-center justify-center rounded-full bg-primary/15 text-xs font-black text-primary shrink-0">
                           BCA
                         </span>
-                        <span className="text-lg font-black italic tracking-wide text-foreground">
+                        <span className="text-base sm:text-lg font-black italic tracking-wide text-foreground truncate">
                           {settings.bankName}
                         </span>
                       </p>
-                      <p className="mt-2 text-sm text-muted-foreground">Bank Central Asia (BCA)</p>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        Account Name: <span className="text-foreground">{settings.bankHolder}</span>
+                      <p className="mt-2 text-xs sm:text-sm text-muted-foreground">
+                        Bank Central Asia (BCA)
                       </p>
-                      <p className="mt-1 text-sm text-muted-foreground">
+                      <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
+                        Account Name:{" "}
+                        <span className="text-foreground font-medium">{settings.bankHolder}</span>
+                      </p>
+                      <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
                         Account No:{" "}
-                        <span className="font-semibold text-foreground">
+                        <span className="font-bold text-foreground font-mono">
                           {settings.bankAccount}
                         </span>
                       </p>
                     </>
                   ) : (
                     <>
-                      <p className="text-lg font-bold text-foreground">E-Wallet</p>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        Account Name: <span className="text-foreground">Nanami Kitchen</span>
+                      <p className="text-base sm:text-lg font-bold text-foreground">E-Wallet</p>
+                      <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
+                        Account Name:{" "}
+                        <span className="text-foreground font-medium">Nanami Kitchen</span>
                       </p>
-                      <p className="mt-1 text-sm text-muted-foreground">
+                      <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
                         Number:{" "}
-                        <span className="font-semibold text-foreground">{settings.ewallet}</span>
+                        <span className="font-bold text-foreground font-mono">
+                          {settings.ewallet}
+                        </span>
                       </p>
                     </>
                   )}
@@ -426,9 +432,9 @@ function Checkout() {
                   onClick={() =>
                     copy(payment === "bank" ? settings.bankAccount : settings.ewallet, "account")
                   }
-                  className="flex shrink-0 items-center gap-2 rounded-xl bg-secondary px-4 py-3 text-sm font-semibold text-foreground"
+                  className="flex shrink-0 items-center gap-1.5 rounded-xl bg-secondary px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-foreground hover:bg-secondary/80 transition"
                 >
-                  <Copy className="size-4" />
+                  <Copy className="size-3.5 sm:size-4" />
                   {copied === "account" ? "Copied" : "Copy"}
                 </button>
               </div>
@@ -512,35 +518,61 @@ function Checkout() {
           </section>
 
           {/* WhatsApp handoff card */}
-          <section className="mt-6 rounded-3xl border border-wa/40 bg-wa-deep/25 p-6">
+          <section className="mt-6 rounded-3xl border border-wa/40 bg-wa-deep/25 p-5 sm:p-6">
             <div className="flex items-start gap-4">
-              <span className="flex size-16 shrink-0 items-center justify-center rounded-full bg-wa shadow-[0_0_30px_var(--color-wa)]">
-                <svg viewBox="0 0 24 24" className="size-9 fill-wa-foreground" aria-hidden="true">
+              <span className="flex size-14 sm:size-16 shrink-0 items-center justify-center rounded-full bg-wa shadow-[0_0_30px_var(--color-wa)]">
+                <svg
+                  viewBox="0 0 24 24"
+                  className="size-8 sm:size-9 fill-wa-foreground"
+                  aria-hidden="true"
+                >
                   <path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 1.8a8.2 8.2 0 1 1-4.2 15.3l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 0 1 12 3.8Zm-3.1 3.6c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.2s.9 2.5 1.1 2.7c.1.2 1.8 2.9 4.5 3.9 2.2.9 2.7.7 3.2.7.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.6-.3l-2-.9c-.3-.1-.5-.2-.7.1l-1 1.2c-.2.2-.3.2-.6.1-.3-.2-1.2-.5-2.3-1.5-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6l.5-.6c.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.9-2.1c-.2-.5-.4-.5-.7-.5h-.5Z" />
                 </svg>
               </span>
               <div>
-                <h3 className="text-lg font-semibold text-wa">Open WhatsApp</h3>
-                <p className="mt-1 text-sm leading-relaxed text-foreground/80">
-                  Your order will be sent automatically with the details and payment proof
+                <h3 className="text-lg font-bold text-wa">Kirim Pesanan ke WhatsApp</h3>
+                <p className="mt-1 text-xs sm:text-sm leading-relaxed text-foreground/80">
+                  Data pemesan, rincian menu, alamat, dan total pembayaran akan terkirim secara
+                  otomatis ke WhatsApp Owner:{" "}
+                  <span className="font-bold text-wa font-mono">
+                    +{cleanWhatsappNumber(settings.whatsapp)}
+                  </span>
                 </p>
               </div>
             </div>
+
+            <div className="mt-4 rounded-xl border border-border/60 bg-background/60 p-3 text-xs space-y-1">
+              <p className="font-semibold text-foreground">Format Pesanan Yang Terkirim:</p>
+              <ul className="list-disc list-inside text-muted-foreground space-y-0.5">
+                <li>
+                  Detail Pembeli ({name || "Nama"} - {phone || "No. WA"})
+                </li>
+                <li>
+                  {orderType === "delivery"
+                    ? `Alamat Kirim: ${address}`
+                    : "Pilihan: Takeaway / Pickup"}
+                </li>
+                <li>Rincian {cart.length} Item Menu & Opsi Pilihan</li>
+                <li>Subtotal & Total Bayar ({rupiah(total)})</li>
+                <li>Metode Pembayaran ({PAYMENT_LABELS[payment]})</li>
+              </ul>
+            </div>
+
             {!valid && (
               <p className="mt-4 rounded-lg bg-destructive/15 px-3 py-2 text-xs text-destructive">
                 {detailsMissing
-                  ? "Add your name and WhatsApp number in the previous step to continue."
+                  ? "Lengkapi nama dan nomor WhatsApp Anda di langkah sebelumnya."
                   : outOfRange
-                    ? `Out of delivery range (max ${settings.maxRadiusKm} km).`
-                    : "Your cart is empty."}
+                    ? `Alamat di luar jangkauan delivery (maksimal ${settings.maxRadiusKm} km).`
+                    : "Keranjang Anda kosong."}
               </p>
             )}
             <button
               disabled={!valid}
               onClick={submit}
-              className="mt-6 w-full rounded-2xl bg-[linear-gradient(135deg,var(--wa),oklch(0.7_0.17_158))] py-4 text-sm font-bold text-wa-foreground shadow-[0_8px_24px_-8px_var(--color-wa)] disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none"
+              className="mt-5 w-full rounded-2xl bg-[linear-gradient(135deg,var(--wa),oklch(0.7_0.17_158))] py-4 text-sm font-bold text-wa-foreground shadow-[0_8px_24px_-8px_var(--color-wa)] hover:brightness-105 active:scale-[0.99] transition disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none"
             >
-              Continue to WhatsApp
+              Kirim Pesanan Via WhatsApp &rarr;
             </button>
           </section>
         </>

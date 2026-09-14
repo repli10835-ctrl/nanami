@@ -82,22 +82,22 @@ function MenuDetailContent({ item }: { item: MenuItem }) {
   const isSize = (name: string) => /size/i.test(name);
 
   return (
-    <div className="mx-auto min-h-screen w-full max-w-md bg-background pb-32">
+    <div className="mx-auto min-h-screen w-full max-w-2xl bg-background pb-32">
       {/* Hero */}
       <div className="relative">
-        <img src={item.image} alt={item.name} className="h-64 w-full object-cover" />
+        <img src={item.image} alt={item.name} className="h-64 sm:h-80 w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-transparent to-background" />
         <button
           onClick={() => navigate({ to: "/menu" })}
           aria-label="Back"
-          className="absolute left-4 top-4 rounded-full bg-background/70 p-2 backdrop-blur"
+          className="absolute left-4 top-4 rounded-full bg-background/70 p-2 backdrop-blur hover:bg-background transition"
         >
           <ChevronLeft className="size-6" />
         </button>
         <button
           onClick={() => setLiked((v) => !v)}
           aria-label="Favorite"
-          className="absolute right-4 top-4 rounded-full bg-background/70 p-2 backdrop-blur"
+          className="absolute right-4 top-4 rounded-full bg-background/70 p-2 backdrop-blur hover:bg-background transition"
         >
           <Heart
             className={`size-6 transition-colors ${liked ? "fill-primary text-primary" : ""}`}
@@ -105,38 +105,40 @@ function MenuDetailContent({ item }: { item: MenuItem }) {
         </button>
       </div>
 
-      <div className="space-y-7 px-5 pt-2">
+      <div className="space-y-6 sm:space-y-7 px-4 sm:px-6 pt-2">
         {/* Title, price, rating */}
         <div>
-          <h1 className="text-3xl font-bold">{item.name}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">{item.name}</h1>
           <div className="mt-2 flex items-center justify-between">
-            <p className="text-2xl font-bold">{rupiah(item.price)}</p>
+            <p className="text-xl sm:text-2xl font-bold text-primary">{rupiah(item.price)}</p>
             <p className="flex items-center gap-1.5 text-sm">
-              <Star className="size-5 fill-primary text-primary" />
-              <span className="text-lg font-bold">{rating}</span>
-              <span className="text-muted-foreground">({reviews} reviews)</span>
+              <Star className="size-4 sm:size-5 fill-primary text-primary" />
+              <span className="text-base sm:text-lg font-bold">{rating}</span>
+              <span className="text-xs sm:text-sm text-muted-foreground">({reviews} reviews)</span>
             </p>
           </div>
-          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.description}</p>
+          <p className="mt-2 text-xs sm:text-sm leading-relaxed text-muted-foreground">
+            {item.description}
+          </p>
           {!item.available && (
-            <p className="mt-2 text-sm font-semibold text-destructive">Sold out</p>
+            <p className="mt-2 text-xs sm:text-sm font-semibold text-destructive">Sold out</p>
           )}
         </div>
 
         {/* Option groups */}
         {item.groups.map((g) => (
           <div key={g.id}>
-            <h2 className="text-lg font-bold">{g.name}</h2>
+            <h2 className="text-base sm:text-lg font-bold">{g.name}</h2>
 
             {g.type === "single" && (isSize(g.name) || isSpice(g.name)) ? (
-              <div className="mt-3 grid grid-cols-2 gap-3">
+              <div className="mt-3 grid grid-cols-2 gap-2.5 sm:gap-3">
                 {g.choices.map((c) => {
                   const active = (selected[g.id] ?? []).includes(c.id);
                   return (
                     <button
                       key={c.id}
                       onClick={() => toggle(g.id, g.type, c.id)}
-                      className={`flex flex-col items-start gap-1 rounded-2xl border-2 p-4 text-left transition-colors ${
+                      className={`flex flex-col items-start gap-1 rounded-2xl border-2 p-3 sm:p-4 text-left transition-colors ${
                         active ? "border-primary bg-primary/10" : "border-border bg-secondary/40"
                       }`}
                     >
@@ -148,7 +150,7 @@ function MenuDetailContent({ item }: { item: MenuItem }) {
                             }).map((_, i) => (
                               <Flame
                                 key={i}
-                                className={`size-4 ${
+                                className={`size-3.5 sm:size-4 ${
                                   c.id === "hot"
                                     ? "fill-destructive text-destructive"
                                     : "fill-primary text-primary"
@@ -158,16 +160,18 @@ function MenuDetailContent({ item }: { item: MenuItem }) {
                           </span>
                         ) : (
                           <span
-                            className={`flex size-5 items-center justify-center rounded-full border-2 ${
+                            className={`flex size-4 sm:size-5 items-center justify-center rounded-full border-2 ${
                               active ? "border-primary" : "border-muted-foreground/50"
                             }`}
                           >
-                            {active && <span className="size-2.5 rounded-full bg-primary" />}
+                            {active && (
+                              <span className="size-2 sm:size-2.5 rounded-full bg-primary" />
+                            )}
                           </span>
                         )}
-                        <span className="font-semibold">{c.name}</span>
+                        <span className="text-xs sm:text-sm font-semibold">{c.name}</span>
                       </span>
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-xs sm:text-sm text-muted-foreground">
                         {c.price ? rupiah(item.price + c.price) : rupiah(item.price)}
                       </span>
                     </button>
@@ -175,26 +179,28 @@ function MenuDetailContent({ item }: { item: MenuItem }) {
                 })}
               </div>
             ) : g.type === "multi" ? (
-              <div className="mt-3 space-y-3">
+              <div className="mt-3 space-y-2.5 sm:space-y-3">
                 {g.choices.map((c) => {
                   const active = (selected[g.id] ?? []).includes(c.id);
                   return (
                     <button
                       key={c.id}
                       onClick={() => toggle(g.id, g.type, c.id)}
-                      className="flex w-full items-center gap-3 text-left"
+                      className="flex w-full items-center gap-3 text-left p-2 rounded-xl hover:bg-secondary/30 transition"
                     >
                       <span
-                        className={`flex size-7 items-center justify-center rounded-lg border-2 transition-colors ${
+                        className={`flex size-6 sm:size-7 items-center justify-center rounded-lg border-2 transition-colors shrink-0 ${
                           active
                             ? "border-primary bg-primary text-primary-foreground"
                             : "border-muted-foreground/50"
                         }`}
                       >
-                        {active && <Check className="size-4" />}
+                        {active && <Check className="size-3.5 sm:size-4" />}
                       </span>
-                      <span className="flex-1 text-base">{c.name}</span>
-                      <span className="text-muted-foreground">+{rupiah(c.price)}</span>
+                      <span className="flex-1 text-xs sm:text-sm font-medium">{c.name}</span>
+                      <span className="text-xs sm:text-sm text-muted-foreground">
+                        +{rupiah(c.price)}
+                      </span>
                     </button>
                   );
                 })}
@@ -207,7 +213,7 @@ function MenuDetailContent({ item }: { item: MenuItem }) {
                     <button
                       key={c.id}
                       onClick={() => toggle(g.id, g.type, c.id)}
-                      className={`flex w-full items-center justify-between rounded-xl border px-3 py-2.5 text-sm transition-colors ${
+                      className={`flex w-full items-center justify-between rounded-xl border px-3 py-2.5 text-xs sm:text-sm transition-colors ${
                         active
                           ? "border-primary bg-primary/10 text-foreground"
                           : "border-border bg-secondary/40 text-muted-foreground"
@@ -225,18 +231,23 @@ function MenuDetailContent({ item }: { item: MenuItem }) {
       </div>
 
       {/* Bottom bar */}
-      <div className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-md border-t border-border bg-background/95 px-5 py-4 backdrop-blur">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-4 rounded-2xl border border-border bg-secondary/40 px-4 py-3">
+      <div className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-2xl border-t border-border bg-background/95 px-4 sm:px-6 py-3 sm:py-4 backdrop-blur">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-2.5 sm:gap-4 rounded-2xl border border-border bg-secondary/40 px-3 sm:px-4 py-2.5 sm:py-3">
             <button
               onClick={() => setQty((q) => Math.max(1, q - 1))}
               aria-label="Decrease quantity"
+              className="p-1 text-muted-foreground hover:text-foreground"
             >
-              <Minus className="size-4" />
+              <Minus className="size-3.5 sm:size-4" />
             </button>
-            <span className="w-5 text-center text-lg font-bold">{qty}</span>
-            <button onClick={() => setQty((q) => q + 1)} aria-label="Increase quantity">
-              <Plus className="size-4" />
+            <span className="w-5 text-center text-sm sm:text-lg font-bold">{qty}</span>
+            <button
+              onClick={() => setQty((q) => q + 1)}
+              aria-label="Increase quantity"
+              className="p-1 text-muted-foreground hover:text-foreground"
+            >
+              <Plus className="size-3.5 sm:size-4" />
             </button>
           </div>
           <button
@@ -252,7 +263,7 @@ function MenuDetailContent({ item }: { item: MenuItem }) {
               });
               navigate({ to: "/cart" });
             }}
-            className="flex-1 rounded-2xl bg-primary py-4 text-base font-bold text-primary-foreground disabled:opacity-30"
+            className="flex-1 rounded-2xl bg-primary py-3 sm:py-4 text-xs sm:text-base font-bold text-primary-foreground disabled:opacity-30 hover:opacity-95 transition"
           >
             Add to Cart - {rupiah(unitPrice * qty)}
           </button>

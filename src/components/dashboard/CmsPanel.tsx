@@ -77,6 +77,7 @@ export function CmsPanel() {
   const [saveToast, setSaveToast] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const heroInputRef = useRef<HTMLInputElement>(null);
+  const promoInputRef = useRef<HTMLInputElement>(null);
   const welcomeInputRef = useRef<HTMLInputElement>(null);
 
   // New Promo form state
@@ -722,15 +723,33 @@ export function CmsPanel() {
                     />
                   </label>
 
-                  <label className="block text-xs text-muted-foreground">
-                    Foto Banner (URL Opsional)
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold text-foreground">
+                      Foto Banner Promo
+                    </label>
                     <input
-                      value={promoImage}
-                      onChange={(e) => setPromoImage(e.target.value)}
-                      placeholder="https://contoh.com/banner.jpg (Kosongkan untuk default)"
-                      className={fieldClass}
+                      type="file"
+                      ref={promoInputRef}
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => handleFileUpload(e, (base64) => setPromoImage(base64))}
                     />
-                  </label>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <button
+                        type="button"
+                        onClick={() => promoInputRef.current?.click()}
+                        className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-secondary/30 px-3 py-2 text-xs font-semibold text-muted-foreground transition hover:border-primary hover:text-foreground"
+                      >
+                        <Upload className="size-4" /> Upload Dari Device
+                      </button>
+                      <input
+                        value={promoImage}
+                        onChange={(e) => setPromoImage(e.target.value)}
+                        placeholder="Atau tempel URL (https://...)"
+                        className={fieldClass}
+                      />
+                    </div>
+                  </div>
 
                   <button
                     disabled={!promoTitle}
@@ -902,6 +921,41 @@ export function CmsPanel() {
                       className={fieldClass}
                     />
                   </label>
+                </div>
+
+                <div className="space-y-2 pt-2 border-t border-border">
+                  <label className="text-xs font-semibold text-foreground">
+                    Gambar Splash / Banner Pembuka
+                  </label>
+                  <input
+                    type="file"
+                    ref={welcomeInputRef}
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) =>
+                      handleFileUpload(e, (base64) =>
+                        actions.updateCmsWelcome({ imageUrl: base64 }),
+                      )
+                    }
+                  />
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <button
+                      type="button"
+                      onClick={() => welcomeInputRef.current?.click()}
+                      className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-secondary/30 px-3 py-2 text-xs font-semibold text-muted-foreground transition hover:border-primary hover:text-foreground"
+                    >
+                      <Upload className="size-4" /> Upload Foto Splash
+                    </button>
+                    <input
+                      value={cms.welcomeScreen.imageUrl || ""}
+                      onChange={(e) => {
+                        actions.updateCmsWelcome({ imageUrl: e.target.value });
+                        triggerToast();
+                      }}
+                      placeholder="Atau tempel URL gambar (https://...)"
+                      className={fieldClass}
+                    />
+                  </div>
                 </div>
               </div>
             </SectionCard>

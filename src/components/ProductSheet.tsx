@@ -48,9 +48,12 @@ export function ProductSheet({ item, onClose }: { item: MenuItem; onClose: () =>
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end bg-black/70" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 p-0 sm:p-4 backdrop-blur-xs transition-opacity"
+      onClick={onClose}
+    >
       <div
-        className="shell max-h-[90vh] overflow-y-auto rounded-t-3xl bg-popover pb-6"
+        className="w-full max-w-lg max-h-[92vh] sm:max-h-[85vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl bg-popover pb-6 shadow-2xl border border-border"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="relative">
@@ -58,34 +61,38 @@ export function ProductSheet({ item, onClose }: { item: MenuItem; onClose: () =>
             src={item.image}
             alt={item.name}
             loading="lazy"
-            className="h-48 w-full rounded-t-3xl object-cover"
+            className="h-48 sm:h-56 w-full rounded-t-3xl object-cover"
           />
           <button
             onClick={onClose}
             aria-label="Close"
-            className="absolute right-3 top-3 rounded-full bg-background/80 p-2"
+            className="absolute right-3 top-3 rounded-full bg-background/80 p-2 backdrop-blur hover:bg-background transition"
           >
             <X className="size-4" />
           </button>
         </div>
 
-        <div className="space-y-5 px-4 pt-4">
+        <div className="space-y-4 px-4 sm:px-6 pt-4">
           <div>
             <div className="flex items-start justify-between gap-3">
-              <h2 className="text-xl font-bold">{item.name}</h2>
-              <button onClick={share} aria-label="Share" className="rounded-full bg-secondary p-2">
+              <h2 className="text-lg sm:text-xl font-bold">{item.name}</h2>
+              <button
+                onClick={share}
+                aria-label="Share"
+                className="rounded-full bg-secondary p-2 hover:bg-secondary/80 transition"
+              >
                 <Share2 className="size-4" />
               </button>
             </div>
-            <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
+            <p className="mt-1 text-xs sm:text-sm text-muted-foreground">{item.description}</p>
             <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
               <Clock className="size-3.5" /> Prep {item.prepMinutes} mins + delivery ~20 mins
             </p>
-            <div className="mt-3 flex flex-wrap gap-1.5">
+            <div className="mt-2.5 flex flex-wrap gap-1.5">
               {item.badges.map((b) => (
                 <span
                   key={b}
-                  className="rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground"
+                  className="rounded-full border border-border px-2 py-0.5 text-[10px] sm:text-[11px] text-muted-foreground"
                 >
                   {b}
                 </span>
@@ -95,27 +102,27 @@ export function ProductSheet({ item, onClose }: { item: MenuItem; onClose: () =>
 
           {item.groups.map((g) => (
             <div key={g.id}>
-              <h3 className="text-sm font-semibold">
+              <h3 className="text-xs sm:text-sm font-semibold">
                 {g.name}
-                <span className="ml-2 text-xs font-normal text-muted-foreground">
+                <span className="ml-2 text-[11px] font-normal text-muted-foreground">
                   {g.type === "single" ? "Choose one" : "Optional"}
                 </span>
               </h3>
-              <div className="mt-2 space-y-2">
+              <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {g.choices.map((c) => {
                   const active = (selected[g.id] ?? []).includes(c.id);
                   return (
                     <button
                       key={c.id}
                       onClick={() => toggle(g.id, g.type, c.id)}
-                      className={`flex w-full items-center justify-between rounded-xl border px-3 py-2.5 text-sm transition-colors ${
+                      className={`flex w-full items-center justify-between rounded-xl border px-3 py-2 text-xs sm:text-sm transition-colors ${
                         active
-                          ? "border-primary bg-primary/10 text-foreground"
-                          : "border-border bg-secondary/40 text-muted-foreground"
+                          ? "border-primary bg-primary/10 text-foreground font-semibold"
+                          : "border-border bg-secondary/40 text-muted-foreground hover:text-foreground"
                       }`}
                     >
-                      <span>{c.name}</span>
-                      <span>{c.price ? `+ ${rupiah(c.price)}` : "Free"}</span>
+                      <span className="truncate mr-2">{c.name}</span>
+                      <span className="shrink-0">{c.price ? `+ ${rupiah(c.price)}` : "Free"}</span>
                     </button>
                   );
                 })}
@@ -124,23 +131,31 @@ export function ProductSheet({ item, onClose }: { item: MenuItem; onClose: () =>
           ))}
 
           <div>
-            <h3 className="text-sm font-semibold">Special request</h3>
+            <h3 className="text-xs sm:text-sm font-semibold">Special request</h3>
             <input
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="e.g. no MSG, less spicy"
-              className="mt-2 w-full rounded-xl border border-input bg-secondary/40 px-3 py-2.5 text-sm outline-none focus:border-primary"
+              className="mt-1.5 w-full rounded-xl border border-input bg-secondary/40 px-3 py-2 text-xs sm:text-sm outline-none focus:border-primary"
             />
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-3 rounded-xl border border-border px-3 py-2">
-              <button onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="Decrease">
-                <Minus className="size-4" />
+          <div className="flex items-center gap-2.5 sm:gap-3 pt-2">
+            <div className="flex items-center gap-2 sm:gap-3 rounded-xl border border-border px-2.5 sm:px-3 py-2 shrink-0">
+              <button
+                onClick={() => setQty((q) => Math.max(1, q - 1))}
+                aria-label="Decrease"
+                className="p-0.5 hover:text-primary transition"
+              >
+                <Minus className="size-3.5 sm:size-4" />
               </button>
-              <span className="w-5 text-center text-sm font-semibold">{qty}</span>
-              <button onClick={() => setQty((q) => q + 1)} aria-label="Increase">
-                <Plus className="size-4" />
+              <span className="w-5 text-center text-xs sm:text-sm font-semibold">{qty}</span>
+              <button
+                onClick={() => setQty((q) => q + 1)}
+                aria-label="Increase"
+                className="p-0.5 hover:text-primary transition"
+              >
+                <Plus className="size-3.5 sm:size-4" />
               </button>
             </div>
             <button
@@ -155,7 +170,7 @@ export function ProductSheet({ item, onClose }: { item: MenuItem; onClose: () =>
                 });
                 onClose();
               }}
-              className="flex-1 rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground"
+              className="flex-1 rounded-xl bg-primary py-2.5 sm:py-3 px-3 text-xs sm:text-sm font-bold text-primary-foreground hover:brightness-105 transition truncate"
             >
               Add to cart · {rupiah(unitPrice * qty)}
             </button>

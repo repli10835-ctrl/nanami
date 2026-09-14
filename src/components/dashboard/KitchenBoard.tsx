@@ -147,16 +147,20 @@ export function KitchenBoard() {
         ))}
       </div>
 
-      <div className="space-y-3 xl:hidden">
+      <div className="space-y-3 lg:hidden">
         <p className="text-xs text-muted-foreground">{active.stage.hint}</p>
         {active.list.length === 0 ? (
           <EmptyStage label={active.stage.label} />
         ) : (
-          active.list.map((o) => <OrderCard key={o.id} order={o} stage={active.stage} />)
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {active.list.map((o) => (
+              <OrderCard key={o.id} order={o} stage={active.stage} />
+            ))}
+          </div>
         )}
       </div>
 
-      <div className="hidden gap-3 xl:grid xl:grid-cols-4 xl:items-start">
+      <div className="hidden gap-3 lg:grid lg:grid-cols-2 xl:grid-cols-4 lg:items-start">
         {grouped.map(({ stage, list }) => (
           <section key={stage.key} className="rounded-2xl border border-border bg-popover/40 p-3">
             <header className="mb-3">

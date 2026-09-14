@@ -944,34 +944,50 @@ export function deliveryFeeFor(
   return Math.max(settings.minFee ?? 0, Math.round(fee / 500) * 500);
 }
 
+export function cleanWhatsappNumber(raw?: string) {
+  if (!raw) return "6281234567890";
+  let cleaned = raw.replace(/\D/g, "");
+  if (cleaned.startsWith("0")) {
+    cleaned = "62" + cleaned.slice(1);
+  }
+  return cleaned || "6281234567890";
+}
+
 export function buildWhatsappMessage(order: Order) {
   const lines = order.lines
     .map(
       (l) =>
-        `• ${l.qty}x ${l.name}${l.optionLabels.length ? ` (${l.optionLabels.join(", ")})` : ""}${
-          l.note ? ` — note: ${l.note}` : ""
-        } — ${rupiah(l.unitPrice * l.qty)}`,
+        `• *${l.qty}x ${l.name}*${l.optionLabels.length ? ` (${l.optionLabels.join(", ")})` : ""}${
+          l.note ? `\n  Catatan: ${l.note}` : ""
+        }\n  Subtotal: ${rupiah(l.unitPrice * l.qty)}`,
     )
-    .join("\n");
+    .join("\n\n");
+
   return [
-    `*New Order ${order.code}* — Nanami Kitchen`,
-    `Type: ${order.type === "delivery" ? "Delivery" : "Pickup"}`,
-    `Name: ${order.customer.name}`,
-    `Phone: ${order.customer.phone}`,
-    order.type === "delivery" ? `Address: ${order.customer.address}` : "",
-    order.customer.deliveryNote ? `Delivery note: ${order.customer.deliveryNote}` : "",
-    "",
+    `*PESANAN BARU #${order.code}*`,
+    `------------------------------------------`,
+    `👤 *DATA PEMBELI:*`,
+    `• Nama: ${order.customer.name}`,
+    `• No. WhatsApp: ${order.customer.phone}`,
+    `• Tipe Pesanan: ${order.type === "delivery" ? "🚚 Delivery (Pengiriman)" : "🛍️ Pickup (Ambil di Toko)"}`,
+    order.type === "delivery" ? `• Alamat Kirim: ${order.customer.address}` : "",
+    order.customer.deliveryNote ? `• Catatan Lokasi: ${order.customer.deliveryNote}` : "",
+    `------------------------------------------`,
+    `🍱 *RINCIAN MENU YANG DIPESAN:*`,
     lines,
-    "",
-    `Subtotal: ${rupiah(order.subtotal)}`,
+    `------------------------------------------`,
+    `💵 *RINGKASAN BIAYA:*`,
+    `• Subtotal Menu: ${rupiah(order.subtotal)}`,
     order.discount
-      ? `Discount${order.voucherCode ? ` (${order.voucherCode})` : ""}: -${rupiah(order.discount)}`
+      ? `• Diskon Voucher${order.voucherCode ? ` (${order.voucherCode})` : ""}: -${rupiah(order.discount)}`
       : "",
-    order.deliveryFee ? `Delivery: ${rupiah(order.deliveryFee)}` : "",
-    `*Total: ${rupiah(order.total)}*`,
-    `Payment: ${order.paymentMethod}`,
+    order.type === "delivery" ? `• Ongkos Kirim: ${rupiah(order.deliveryFee)}` : "",
+    `*💰 TOTAL BAYAR: ${rupiah(order.total)}*`,
+    `------------------------------------------`,
+    `💳 *METODE PEMBAYARAN (MANUAL):*`,
+    `• ${order.paymentMethod}`,
     "",
-    "I will attach the transfer proof here.",
+    `_Halo Kak / Admin, saya telah melakukan pemesanan di atas. Mohon konfirmasi dan proses pesanan saya. Terima kasih!_`,
   ]
     .filter(Boolean)
     .join("\n");

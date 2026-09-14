@@ -1,7 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Share2 } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
-import { rupiah, useStore, type Order } from "@/lib/store";
+import {
+  buildWhatsappMessage,
+  cleanWhatsappNumber,
+  rupiah,
+  useStore,
+  type Order,
+} from "@/lib/store";
 
 const FLOW = ["Pending Payment", "Cooking", "Out for Delivery", "Completed"];
 const PICKUP_FLOW = ["Pending Payment", "Cooking", "Ready for Pickup", "Completed"];
@@ -45,8 +51,10 @@ function Orders() {
 }
 
 function OrderCard({ order }: { order: Order }) {
+  const settings = useStore((s) => s.settings);
   const flow = order.type === "delivery" ? FLOW : PICKUP_FLOW;
   const index = flow.indexOf(order.status);
+  const targetWa = cleanWhatsappNumber(settings.whatsapp);
 
   return (
     <article className="glow-card p-4">
@@ -58,18 +66,17 @@ function OrderCard({ order }: { order: Order }) {
           </p>
         </div>
         <button
-          aria-label="Share order"
+          aria-label="Send to WhatsApp Owner"
           onClick={() =>
             window.open(
-              `https://wa.me/?text=${encodeURIComponent(
-                `My Nanami Kitchen order ${order.code} — ${order.status}`,
-              )}`,
+              `https://wa.me/${targetWa}?text=${encodeURIComponent(buildWhatsappMessage(order))}`,
               "_blank",
             )
           }
-          className="rounded-full bg-secondary p-2"
+          className="flex items-center gap-1.5 rounded-xl bg-wa/15 px-2.5 py-1.5 text-xs font-bold text-wa hover:bg-wa/25 transition"
         >
-          <Share2 className="size-4" />
+          <MessageSquare className="size-3.5" />
+          WhatsApp
         </button>
       </div>
 

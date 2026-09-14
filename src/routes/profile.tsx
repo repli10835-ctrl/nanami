@@ -123,25 +123,31 @@ function Profile() {
         <Row to="/owner" icon={ShieldCheck} label="Panel Owner" />
         <button
           onClick={() => setShowPassword((v) => !v)}
-          className="flex w-full items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-secondary/60"
+          className="flex w-full items-center gap-3 sm:gap-4 px-3.5 sm:px-5 py-3.5 sm:py-4 text-left transition-colors hover:bg-secondary/60"
         >
-          <KeyRound className="size-6 shrink-0 text-muted-foreground" strokeWidth={1.8} />
-          <span className="flex-1 text-base font-medium">Change Password</span>
-          <ChevronRight className="size-5 text-muted-foreground" />
+          <KeyRound className="size-5 sm:size-6 shrink-0 text-muted-foreground" strokeWidth={1.8} />
+          <span className="flex-1 text-sm sm:text-base font-medium">Change Password</span>
+          <ChevronRight className="size-4 sm:size-5 text-muted-foreground shrink-0" />
         </button>
         <a
           href={`https://wa.me/${settings.whatsapp}`}
           target="_blank"
           rel="noreferrer"
-          className="flex w-full items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-secondary/60"
+          className="flex w-full items-center gap-3 sm:gap-4 px-3.5 sm:px-5 py-3.5 sm:py-4 text-left transition-colors hover:bg-secondary/60"
         >
-          <MessageCircle className="size-6 shrink-0 text-muted-foreground" strokeWidth={1.8} />
-          <span className="flex-1 text-base font-medium">Chat with us</span>
-          <ChevronRight className="size-5 text-muted-foreground" />
+          <MessageCircle
+            className="size-5 sm:size-6 shrink-0 text-muted-foreground"
+            strokeWidth={1.8}
+          />
+          <span className="flex-1 text-sm sm:text-base font-medium">Chat with us</span>
+          <ChevronRight className="size-4 sm:size-5 text-muted-foreground shrink-0" />
         </a>
-        <div className="flex w-full items-center gap-4 px-5 py-4 text-left">
-          <CircleHelp className="size-6 shrink-0 text-muted-foreground" strokeWidth={1.8} />
-          <span className="flex-1 text-sm text-muted-foreground">
+        <div className="flex w-full items-center gap-3 sm:gap-4 px-3.5 sm:px-5 py-3.5 sm:py-4 text-left">
+          <CircleHelp
+            className="size-5 sm:size-6 shrink-0 text-muted-foreground"
+            strokeWidth={1.8}
+          />
+          <span className="flex-1 text-xs sm:text-sm text-muted-foreground">
             Open {settings.openHours}. Delivery up to {settings.maxRadiusKm} km.
           </span>
         </div>
@@ -203,11 +209,11 @@ function Row({ to, icon: Icon, label }: { to: string; icon: typeof ReceiptText; 
   return (
     <Link
       to={to}
-      className="flex w-full items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-secondary/60"
+      className="flex w-full items-center gap-3 sm:gap-4 px-3.5 sm:px-5 py-3.5 sm:py-4 text-left transition-colors hover:bg-secondary/60"
     >
-      <Icon className="size-6 shrink-0 text-muted-foreground" strokeWidth={1.8} />
-      <span className="flex-1 text-base font-medium">{label}</span>
-      <ChevronRight className="size-5 text-muted-foreground" />
+      <Icon className="size-5 sm:size-6 shrink-0 text-muted-foreground" strokeWidth={1.8} />
+      <span className="flex-1 text-sm sm:text-base font-medium">{label}</span>
+      <ChevronRight className="size-4 sm:size-5 text-muted-foreground shrink-0" />
     </Link>
   );
 }
