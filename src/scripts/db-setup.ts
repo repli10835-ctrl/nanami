@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { initDb, seedDbIfEmpty } from "../lib/db";
 import { seedState } from "../lib/seed-data";
 
