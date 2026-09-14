@@ -12,13 +12,22 @@ export const sql = connectionString
     })
   : null;
 
+let isInitialized: boolean | null = null;
+
 export async function initDb() {
   if (!sql) {
     console.log("DATABASE_URL is not set. Using in-memory store fallback.");
     return false;
   }
 
+  if (isInitialized !== null) {
+    return isInitialized;
+  }
+
   try {
+    // Test the connection quickly first
+    await sql`SELECT 1`;
+
     // 1. Create tables
     await sql`
       CREATE TABLE IF NOT EXISTS app_settings (
@@ -120,9 +129,12 @@ export async function initDb() {
     `;
 
     console.log("PostgreSQL tables checked/created successfully.");
+    isInitialized = true;
     return true;
   } catch (error) {
-    console.error("Failed to initialize database tables:", error);
+    // PostgreSQL is unreachable or offline in this environment.
+    // Fall back silently to the default state/in-memory store.
+    isInitialized = false;
     return false;
   }
 }

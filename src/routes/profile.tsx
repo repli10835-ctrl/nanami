@@ -8,7 +8,6 @@ import {
   MapPin,
   MessageCircle,
   ReceiptText,
-  ShieldCheck,
   Sparkles,
   TicketPercent,
 } from "lucide-react";
@@ -117,8 +116,6 @@ function Profile() {
         <Row to="/orders" icon={ReceiptText} label="My Orders" />
         <Row to="/saved-address" icon={MapPin} label="Saved Addresses" />
         <Row to="/vouchers" icon={TicketPercent} label="Vouchers & Promo" />
-        <Row to="/admin" icon={ShieldCheck} label="Panel Admin" />
-        <Row to="/owner" icon={ShieldCheck} label="Panel Owner" />
         <button
           onClick={() => setShowPassword((v) => !v)}
           className="flex w-full items-center gap-3 sm:gap-4 px-3.5 sm:px-5 py-3.5 sm:py-4 text-left transition-colors hover:bg-secondary/60"

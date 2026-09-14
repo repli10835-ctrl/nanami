@@ -40,14 +40,30 @@ export const Route = createFileRoute("/admin/")({
 });
 
 function AdminHome() {
-  const { menu, orders, vouchers, staff, outlets, settings } = useStore((s) => ({
+  const { menu, orders, vouchers, staff, settings } = useStore((s) => ({
     menu: s.menu,
     orders: s.orders,
     vouchers: s.vouchers,
     staff: s.staff,
-    outlets: s.outlets,
     settings: s.settings,
   }));
+
+  const outlets = [
+    {
+      id: "1",
+      name: "Nanami Kitchen Main Store",
+      address: "12 Rosebank Road, Rosebank, Johannesburg",
+      hours: "10:00 - 22:00",
+      open: true,
+    },
+    {
+      id: "2",
+      name: "Nanami Kitchen Sandton Branch",
+      address: "Building 4, Sandton City, Sandton",
+      hours: "11:00 - 21:00",
+      open: false,
+    },
+  ];
 
   const [activeTab, setActiveTab] = useState<"kitchen" | "crud">("crud");
 

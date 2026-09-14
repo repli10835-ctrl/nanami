@@ -14,7 +14,10 @@ import {
 export const getDatabaseState = createServerFn({ method: "GET" }).handler(async () => {
   if (!sql) return null;
   try {
-    await initDb();
+    const ok = await initDb();
+    if (!ok) {
+      return null;
+    }
 
     // Seed default if database is freshly created and has no records
     const { seedState } = await import("./seed-data");
