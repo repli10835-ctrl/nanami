@@ -127,7 +127,7 @@ export async function initDb() {
   }
 }
 
-export async function seedDbIfEmpty(defaultState: State) {
+export async function seedDbIfEmpty(defaultState: Partial<State>) {
   if (!sql) return;
 
   try {

@@ -1,5 +1,5 @@
 import { initDb, seedDbIfEmpty } from "../lib/db";
-import { defaultState } from "../lib/store";
+import { seedState } from "../lib/seed-data";
 
 async function run() {
   const mode = process.argv[2];
@@ -22,7 +22,7 @@ async function run() {
 
     if (mode === "seed" || mode === "setup") {
       console.log("Seeding initial database content...");
-      await seedDbIfEmpty(defaultState);
+      await seedDbIfEmpty(seedState);
       console.log("Database seeded successfully.");
     }
 

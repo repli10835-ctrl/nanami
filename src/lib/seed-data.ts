@@ -1,0 +1,292 @@
+import { type State, type MenuItem, type Account, type CmsContent } from "./store";
+
+const spice = {
+  id: "spice",
+  name: "Spice Level",
+  type: "single",
+  choices: [
+    { id: "mild", name: "Mild", price: 0 },
+    { id: "medium", name: "Medium", price: 0 },
+    { id: "hot", name: "Extra Hot", price: 5 },
+  ],
+};
+
+const size = {
+  id: "size",
+  name: "Size",
+  type: "single",
+  choices: [
+    { id: "reg", name: "Regular", price: 0 },
+    { id: "large", name: "Large", price: 15 },
+  ],
+};
+
+const toppings = {
+  id: "topping",
+  name: "Extra Toppings",
+  type: "multi",
+  choices: [
+    { id: "egg", name: "Fried Egg", price: 15 },
+    { id: "cheese", name: "Mozzarella Cheese", price: 20 },
+    { id: "sambal", name: "Extra Chili Sauce", price: 10 },
+  ],
+};
+
+export const seedMenu = [
+  {
+    id: "m1",
+    name: "Teriyaki Chicken Bento",
+    description: "Grilled teriyaki chicken with warm rice and Japanese pickles.",
+    price: 95,
+    category: "Foods",
+    image: "/src/assets/food-1.jpg",
+    available: true,
+    prepMinutes: 15,
+    badges: ["Halal-friendly", "Contains Soy"],
+    groups: [size, toppings],
+  },
+  {
+    id: "m2",
+    name: "Crispy Smashed Chicken (Geprek)",
+    description: "Crispy smashed chicken served with fresh chili sambal.",
+    price: 85,
+    category: "Foods",
+    image: "/src/assets/food-2.jpg",
+    available: true,
+    prepMinutes: 18,
+    badges: ["Halal-friendly", "Spicy"],
+    groups: [spice, toppings],
+  },
+  {
+    id: "m3",
+    name: "Iced Milk Tea",
+    description: "House brewed tea with fresh milk and brown sugar.",
+    price: 35,
+    category: "Drinks",
+    image: "/src/assets/food-3.jpg",
+    available: true,
+    prepMinutes: 5,
+    badges: ["Contains Dairy"],
+    groups: [size],
+  },
+  {
+    id: "m4",
+    name: "Crispy Snack Platter",
+    description: "Golden fried bites served with signature dipping sauce.",
+    price: 65,
+    category: "Snacks",
+    image: "/src/assets/food-4.jpg",
+    available: true,
+    prepMinutes: 12,
+    badges: ["Contains Gluten"],
+    groups: [toppings],
+  },
+  {
+    id: "m5",
+    name: "Crispy Chicken & Tea Combo",
+    description: "Smashed chicken, fragrant rice, and iced milk tea.",
+    price: 110,
+    category: "Combos",
+    image: "/src/assets/food-2.jpg",
+    available: true,
+    prepMinutes: 20,
+    badges: ["Halal-friendly", "Spicy"],
+    groups: [spice],
+  },
+  {
+    id: "m6",
+    name: "Signature Chili Jar (150ml)",
+    description: "Take our fiery chili sauce home. Fresh and spicy.",
+    price: 45,
+    category: "Others",
+    image: "/src/assets/food-2.jpg",
+    available: true,
+    prepMinutes: 2,
+    badges: ["Spicy", "Vegan"],
+    groups: [],
+  },
+];
+
+export const seedAccounts = [
+  {
+    id: "demo-user",
+    email: "user@nanami.id",
+    password: "user123",
+    name: "David Smith",
+    phone: "0812345678",
+    role: "user",
+    address: "12 Rosebank Road, Rosebank, Johannesburg",
+    addresses: ["12 Rosebank Road, Rosebank, Johannesburg", "Building 4, Sandton City, Sandton"],
+    points: 350,
+  },
+  {
+    id: "demo-admin",
+    email: "admin@nanami.id",
+    password: "admin123",
+    name: "Sarah Jenkins",
+    phone: "0823456789",
+    role: "admin",
+    address: "Kitchen 2, Rosebank Mall, Johannesburg",
+    addresses: ["Kitchen 2, Rosebank Mall, Johannesburg"],
+    points: 120,
+  },
+  {
+    id: "demo-owner",
+    email: "owner@nanami.id",
+    password: "owner123",
+    name: "Nanami Miller",
+    phone: "0834567890",
+    role: "owner",
+    address: "HQ Nanami Kitchen, Rosebank, Johannesburg",
+    addresses: ["HQ Nanami Kitchen, Rosebank, Johannesburg"],
+    points: 1500,
+  },
+];
+
+export const seedCms = {
+  logoUrl: "",
+  brandName: "nanami",
+  brandSuffix: "kitchen",
+  tagline: "Good food, made with love.",
+  description:
+    "Delicious bento boxes, crispy chicken, snacks, and refreshing handcrafted drinks made fresh for families and co-workers.",
+  heroImage: "",
+  heroTitleLine1: "Good Food.",
+  heroTitleLine2: "Made with Love",
+  heroSlogan: "Good Food. Made with Love",
+  heroCtaText: "Order Now",
+  announcement: {
+    enabled: true,
+    text: "🎉 Special Promo: Get 20% OFF all menu items with voucher code NANAMI20!",
+    type: "promo",
+    link: "/vouchers",
+  },
+  welcomeScreen: {
+    enabled: true,
+    durationSec: 2.6,
+    title: "nanami",
+    subtitle: "kitchen",
+    slogan: "Good Food.\nMade with Love",
+    imageUrl: "",
+  },
+  socials: {
+    instagram: "@nanami.kitchen",
+    tiktok: "@nanami.kitchen",
+    whatsapp: "27812345678",
+    mapsUrl: "https://maps.google.com/?q=Nanami+Kitchen",
+  },
+  aboutStory:
+    "Nanami Kitchen serves authentic Japanese bento boxes, fiery crispy smashed chicken, and refreshing handcrafted beverages prepared fresh daily using high-quality ingredients.",
+  faqs: [
+    {
+      id: "faq-1",
+      question: "What is the estimated preparation and delivery time?",
+      answer:
+        "Orders are freshly cooked in 15–20 minutes. Delivery time depends on your distance (approx. 15–30 minutes).",
+      active: true,
+    },
+    {
+      id: "faq-2",
+      question: "Does Nanami Kitchen offer a Pick-up (Takeaway) option?",
+      answer: "Yes, you can choose Pick-up at checkout with zero delivery fee.",
+      active: true,
+    },
+    {
+      id: "faq-3",
+      question: "How do I redeem a discount voucher?",
+      answer: "Go to Vouchers, tap 'Apply' on your voucher or enter the code during Checkout.",
+      active: true,
+    },
+    {
+      id: "faq-4",
+      question: "Which payment methods are accepted?",
+      answer:
+        "We accept Bank Transfer (EFT), E-Wallets / Capitec Pay, and Cash on Delivery / Pickup.",
+      active: true,
+    },
+  ],
+};
+
+export const seedState: Partial<State> = {
+  menu: seedMenu as unknown as MenuItem[],
+  settings: {
+    storeName: "Nanami Kitchen",
+    storeTagline: "Japanese comfort food, made fresh daily",
+    storeAddress: "12 Rosebank Road, Rosebank, Johannesburg",
+    storeOpen: true,
+    deliveryOn: true,
+    pickupOn: true,
+    whatsapp: "27812345678",
+    baseFee: 25,
+    feePerKm: 5,
+    maxRadiusKm: 15,
+    storeMapsUrl: "https://www.google.com/maps?q=-26.146,28.043",
+    storeLat: -26.146,
+    storeLng: 28.043,
+    minFee: 25,
+    freeDeliveryAbove: 250,
+    routeFactor: 1.3,
+    bankName: "Standard Bank / FNB",
+    bankAccount: "62812345678",
+    bankHolder: "Nanami Kitchen Pty Ltd",
+    ewallet: "0812345678 (Capitec Pay / SnapScan)",
+    openHours: "10:00 – 21:00 every day",
+    pointsPer10k: 1,
+    adminPassword: "nanami123",
+  },
+  promos: [
+    {
+      id: "p1",
+      title: "20% OFF all menu",
+      subtitle: "Today only — use code NANAMI20",
+      badge: "Special",
+    },
+    {
+      id: "p2",
+      title: "Free delivery over R 250",
+      subtitle: "Within 5 km radius of our kitchen",
+      badge: "Delivery",
+    },
+    {
+      id: "p3",
+      title: "Earn points on every order",
+      subtitle: "1 point for every R 100 spent",
+      badge: "Loyalty",
+    },
+  ],
+  vouchers: [
+    { code: "NANAMI20", type: "percent", value: 20, minSpend: 0, active: true },
+    { code: "SAVE20RAND", type: "fixed", value: 20, minSpend: 100, active: true },
+  ],
+  accounts: seedAccounts as unknown as Account[],
+  staff: [
+    {
+      id: "s1",
+      name: "Nanami Putri",
+      email: "owner@nanami.id",
+      phone: "0812-1111-2222",
+      role: "owner",
+      active: true,
+      createdAt: 1736467200000, // Date.parse("2025-01-10")
+    },
+    {
+      id: "s2",
+      name: "Rina Astuti",
+      email: "rina@nanami.id",
+      phone: "0812-3333-4444",
+      role: "admin",
+      active: true,
+      createdAt: 1740873600000, // Date.parse("2025-03-02")
+    },
+    {
+      id: "s3",
+      name: "Dimas Pratama",
+      email: "dimas@nanami.id",
+      phone: "0812-5555-6666",
+      role: "staff",
+      active: true,
+      createdAt: 1750204800000, // Date.parse("2025-06-18")
+    },
+  ],
+  cms: seedCms as unknown as CmsContent,
+};

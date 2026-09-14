@@ -17,8 +17,8 @@ export const getDatabaseState = createServerFn({ method: "GET" }).handler(async 
     await initDb();
 
     // Seed default if database is freshly created and has no records
-    const defaultState = (await import("./store")).defaultState;
-    await seedDbIfEmpty(defaultState);
+    const { seedState } = await import("./seed-data");
+    await seedDbIfEmpty(seedState);
 
     const settings = await sql`SELECT data FROM app_settings WHERE id = 'main_settings' LIMIT 1`;
     const cms = await sql`SELECT data FROM cms_content WHERE id = 'main_cms' LIMIT 1`;
