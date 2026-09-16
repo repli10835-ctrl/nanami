@@ -75,8 +75,8 @@ export type Order = {
   type: "pickup" | "delivery";
   lines: CartLine[];
   subtotal: number;
-  vatAmount?: number;
-  vatPercent?: number;
+  vatAmount?: number | undefined;
+  vatPercent?: number | undefined;
   discount: number;
   voucherCode: string;
   deliveryFee: number;
@@ -206,7 +206,7 @@ export type Profile = {
   points: number;
   signedIn: boolean;
   method: string;
-  role?: "user" | "admin" | "owner" | "staff";
+  role?: "user" | "admin" | "owner" | "staff" | undefined;
 };
 
 export type Account = {
@@ -215,10 +215,10 @@ export type Account = {
   password: string;
   name: string;
   phone: string;
-  role?: "user" | "admin" | "owner" | "staff";
-  address?: string;
-  addresses?: string[];
-  points?: number;
+  role?: "user" | "admin" | "owner" | "staff" | undefined;
+  address?: string | undefined;
+  addresses?: string[] | undefined;
+  points?: number | undefined;
 };
 
 export type StaffRole = "owner" | "admin" | "staff";
@@ -305,8 +305,8 @@ export const seedMenu: MenuItem[] = [
   },
   {
     id: "m2",
-    name: "Crispy Smashed Chicken (Geprek)",
-    description: "Crispy smashed chicken served with fresh chili sambal.",
+    name: "Crispy Smashed Chicken",
+    description: "Crispy smashed chicken served with fresh chili sauce.",
     price: 85,
     category: "Meals",
     image: food2,
@@ -373,7 +373,7 @@ export const seedMenu: MenuItem[] = [
 export const DEMO_ACCOUNTS: Account[] = [
   {
     id: "demo-user",
-    email: "user@nanami.id",
+    email: "user@nanamikitchen.com",
     password: "user123",
     name: "David Smith",
     phone: "0812345678",
@@ -384,7 +384,7 @@ export const DEMO_ACCOUNTS: Account[] = [
   },
   {
     id: "demo-admin",
-    email: "admin@nanami.id",
+    email: "admin@nanamikitchen.com",
     password: "admin123",
     name: "Sarah Jenkins",
     phone: "0823456789",
@@ -395,9 +395,9 @@ export const DEMO_ACCOUNTS: Account[] = [
   },
   {
     id: "demo-staff",
-    email: "staff@nanami.id",
+    email: "staff@nanamikitchen.com",
     password: "staff123",
-    name: "Dimas Pratama (Kitchen)",
+    name: "David Miller (Kitchen)",
     phone: "0812-5555-6666",
     role: "staff",
     address: "Nanami Kitchen Line 1",
@@ -406,7 +406,7 @@ export const DEMO_ACCOUNTS: Account[] = [
   },
   {
     id: "demo-owner",
-    email: "owner@nanami.id",
+    email: "owner@nanamikitchen.com",
     password: "owner123",
     name: "Nanami Miller",
     phone: "0834567890",
@@ -543,15 +543,15 @@ const defaultState: State = {
   promos: [
     {
       id: "p1",
-      title: "20% OFF all menu",
-      subtitle: "Today only — use code NANAMI20",
-      badge: "Special",
-    },
-    {
-      id: "p2",
       title: "Free delivery over N$ 250",
       subtitle: "Within 5 km radius of our kitchen",
       badge: "Delivery",
+    },
+    {
+      id: "p2",
+      title: "20% OFF all menu",
+      subtitle: "Today only — use code NANAMI20",
+      badge: "Special",
     },
     {
       id: "p3",
@@ -569,8 +569,8 @@ const defaultState: State = {
   staff: [
     {
       id: "s1",
-      name: "Nanami Putri",
-      email: "owner@nanami.id",
+      name: "Nanami Miller",
+      email: "owner@nanamikitchen.com",
       phone: "0812-1111-2222",
       role: "owner",
       active: true,
@@ -578,8 +578,8 @@ const defaultState: State = {
     },
     {
       id: "s2",
-      name: "Rina Astuti",
-      email: "rina@nanami.id",
+      name: "Rina Adams",
+      email: "rina@nanamikitchen.com",
       phone: "0812-3333-4444",
       role: "admin",
       active: true,
@@ -587,8 +587,8 @@ const defaultState: State = {
     },
     {
       id: "s3",
-      name: "Dimas Pratama",
-      email: "dimas@nanami.id",
+      name: "David Miller",
+      email: "david@nanamikitchen.com",
       phone: "0812-5555-6666",
       role: "staff",
       active: true,
@@ -698,11 +698,11 @@ export const actions = {
         ? s.vouchers.map((x) => (x.code === v.code ? v : x))
         : [...s.vouchers, v],
     }));
-    saveVoucherDb(v).catch(console.error);
+    saveVoucherDb({ data: v }).catch(console.error);
   },
   deleteVoucher(code: string) {
     set((s) => ({ ...s, vouchers: s.vouchers.filter((v) => v.code !== code) }));
-    deleteVoucherDb(code).catch(console.error);
+    deleteVoucherDb({ data: code }).catch(console.error);
   },
   savePromo(p: Promo) {
     set((s) => ({
@@ -711,15 +711,16 @@ export const actions = {
         ? s.promos.map((x) => (x.id === p.id ? p : x))
         : [...s.promos, p],
     }));
-    savePromoDb(p).catch(console.error);
+    savePromoDb({ data: p }).catch(console.error);
   },
   deletePromo(id: string) {
     set((s) => ({ ...s, promos: s.promos.filter((p) => p.id !== id) }));
-    deletePromoDb(id).catch(console.error);
+    deletePromoDb({ data: id }).catch(console.error);
   },
   signUp(data: { name: string; email: string; phone: string; password: string }): {
     ok: boolean;
     error?: string;
+    role?: "user" | "admin" | "owner" | "staff";
   } {
     const email = data.email.trim().toLowerCase();
     if (!email.includes("@")) return { ok: false, error: "Please enter a valid email address." };
@@ -747,8 +748,8 @@ export const actions = {
         method: "Email",
       },
     }));
-    saveAccountDb(account).catch(console.error);
-    return { ok: true, role: "user" as const };
+    saveAccountDb({ data: account }).catch(console.error);
+    return { ok: true, role: "user" };
   },
   signIn(
     email: string,
@@ -821,7 +822,7 @@ export const actions = {
       );
       const updatedItem = updatedMenu.find((m) => m.id === id);
       if (updatedItem) {
-        saveMenuItemDb(updatedItem).catch(console.error);
+        saveMenuItemDb({ data: updatedItem }).catch(console.error);
       }
       return { ...s, menu: updatedMenu };
     });
@@ -840,7 +841,7 @@ export const actions = {
       const account = s.accounts.find((a) => a.email === s.profile.email);
       if (account) {
         const updatedAcc = { ...account, address, addresses: updatedProfile.addresses };
-        saveAccountDb(updatedAcc).catch(console.error);
+        saveAccountDb({ data: updatedAcc }).catch(console.error);
       }
 
       return { ...s, profile: updatedProfile };
@@ -856,7 +857,7 @@ export const actions = {
       const account = s.accounts.find((a) => a.email === s.profile.email);
       if (account) {
         const updatedAcc = { ...account, addresses: updatedProfile.addresses };
-        saveAccountDb(updatedAcc).catch(console.error);
+        saveAccountDb({ data: updatedAcc }).catch(console.error);
       }
 
       return { ...s, profile: updatedProfile };
@@ -906,12 +907,12 @@ export const actions = {
         if (!ordered) return m;
         const stock = Math.max(0, m.stock - ordered);
         const updated = { ...m, stock, available: stock > 0 };
-        saveMenuItemDb(updated).catch(console.error);
+        saveMenuItemDb({ data: updated }).catch(console.error);
         return updated;
       });
 
       // Save order to db
-      saveOrderDb(full).catch(console.error);
+      saveOrderDb({ data: full }).catch(console.error);
 
       // Save updated points for profile only if member
       let updatedPoints = s.profile.points;
@@ -922,7 +923,7 @@ export const actions = {
         updatedPoints = s.profile.points + pointsEarned;
         if (account) {
           const updatedAcc = { ...account, points: updatedPoints };
-          saveAccountDb(updatedAcc).catch(console.error);
+          saveAccountDb({ data: updatedAcc }).catch(console.error);
         }
       }
 
@@ -944,19 +945,19 @@ export const actions = {
       );
       const updatedOrder = updatedOrders.find((o) => o.id === id);
       if (updatedOrder) {
-        saveOrderDb(updatedOrder).catch(console.error);
+        saveOrderDb({ data: updatedOrder }).catch(console.error);
       }
       return { ...s, orders: updatedOrders };
     });
   },
   markPaid(id: string) {
     set((s) => {
-      const updatedOrders = s.orders.map((o) =>
-        o.id === id ? { ...o, paid: true, status: "Cooking" } : o,
+      const updatedOrders: Order[] = s.orders.map((o) =>
+        o.id === id ? { ...o, paid: true, status: "Cooking" as OrderStatus } : o,
       );
       const updatedOrder = updatedOrders.find((o) => o.id === id);
       if (updatedOrder) {
-        saveOrderDb(updatedOrder).catch(console.error);
+        saveOrderDb({ data: updatedOrder }).catch(console.error);
       }
       return { ...s, orders: updatedOrders };
     });
@@ -971,7 +972,9 @@ export const actions = {
           updatedMediaAssets = updatedMediaAssets.map((asset) => {
             if (asset.url === oldItem.image) {
               const newUsage = asset.usedByMenuIds.filter((id) => id !== item.id);
-              updateMediaAssetUsageDb({ id: asset.id, usedByMenuIds: newUsage }).catch(console.error);
+              updateMediaAssetUsageDb({ data: { id: asset.id, usedByMenuIds: newUsage } }).catch(
+                console.error,
+              );
               return { ...asset, usedByMenuIds: newUsage };
             }
             return asset;
@@ -981,7 +984,9 @@ export const actions = {
           updatedMediaAssets = updatedMediaAssets.map((asset) => {
             if (asset.url === item.image) {
               const newUsage = Array.from(new Set([...asset.usedByMenuIds, item.id]));
-              updateMediaAssetUsageDb({ id: asset.id, usedByMenuIds: newUsage }).catch(console.error);
+              updateMediaAssetUsageDb({ data: { id: asset.id, usedByMenuIds: newUsage } }).catch(
+                console.error,
+              );
               return { ...asset, usedByMenuIds: newUsage };
             }
             return asset;
@@ -989,7 +994,7 @@ export const actions = {
         }
       }
 
-      saveMenuItemDb(item).catch(console.error);
+      saveMenuItemDb({ data: item }).catch(console.error);
       return {
         ...s,
         menu: s.menu.some((m) => m.id === item.id)
@@ -1007,13 +1012,15 @@ export const actions = {
         updatedMediaAssets = updatedMediaAssets.map((asset) => {
           if (asset.url === item.image) {
             const newUsage = asset.usedByMenuIds.filter((uid) => uid !== id);
-            updateMediaAssetUsageDb({ id: asset.id, usedByMenuIds: newUsage }).catch(console.error);
+            updateMediaAssetUsageDb({ data: { id: asset.id, usedByMenuIds: newUsage } }).catch(
+              console.error,
+            );
             return { ...asset, usedByMenuIds: newUsage };
           }
           return asset;
         });
       }
-      deleteMenuItemDb(id).catch(console.error);
+      deleteMenuItemDb({ data: id }).catch(console.error);
       return {
         ...s,
         menu: s.menu.filter((m) => m.id !== id),
@@ -1026,7 +1033,7 @@ export const actions = {
       const updatedMenu = s.menu.map((m) => (m.id === id ? { ...m, available: !m.available } : m));
       const updatedItem = updatedMenu.find((m) => m.id === id);
       if (updatedItem) {
-        saveMenuItemDb(updatedItem).catch(console.error);
+        saveMenuItemDb({ data: updatedItem }).catch(console.error);
       }
       return { ...s, menu: updatedMenu };
     });
@@ -1036,7 +1043,7 @@ export const actions = {
       const updatedMenu = s.menu.map((m) => (m.id === id ? { ...m, available } : m));
       const updatedItem = updatedMenu.find((m) => m.id === id);
       if (updatedItem) {
-        saveMenuItemDb(updatedItem).catch(console.error);
+        saveMenuItemDb({ data: updatedItem }).catch(console.error);
       }
       return { ...s, menu: updatedMenu };
     });
@@ -1044,7 +1051,7 @@ export const actions = {
   setAllAvailability(available: boolean) {
     set((s) => {
       s.menu.forEach((m) => {
-        saveMenuItemDb({ ...m, available }).catch(console.error);
+        saveMenuItemDb({ data: { ...m, available } }).catch(console.error);
       });
       return { ...s, menu: s.menu.map((m) => ({ ...m, available })) };
     });
@@ -1056,14 +1063,14 @@ export const actions = {
         ? s.staff.map((x) => (x.id === member.id ? member : x))
         : [...s.staff, member],
     }));
-    saveStaffDb(member).catch(console.error);
+    saveStaffDb({ data: member }).catch(console.error);
   },
   updateStaff(id: string, patch: Partial<StaffMember>) {
     set((s) => {
       const updatedStaff = s.staff.map((x) => (x.id === id ? { ...x, ...patch } : x));
       const updatedMember = updatedStaff.find((x) => x.id === id);
       if (updatedMember) {
-        saveStaffDb(updatedMember).catch(console.error);
+        saveStaffDb({ data: updatedMember }).catch(console.error);
       }
       return { ...s, staff: updatedStaff };
     });
@@ -1073,7 +1080,7 @@ export const actions = {
       const staffMember = s.staff.find((x) => x.id === id);
       if (staffMember) {
         // Soft delete/mark inactive in database
-        saveStaffDb({ ...staffMember, active: false }).catch(console.error);
+        saveStaffDb({ data: { ...staffMember, active: false } }).catch(console.error);
       }
       return { ...s, staff: s.staff.filter((x) => x.id !== id) };
     });
@@ -1084,7 +1091,7 @@ export const actions = {
         setCurrencySymbol(patch.currencySymbol);
       }
       const updated = { ...s.settings, ...patch };
-      saveSettingsDb(updated).catch(console.error);
+      saveSettingsDb({ data: updated }).catch(console.error);
       return { ...s, settings: updated };
     });
   },
@@ -1108,7 +1115,7 @@ export const actions = {
               : account.addresses,
             points: updatedProfile.points,
           };
-          saveAccountDb(updatedAcc).catch(console.error);
+          saveAccountDb({ data: updatedAcc }).catch(console.error);
         }
       }
 
@@ -1118,7 +1125,7 @@ export const actions = {
   updateCms(patch: Partial<CmsContent>) {
     set((s) => {
       const updated = { ...s.cms, ...patch };
-      saveCmsDb(updated).catch(console.error);
+      saveCmsDb({ data: updated }).catch(console.error);
       return { ...s, cms: updated };
     });
   },
@@ -1128,7 +1135,7 @@ export const actions = {
         ...s.cms,
         announcement: { ...s.cms.announcement, ...patch },
       };
-      saveCmsDb(updated).catch(console.error);
+      saveCmsDb({ data: updated }).catch(console.error);
       return { ...s, cms: updated };
     });
   },
@@ -1138,7 +1145,7 @@ export const actions = {
         ...s.cms,
         welcomeScreen: { ...s.cms.welcomeScreen, ...patch },
       };
-      saveCmsDb(updated).catch(console.error);
+      saveCmsDb({ data: updated }).catch(console.error);
       return { ...s, cms: updated };
     });
   },
@@ -1148,7 +1155,7 @@ export const actions = {
         ...s.cms,
         socials: { ...s.cms.socials, ...patch },
       };
-      saveCmsDb(updated).catch(console.error);
+      saveCmsDb({ data: updated }).catch(console.error);
       return { ...s, cms: updated };
     });
   },
@@ -1164,7 +1171,7 @@ export const actions = {
         ...s.cms,
         faqs: [...s.cms.faqs, newFaq],
       };
-      saveCmsDb(updated).catch(console.error);
+      saveCmsDb({ data: updated }).catch(console.error);
       return { ...s, cms: updated };
     });
   },
@@ -1174,7 +1181,7 @@ export const actions = {
         ...s.cms,
         faqs: s.cms.faqs.map((f) => (f.id === id ? { ...f, ...patch } : f)),
       };
-      saveCmsDb(updated).catch(console.error);
+      saveCmsDb({ data: updated }).catch(console.error);
       return { ...s, cms: updated };
     });
   },
@@ -1184,7 +1191,7 @@ export const actions = {
         ...s.cms,
         faqs: s.cms.faqs.filter((f) => f.id !== id),
       };
-      saveCmsDb(updated).catch(console.error);
+      saveCmsDb({ data: updated }).catch(console.error);
       return { ...s, cms: updated };
     });
   },
@@ -1195,14 +1202,14 @@ export const actions = {
         ? s.mediaAssets.map((m) => (m.id === asset.id ? asset : m))
         : [...s.mediaAssets, asset],
     }));
-    saveMediaAssetDb(asset).catch(console.error);
+    saveMediaAssetDb({ data: asset }).catch(console.error);
   },
   deleteMediaAsset(id: string) {
     set((s) => ({
       ...s,
       mediaAssets: s.mediaAssets.filter((m) => m.id !== id),
     }));
-    deleteMediaAssetDb(id).catch(console.error);
+    deleteMediaAssetDb({ data: id }).catch(console.error);
   },
   saveAccount(acc: Account) {
     set((s) => ({
@@ -1211,18 +1218,18 @@ export const actions = {
         ? s.accounts.map((a) => (a.id === acc.id ? acc : a))
         : [...s.accounts, acc],
     }));
-    saveAccountDb(acc).catch(console.error);
+    saveAccountDb({ data: acc }).catch(console.error);
   },
   deleteAccount(id: string) {
     set((s) => ({
       ...s,
       accounts: s.accounts.filter((a) => a.id !== id),
     }));
-    deleteAccountDb(id).catch(console.error);
+    deleteAccountDb({ data: id }).catch(console.error);
   },
   resetCms() {
     set((s) => {
-      saveCmsDb(defaultCmsContent).catch(console.error);
+      saveCmsDb({ data: defaultCmsContent }).catch(console.error);
       return {
         ...s,
         cms: defaultCmsContent,

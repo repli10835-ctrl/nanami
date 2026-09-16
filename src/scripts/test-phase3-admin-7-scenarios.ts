@@ -82,7 +82,7 @@ async function run7AdminScenariosTest() {
     choices: [{ id: "c-mild", name: "Mild", price: 0 }],
   };
   console.log(
-    `- State Awal Grup '${singleChoiceGroup.name}': ${singleChoiceGroup.choices.length} pilihan (${singleChoiceGroup.choices[0].name})`,
+    `- State Awal Grup '${singleChoiceGroup.name}': ${singleChoiceGroup.choices.length} pilihan (${singleChoiceGroup.choices[0]?.name})`,
   );
 
   const removeChoiceWithValidation = (group: OptionGroup, choiceId: string): OptionGroup => {

@@ -64,8 +64,11 @@ async function runMustTryRegressionTest() {
     voucherCode: "",
     deliveryFee: 15,
     total: calc.unitPrice + 15,
-    status: "new",
+    status: "Pending Payment",
+    paid: false,
     paymentMethod: "QRIS",
+    pointsEarned: 1,
+    etaMinutes: 30,
     customer: {
       name: "Siti Rahma",
       phone: "081987654321",

@@ -22,7 +22,7 @@ export function MediaGallery({ onSelect, selectedUrl, closeOnSelect }: MediaGall
 
     setUploading(true);
     try {
-      // In a real app, you'd upload to S3/Cloudinary. 
+      // In a real app, you'd upload to S3/Cloudinary.
       // For this prototype, we'll use a FileReader to get a base64 or object URL.
       const reader = new FileReader();
       reader.onload = (event) => {
@@ -51,11 +51,14 @@ export function MediaGallery({ onSelect, selectedUrl, closeOnSelect }: MediaGall
         .map((id) => menu.find((m) => m.id === id)?.name)
         .filter(Boolean)
         .join(", ");
-      
+
       alert(
-        `Cannot delete image because it is used by: ${productNames}. Please remove the image from these products first.`
+        `Cannot delete image because it is used by: ${productNames}. Please remove the image from these products first.`,
       );
-      console.log(`[DEBUG] Delete blocked for asset ${asset.id}. usedByMenuIds:`, asset.usedByMenuIds);
+      console.log(
+        `[DEBUG] Delete blocked for asset ${asset.id}. usedByMenuIds:`,
+        asset.usedByMenuIds,
+      );
       return;
     }
 
@@ -68,15 +71,15 @@ export function MediaGallery({ onSelect, selectedUrl, closeOnSelect }: MediaGall
   return (
     <div className="space-y-6">
       <SectionCard title="Upload New Media">
-        <div 
+        <div
           onClick={() => fileInputRef.current?.click()}
           className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-2xl p-8 hover:bg-secondary/50 cursor-pointer transition-colors"
         >
           <Upload className="size-8 text-muted-foreground mb-2" />
           <p className="text-sm font-medium">Click to upload image</p>
           <p className="text-xs text-muted-foreground mt-1">PNG, JPG or WebP (max 5MB)</p>
-          <input 
-            type="file" 
+          <input
+            type="file"
             ref={fileInputRef}
             onChange={handleFileUpload}
             accept="image/*"
@@ -88,18 +91,14 @@ export function MediaGallery({ onSelect, selectedUrl, closeOnSelect }: MediaGall
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
         {mediaAssets.map((asset) => (
-          <div 
+          <div
             key={asset.id}
             className={`group relative aspect-square rounded-xl border overflow-hidden bg-secondary/20 transition-all ${
               selectedUrl === asset.url ? "ring-2 ring-primary border-primary" : "border-border"
             }`}
           >
-            <img 
-              src={asset.url} 
-              alt={asset.filename}
-              className="w-full h-full object-cover"
-            />
-            
+            <img src={asset.url} alt={asset.filename} className="w-full h-full object-cover" />
+
             {/* Selection indicator */}
             {selectedUrl === asset.url && (
               <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1 shadow-sm">
@@ -109,14 +108,14 @@ export function MediaGallery({ onSelect, selectedUrl, closeOnSelect }: MediaGall
 
             {/* Overlay actions */}
             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-              <button 
+              <button
                 onClick={() => setPreviewAsset(asset)}
                 className="p-1.5 bg-white text-black rounded-lg hover:bg-gray-100"
                 title="Preview"
               >
                 <Eye className="size-4" />
               </button>
-              <button 
+              <button
                 onClick={() => handleDelete(asset)}
                 className="p-1.5 bg-destructive text-destructive-foreground rounded-lg hover:bg-destructive/90"
                 title="Delete"
@@ -124,7 +123,7 @@ export function MediaGallery({ onSelect, selectedUrl, closeOnSelect }: MediaGall
                 <Trash2 className="size-4" />
               </button>
               {onSelect && (
-                <button 
+                <button
                   onClick={() => onSelect(asset.url)}
                   className="p-1.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90"
                   title="Select"
@@ -156,7 +155,7 @@ export function MediaGallery({ onSelect, selectedUrl, closeOnSelect }: MediaGall
           <div className="relative max-w-4xl w-full bg-background rounded-3xl overflow-hidden shadow-2xl">
             <div className="flex items-center justify-between p-4 border-b">
               <h3 className="font-semibold truncate pr-8">{previewAsset.filename}</h3>
-              <button 
+              <button
                 onClick={() => setPreviewAsset(null)}
                 className="p-1 hover:bg-secondary rounded-lg transition-colors"
               >
@@ -164,8 +163,8 @@ export function MediaGallery({ onSelect, selectedUrl, closeOnSelect }: MediaGall
               </button>
             </div>
             <div className="aspect-video bg-black flex items-center justify-center">
-              <img 
-                src={previewAsset.url} 
+              <img
+                src={previewAsset.url}
                 alt={previewAsset.filename}
                 className="max-w-full max-h-full object-contain"
               />
@@ -176,7 +175,11 @@ export function MediaGallery({ onSelect, selectedUrl, closeOnSelect }: MediaGall
               </p>
               {previewAsset.usedByMenuIds.length > 0 && (
                 <p className="text-xs font-medium text-primary mt-1">
-                  Used by: {previewAsset.usedByMenuIds.map(id => menu.find(m => m.id === id)?.name).filter(Boolean).join(", ")}
+                  Used by:{" "}
+                  {previewAsset.usedByMenuIds
+                    .map((id) => menu.find((m) => m.id === id)?.name)
+                    .filter(Boolean)
+                    .join(", ")}
                 </p>
               )}
             </div>

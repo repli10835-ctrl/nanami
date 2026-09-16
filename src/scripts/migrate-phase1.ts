@@ -2,7 +2,7 @@ import "dotenv/config";
 import postgres from "postgres";
 
 async function run() {
-  const connectionString = process.env.DATABASE_URL;
+  const connectionString = process.env["DATABASE_URL"];
   if (!connectionString) {
     console.log("No DATABASE_URL found. Skipping migration.");
     process.exit(0);

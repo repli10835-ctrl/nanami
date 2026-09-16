@@ -1,11 +1,11 @@
 import postgres from "postgres";
 import { type State } from "./store";
 
-const connectionString = process.env.DATABASE_URL;
+const connectionString = process.env["DATABASE_URL"];
 
 export const sql = connectionString
   ? postgres(connectionString, {
-      ssl: connectionString.includes("sslmode=") ? undefined : "prefer",
+      ssl: connectionString.includes("sslmode=") ? false : "prefer",
       max: 10,
       idle_timeout: 20,
       connect_timeout: 10,
@@ -161,95 +161,109 @@ export async function seedDbIfEmpty(defaultState: Partial<State>) {
 
   try {
     // Seed Settings
-    const settingsCount = await sql`SELECT COUNT(*) FROM app_settings`;
-    if (parseInt(settingsCount[0].count) === 0) {
-      await sql`
-        INSERT INTO app_settings (id, data) 
-        VALUES ('main_settings', ${sql.json(defaultState.settings)})
-      `;
-      console.log("Seeded app_settings.");
+    if (defaultState.settings) {
+      const settingsCount = (await sql`SELECT COUNT(*) FROM app_settings`) as any[];
+      if (parseInt(settingsCount[0]?.count || "0") === 0) {
+        await sql`
+          INSERT INTO app_settings (id, data) 
+          VALUES ('main_settings', ${sql.json(defaultState.settings)})
+        `;
+        console.log("Seeded app_settings.");
+      }
     }
 
     // Seed CMS
-    const cmsCount = await sql`SELECT COUNT(*) FROM cms_content`;
-    if (parseInt(cmsCount[0].count) === 0) {
-      await sql`
-        INSERT INTO cms_content (id, data) 
-        VALUES ('main_cms', ${sql.json(defaultState.cms)})
-      `;
-      console.log("Seeded cms_content.");
+    if (defaultState.cms) {
+      const cmsCount = (await sql`SELECT COUNT(*) FROM cms_content`) as any[];
+      if (parseInt(cmsCount[0]?.count || "0") === 0) {
+        await sql`
+          INSERT INTO cms_content (id, data) 
+          VALUES ('main_cms', ${sql.json(defaultState.cms)})
+        `;
+        console.log("Seeded cms_content.");
+      }
     }
 
     // Seed Menu
-    const menuCount = await sql`SELECT COUNT(*) FROM menu_items`;
-    if (parseInt(menuCount[0].count) === 0) {
-      for (const item of defaultState.menu) {
-        await sql`
-          INSERT INTO menu_items (id, name, description, price, category, image, available, prep_minutes, badges, stock, groups)
-          VALUES (
-            ${item.id}, 
-            ${item.name}, 
-            ${item.description}, 
-            ${item.price}, 
-            ${item.category}, 
-            ${item.image}, 
-            ${item.available}, 
-            ${item.prepMinutes}, 
-            ${sql.json(item.badges)}, 
-            ${item.stock || null}, 
-            ${sql.json(item.groups)}
-          )
-        `;
+    if (defaultState.menu && defaultState.menu.length > 0) {
+      const menuCount = (await sql`SELECT COUNT(*) FROM menu_items`) as any[];
+      if (parseInt(menuCount[0]?.count || "0") === 0) {
+        for (const item of defaultState.menu) {
+          await sql`
+            INSERT INTO menu_items (id, name, description, price, category, image, available, prep_minutes, badges, stock, groups)
+            VALUES (
+              ${item.id}, 
+              ${item.name}, 
+              ${item.description}, 
+              ${item.price}, 
+              ${item.category}, 
+              ${item.image}, 
+              ${item.available}, 
+              ${item.prepMinutes}, 
+              ${sql.json(item.badges)}, 
+              ${item.stock || null}, 
+              ${sql.json(item.groups)}
+            )
+          `;
+        }
+        console.log("Seeded menu_items.");
       }
-      console.log("Seeded menu_items.");
     }
 
     // Seed Promos
-    const promosCount = await sql`SELECT COUNT(*) FROM promos`;
-    if (parseInt(promosCount[0].count) === 0) {
-      for (const promo of defaultState.promos) {
-        await sql`
-          INSERT INTO promos (id, title, subtitle, badge, image_url, link, active)
-          VALUES (${promo.id}, ${promo.title}, ${promo.subtitle}, ${promo.badge}, ${promo.imageUrl || null}, ${promo.link || null}, ${promo.active ?? true})
-        `;
+    if (defaultState.promos && defaultState.promos.length > 0) {
+      const promosCount = (await sql`SELECT COUNT(*) FROM promos`) as any[];
+      if (parseInt(promosCount[0]?.count || "0") === 0) {
+        for (const promo of defaultState.promos) {
+          await sql`
+            INSERT INTO promos (id, title, subtitle, badge, image_url, link, active)
+            VALUES (${promo.id}, ${promo.title}, ${promo.subtitle}, ${promo.badge}, ${promo.imageUrl || null}, ${promo.link || null}, ${promo.active ?? true})
+          `;
+        }
+        console.log("Seeded promos.");
       }
-      console.log("Seeded promos.");
     }
 
     // Seed Vouchers
-    const vouchersCount = await sql`SELECT COUNT(*) FROM vouchers`;
-    if (parseInt(vouchersCount[0].count) === 0) {
-      for (const v of defaultState.vouchers) {
-        await sql`
-          INSERT INTO vouchers (code, type, value, min_spend, active)
-          VALUES (${v.code}, ${v.type}, ${v.value}, ${v.minSpend}, ${v.active})
-        `;
+    if (defaultState.vouchers && defaultState.vouchers.length > 0) {
+      const vouchersCount = (await sql`SELECT COUNT(*) FROM vouchers`) as any[];
+      if (parseInt(vouchersCount[0]?.count || "0") === 0) {
+        for (const v of defaultState.vouchers) {
+          await sql`
+            INSERT INTO vouchers (code, type, value, min_spend, active)
+            VALUES (${v.code}, ${v.type}, ${v.value}, ${v.minSpend}, ${v.active})
+          `;
+        }
+        console.log("Seeded vouchers.");
       }
-      console.log("Seeded vouchers.");
     }
 
     // Seed Accounts
-    const accountsCount = await sql`SELECT COUNT(*) FROM accounts`;
-    if (parseInt(accountsCount[0].count) === 0) {
-      for (const acc of defaultState.accounts) {
-        await sql`
-          INSERT INTO accounts (id, email, password, name, phone, role, address, addresses, points)
-          VALUES (${acc.id}, ${acc.email}, ${acc.password}, ${acc.name}, ${acc.phone}, ${acc.role || "user"}, ${acc.address || null}, ${sql.json(acc.addresses || [])}, ${acc.points || 0})
-        `;
+    if (defaultState.accounts && defaultState.accounts.length > 0) {
+      const accountsCount = (await sql`SELECT COUNT(*) FROM accounts`) as any[];
+      if (parseInt(accountsCount[0]?.count || "0") === 0) {
+        for (const acc of defaultState.accounts) {
+          await sql`
+            INSERT INTO accounts (id, email, password, name, phone, role, address, addresses, points)
+            VALUES (${acc.id}, ${acc.email}, ${acc.password}, ${acc.name}, ${acc.phone}, ${acc.role || "user"}, ${acc.address || null}, ${sql.json(acc.addresses || [])}, ${acc.points || 0})
+          `;
+        }
+        console.log("Seeded accounts.");
       }
-      console.log("Seeded accounts.");
     }
 
     // Seed Staff
-    const staffCount = await sql`SELECT COUNT(*) FROM staff`;
-    if (parseInt(staffCount[0].count) === 0) {
-      for (const st of defaultState.staff) {
-        await sql`
-          INSERT INTO staff (id, name, email, phone, role, active, created_at)
-          VALUES (${st.id}, ${st.name}, ${st.email}, ${st.phone}, ${st.role}, ${st.active}, ${st.createdAt})
-        `;
+    if (defaultState.staff && defaultState.staff.length > 0) {
+      const staffCount = (await sql`SELECT COUNT(*) FROM staff`) as any[];
+      if (parseInt(staffCount[0]?.count || "0") === 0) {
+        for (const st of defaultState.staff) {
+          await sql`
+            INSERT INTO staff (id, name, email, phone, role, active, created_at)
+            VALUES (${st.id}, ${st.name}, ${st.email}, ${st.phone}, ${st.role}, ${st.active}, ${st.createdAt})
+          `;
+        }
+        console.log("Seeded staff.");
       }
-      console.log("Seeded staff.");
     }
   } catch (error) {
     console.error("Failed to seed database:", error);

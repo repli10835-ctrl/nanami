@@ -53,11 +53,11 @@ export function ProductSheet({ item, onClose }: { item: MenuItem; onClose: () =>
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 p-0 sm:p-4 backdrop-blur-xs transition-opacity"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/75 backdrop-blur-xs transition-opacity"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg max-h-[92vh] sm:max-h-[85vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl bg-popover pb-6 shadow-2xl border border-border"
+        className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-t-3xl bg-popover pb-6 shadow-2xl border-t border-x border-border"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="relative">
@@ -65,7 +65,7 @@ export function ProductSheet({ item, onClose }: { item: MenuItem; onClose: () =>
             src={item.image}
             alt={item.name}
             loading="lazy"
-            className="h-48 sm:h-56 w-full rounded-t-3xl object-cover"
+            className="h-48 w-full rounded-t-3xl object-cover"
           />
           <button
             onClick={onClose}

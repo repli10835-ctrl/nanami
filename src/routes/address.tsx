@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowLeft, ChevronRight, MapPin, Search } from "lucide-react";
+import { ArrowLeft, ChevronRight, Compass, Loader2, MapPin, Search } from "lucide-react";
 import { actions, deliveryFeeFor, rupiah, useStore } from "@/lib/store";
 import { haversineKm, parseLatLng } from "@/lib/geo";
 import mapImg from "@/assets/checkout-map.jpg";
@@ -23,7 +23,7 @@ export const Route = createFileRoute("/address")({
   component: AddressPage,
 });
 
-const DEFAULT_ADDRESS = "Jl. Melati No.12, Kec. Sukasari, Jakarta Selatan";
+const DEFAULT_ADDRESS = "12 Independence Avenue, Windhoek, Namibia";
 
 function AddressPage() {
   const navigate = useNavigate();
@@ -37,18 +37,67 @@ function AddressPage() {
 
   const [mapsUrl, setMapsUrl] = useState(customerMapsUrl);
   const [mapsError, setMapsError] = useState("");
+  const [locating, setLocating] = useState(false);
 
   function applyMapsPoint() {
     const p = parseLatLng(mapsUrl);
     if (!p) {
-      setMapsError("Titik belum terbaca. Tempel tautan Google Maps atau koordinat lokasi Anda.");
+      setMapsError(
+        "Location coordinates not recognized. Please paste a Google Maps link or coordinates (lat, lng).",
+      );
       return;
     }
     setMapsError("");
-    const km =
-      haversineKm({ lat: settings.storeLat, lng: settings.storeLng }, p) *
-      (settings.routeFactor || 1);
+    const km = Math.max(
+      1,
+      Math.round(
+        haversineKm({ lat: settings.storeLat, lng: settings.storeLng }, p) *
+          (settings.routeFactor || 1) *
+          10,
+      ) / 10,
+    );
     actions.setCustomerPoint(mapsUrl.trim(), km);
+  }
+
+  function requestCurrentLocation() {
+    if (typeof navigator === "undefined" || !("geolocation" in navigator)) {
+      setMapsError("Geolocation is not supported by your browser.");
+      return;
+    }
+    setLocating(true);
+    setMapsError("");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLocating(false);
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        const googleMapsLink = `https://maps.google.com/?q=${lat.toFixed(6)},${lng.toFixed(6)}`;
+        setMapsUrl(googleMapsLink);
+        const km = Math.max(
+          1,
+          Math.round(
+            haversineKm({ lat: settings.storeLat, lng: settings.storeLng }, { lat, lng }) *
+              (settings.routeFactor || 1) *
+              10,
+          ) / 10,
+        );
+        actions.setCustomerPoint(googleMapsLink, km);
+        if (address === DEFAULT_ADDRESS || !address.trim()) {
+          setAddress(`Current Location (${lat.toFixed(4)}, ${lng.toFixed(4)})`);
+        }
+      },
+      (err) => {
+        setLocating(false);
+        if (err.code === 1 /* PERMISSION_DENIED */) {
+          setMapsError(
+            "Location access was denied. Please enable permission in your browser or enter your address manually.",
+          );
+        } else {
+          setMapsError(`Unable to fetch location: ${err.message}`);
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
   }
 
   const [query, setQuery] = useState("");
@@ -71,8 +120,8 @@ function AddressPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-10">
-      <div className="shell px-4 pt-5">
+    <div className="min-h-screen bg-neutral-950 text-foreground flex justify-center selection:bg-primary selection:text-primary-foreground">
+      <div className="w-full max-w-md min-h-screen bg-background relative sm:shadow-2xl sm:border-x sm:border-border/40 px-4 pt-5 pb-10 flex flex-col">
         {/* Header */}
         <div className="flex items-center gap-4">
           <button
@@ -123,25 +172,45 @@ function AddressPage() {
           </div>
         </div>
 
-        {/* Titik Google Maps pelanggan */}
+        {/* Google Maps Coordinates & Auto Geolocation */}
         <section className="mt-4 rounded-2xl border border-border bg-card px-5 py-4">
-          <h2 className="text-base font-medium text-card-foreground">Titik Google Maps Anda</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-medium text-card-foreground">
+              Your Google Maps Location
+            </h2>
+            <button
+              type="button"
+              onClick={requestCurrentLocation}
+              disabled={locating}
+              className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1.5 text-xs font-bold text-primary transition hover:bg-primary/25 disabled:opacity-50"
+            >
+              {locating ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <Compass className="size-3.5" />
+              )}
+              <span>{locating ? "Locating..." : "Use Current Location"}</span>
+            </button>
+          </div>
           <p className="mt-1 text-xs text-muted-foreground">
-            Tempel tautan lokasi Google Maps Anda agar ongkir dihitung otomatis dari dapur kami.
+            Allow location access or paste your Google Maps link to calculate delivery fee
+            automatically.
           </p>
           <input
             value={mapsUrl}
             onChange={(e) => setMapsUrl(e.target.value)}
-            placeholder="https://maps.google.com/?q=-6.2200,106.8000"
+            placeholder="https://maps.google.com/?q=-22.5609,17.0658"
             className="mt-3 w-full rounded-xl border border-input bg-secondary/40 px-3 py-2.5 text-sm outline-none focus:border-primary"
           />
           {mapsError ? <p className="mt-1 text-xs text-destructive">{mapsError}</p> : null}
-          <button
-            onClick={applyMapsPoint}
-            className="mt-3 rounded-full bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
-          >
-            Hitung jarak & ongkir
-          </button>
+          <div className="mt-3 flex items-center gap-2">
+            <button
+              onClick={applyMapsPoint}
+              className="rounded-full bg-primary px-4 py-2 text-xs font-bold text-primary-foreground transition hover:opacity-90"
+            >
+              Calculate Distance & Fee
+            </button>
+          </div>
         </section>
 
         {/* Details card */}

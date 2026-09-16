@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { ChevronDown, ChevronLeft, Minus, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronLeft, Minus, Plus, Share2, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { actions, cartTotals, deliveryFeeFor, rupiah, useStore } from "@/lib/store";
 
@@ -49,6 +49,23 @@ function CartPage() {
 
   const imageFor = (itemId: string) => menu.find((m) => m.id === itemId)?.image;
 
+  function handleShareCart() {
+    if (cart.length === 0) return;
+    const linesText = cart
+      .map((l) => `${l.qty}x ${l.name} (${rupiah(l.unitPrice * l.qty)})`)
+      .join("\n");
+    const text = `My Nanami Kitchen Cart:\n${linesText}\nTotal: ${rupiah(total)}`;
+    if (typeof navigator !== "undefined" && navigator.share) {
+      navigator.share({ title: "My Nanami Kitchen Order", text }).catch(() => {});
+    } else if (typeof window !== "undefined") {
+      window.open(
+        `https://wa.me/?text=${encodeURIComponent(text)}`,
+        "_blank",
+        "noopener,noreferrer",
+      );
+    }
+  }
+
   return (
     <AppShell hideCartBar>
       {/* Header */}
@@ -61,13 +78,24 @@ function CartPage() {
           <ChevronLeft className="size-4" />
         </button>
         <h1 className="text-lg font-bold">My Cart</h1>
-        <button
-          onClick={() => actions.clearCart()}
-          aria-label="Clear cart"
-          className="flex size-8 items-center justify-center rounded-lg text-foreground hover:bg-secondary/40 transition"
-        >
-          <Trash2 className="size-4 text-muted-foreground hover:text-destructive" />
-        </button>
+        <div className="flex items-center gap-1">
+          {cart.length > 0 && (
+            <button
+              onClick={handleShareCart}
+              aria-label="Share cart"
+              className="flex size-8 items-center justify-center rounded-lg text-foreground hover:bg-secondary/40 transition"
+            >
+              <Share2 className="size-4 text-muted-foreground hover:text-foreground" />
+            </button>
+          )}
+          <button
+            onClick={() => actions.clearCart()}
+            aria-label="Clear cart"
+            className="flex size-8 items-center justify-center rounded-lg text-foreground hover:bg-secondary/40 transition"
+          >
+            <Trash2 className="size-4 text-muted-foreground hover:text-destructive" />
+          </button>
+        </div>
       </div>
 
       {/* Cart items */}

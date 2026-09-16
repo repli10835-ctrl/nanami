@@ -101,6 +101,7 @@ export function OrderManagementPanel() {
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest" | "highest">("newest");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [viewMode, setViewMode] = useState<"pipeline" | "recap">("pipeline");
+  const [autoPrintCooking, setAutoPrintCooking] = useState(true);
 
   // Status Counts
   const counts = useMemo(() => {
@@ -195,6 +196,7 @@ export function OrderManagementPanel() {
   }, [orders, activeTab, typeFilter, dateFilter, searchQuery, sortOrder]);
 
   function handleStatusChange(orderId: string, newStatus: OrderStatus) {
+    const targetOrder = orders.find((o) => o.id === orderId);
     actions.setOrderStatus(orderId, newStatus);
     if (selectedOrder && selectedOrder.id === orderId) {
       setSelectedOrder((prev) =>
@@ -202,6 +204,11 @@ export function OrderManagementPanel() {
           ? { ...prev, status: newStatus, paid: prev.paid || newStatus !== "Pending Payment" }
           : null,
       );
+    }
+    if (newStatus === "Cooking" && autoPrintCooking && targetOrder) {
+      setTimeout(() => {
+        printReceipt({ ...targetOrder, status: newStatus, paid: true });
+      }, 250);
     }
   }
 
@@ -234,7 +241,7 @@ export function OrderManagementPanel() {
       </div>
 
       {/* View Mode Toggle Header */}
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-1.5 rounded-2xl border border-border bg-card p-1 shadow-xs">
           <button
             onClick={() => setViewMode("pipeline")}
@@ -259,6 +266,19 @@ export function OrderManagementPanel() {
             <span>7-Day Sales Recap</span>
           </button>
         </div>
+
+        <button
+          onClick={() => setAutoPrintCooking((v) => !v)}
+          className={`flex items-center gap-2 rounded-2xl border px-3.5 py-1.5 text-xs font-semibold transition ${
+            autoPrintCooking
+              ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+              : "border-border bg-secondary/50 text-muted-foreground"
+          }`}
+          title="Auto-trigger Kitchen Thermal Printer receipt when order moves to Cooking status"
+        >
+          <Printer className="size-3.5" />
+          <span>Thermal Auto-Print: {autoPrintCooking ? "ON" : "OFF"}</span>
+        </button>
       </div>
 
       {viewMode === "recap" ? (

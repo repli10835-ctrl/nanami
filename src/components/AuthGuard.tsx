@@ -168,12 +168,18 @@ function UnauthenticatedGate({ pathname, title }: { pathname: string; title?: st
 
   useEffect(() => {
     // Automatically redirect to /login with redirect target
-    const targetSearch = pathname && pathname !== "/" ? { redirect: pathname } : undefined;
-    navigate({
-      to: "/login",
-      search: targetSearch,
-      replace: true,
-    });
+    if (pathname && pathname !== "/") {
+      navigate({
+        to: "/login",
+        search: { redirect: pathname },
+        replace: true,
+      });
+    } else {
+      navigate({
+        to: "/login",
+        replace: true,
+      });
+    }
   }, [pathname, navigate]);
 
   return (
@@ -186,13 +192,22 @@ function UnauthenticatedGate({ pathname, title }: { pathname: string; title?: st
         </p>
 
         <div className="mt-6 flex flex-col gap-2.5">
-          <Link
-            to="/login"
-            search={pathname !== "/" ? { redirect: pathname } : undefined}
-            className="flex w-full items-center justify-center gap-2 rounded-full bg-primary py-3 text-sm font-bold text-primary-foreground shadow-sm hover:opacity-95"
-          >
-            <LogIn className="size-4" /> Sign In Now
-          </Link>
+          {pathname && pathname !== "/" ? (
+            <Link
+              to="/login"
+              search={{ redirect: pathname }}
+              className="flex w-full items-center justify-center gap-2 rounded-full bg-primary py-3 text-sm font-bold text-primary-foreground shadow-sm hover:opacity-95"
+            >
+              <LogIn className="size-4" /> Sign In Now
+            </Link>
+          ) : (
+            <Link
+              to="/login"
+              className="flex w-full items-center justify-center gap-2 rounded-full bg-primary py-3 text-sm font-bold text-primary-foreground shadow-sm hover:opacity-95"
+            >
+              <LogIn className="size-4" /> Sign In Now
+            </Link>
+          )}
           <Link
             to="/"
             className="flex w-full items-center justify-center gap-2 rounded-full border border-border bg-secondary/40 py-2.5 text-xs font-semibold text-foreground hover:bg-secondary/70"

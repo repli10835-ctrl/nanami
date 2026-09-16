@@ -1,5 +1,4 @@
 import { createServerFn } from "@tanstack/react-start";
-import { sql, initDb, seedDbIfEmpty } from "./db";
 import {
   type MenuItem,
   type Order,
@@ -12,7 +11,13 @@ import {
   type MediaAsset,
 } from "./store";
 
+async function getDb() {
+  const { sql, initDb, seedDbIfEmpty } = await import("./db");
+  return { sql, initDb, seedDbIfEmpty };
+}
+
 export const getDatabaseState = createServerFn({ method: "GET" }).handler(async () => {
+  const { sql, initDb, seedDbIfEmpty } = await getDb();
   if (!sql) return null;
   try {
     const ok = await initDb();
@@ -24,15 +29,16 @@ export const getDatabaseState = createServerFn({ method: "GET" }).handler(async 
     const { seedState } = await import("./seed-data");
     await seedDbIfEmpty(seedState);
 
-    const settings = await sql`SELECT data FROM app_settings WHERE id = 'main_settings' LIMIT 1`;
-    const cms = await sql`SELECT data FROM cms_content WHERE id = 'main_cms' LIMIT 1`;
-    const menu = await sql`SELECT * FROM menu_items ORDER BY id`;
-    const orders = await sql`SELECT * FROM orders ORDER BY created_at DESC`;
-    const promos = await sql`SELECT * FROM promos ORDER BY id`;
-    const vouchers = await sql`SELECT * FROM vouchers ORDER BY code`;
-    const accounts = await sql`SELECT * FROM accounts ORDER BY id`;
-    const staff = await sql`SELECT * FROM staff ORDER BY created_at DESC`;
-    const media = await sql`SELECT * FROM media_assets ORDER BY uploaded_at DESC`;
+    const settings =
+      (await sql`SELECT data FROM app_settings WHERE id = 'main_settings' LIMIT 1`) as any[];
+    const cms = (await sql`SELECT data FROM cms_content WHERE id = 'main_cms' LIMIT 1`) as any[];
+    const menu = (await sql`SELECT * FROM menu_items ORDER BY id`) as any[];
+    const orders = (await sql`SELECT * FROM orders ORDER BY created_at DESC`) as any[];
+    const promos = (await sql`SELECT * FROM promos ORDER BY id`) as any[];
+    const vouchers = (await sql`SELECT * FROM vouchers ORDER BY code`) as any[];
+    const accounts = (await sql`SELECT * FROM accounts ORDER BY id`) as any[];
+    const staff = (await sql`SELECT * FROM staff ORDER BY created_at DESC`) as any[];
+    const media = (await sql`SELECT * FROM media_assets ORDER BY uploaded_at DESC`) as any[];
 
     return {
       settings: settings[0]?.data,
@@ -124,6 +130,7 @@ export const getDatabaseState = createServerFn({ method: "GET" }).handler(async 
 export const saveMenuItemDb = createServerFn({ method: "POST" })
   .validator((item: MenuItem) => item)
   .handler(async ({ data: item }) => {
+    const { sql } = await getDb();
     if (!sql) return;
     try {
       await sql`
@@ -163,6 +170,7 @@ export const saveMenuItemDb = createServerFn({ method: "POST" })
 export const deleteMenuItemDb = createServerFn({ method: "POST" })
   .validator((id: string) => id)
   .handler(async ({ data: id }) => {
+    const { sql } = await getDb();
     if (!sql) return;
     try {
       await sql`DELETE FROM menu_items WHERE id = ${id}`;
@@ -174,6 +182,7 @@ export const deleteMenuItemDb = createServerFn({ method: "POST" })
 export const saveOrderDb = createServerFn({ method: "POST" })
   .validator((order: Order) => order)
   .handler(async ({ data: order }) => {
+    const { sql } = await getDb();
     if (!sql) return;
     try {
       await sql`
@@ -210,6 +219,7 @@ export const saveOrderDb = createServerFn({ method: "POST" })
 export const saveVoucherDb = createServerFn({ method: "POST" })
   .validator((v: Voucher) => v)
   .handler(async ({ data: v }) => {
+    const { sql } = await getDb();
     if (!sql) return;
     try {
       await sql`
@@ -229,6 +239,7 @@ export const saveVoucherDb = createServerFn({ method: "POST" })
 export const deleteVoucherDb = createServerFn({ method: "POST" })
   .validator((code: string) => code)
   .handler(async ({ data: code }) => {
+    const { sql } = await getDb();
     if (!sql) return;
     try {
       await sql`DELETE FROM vouchers WHERE code = ${code}`;
@@ -240,6 +251,7 @@ export const deleteVoucherDb = createServerFn({ method: "POST" })
 export const savePromoDb = createServerFn({ method: "POST" })
   .validator((p: Promo) => p)
   .handler(async ({ data: p }) => {
+    const { sql } = await getDb();
     if (!sql) return;
     try {
       await sql`
@@ -261,6 +273,7 @@ export const savePromoDb = createServerFn({ method: "POST" })
 export const deletePromoDb = createServerFn({ method: "POST" })
   .validator((id: string) => id)
   .handler(async ({ data: id }) => {
+    const { sql } = await getDb();
     if (!sql) return;
     try {
       await sql`DELETE FROM promos WHERE id = ${id}`;
@@ -272,6 +285,7 @@ export const deletePromoDb = createServerFn({ method: "POST" })
 export const saveAccountDb = createServerFn({ method: "POST" })
   .validator((acc: Account) => acc)
   .handler(async ({ data: acc }) => {
+    const { sql } = await getDb();
     if (!sql) return;
     try {
       await sql`
@@ -295,6 +309,7 @@ export const saveAccountDb = createServerFn({ method: "POST" })
 export const saveStaffDb = createServerFn({ method: "POST" })
   .validator((s: StaffMember) => s)
   .handler(async ({ data: s }) => {
+    const { sql } = await getDb();
     if (!sql) return;
     try {
       await sql`
@@ -315,6 +330,7 @@ export const saveStaffDb = createServerFn({ method: "POST" })
 export const saveSettingsDb = createServerFn({ method: "POST" })
   .validator((settings: Settings) => settings)
   .handler(async ({ data: settings }) => {
+    const { sql } = await getDb();
     if (!sql) return;
     try {
       await sql`
@@ -331,6 +347,7 @@ export const saveSettingsDb = createServerFn({ method: "POST" })
 export const saveCmsDb = createServerFn({ method: "POST" })
   .validator((cms: CmsContent) => cms)
   .handler(async ({ data: cms }) => {
+    const { sql } = await getDb();
     if (!sql) return;
     try {
       await sql`
@@ -347,6 +364,7 @@ export const saveCmsDb = createServerFn({ method: "POST" })
 export const searchOrdersDb = createServerFn({ method: "POST" })
   .validator((params: { query?: string; statusFilter?: string }) => params)
   .handler(async ({ data: { query, statusFilter } }) => {
+    const { sql } = await getDb();
     if (!sql) return null;
     try {
       const q = query ? `%${query.trim().toLowerCase()}%` : null;
@@ -380,7 +398,7 @@ export const searchOrdersDb = createServerFn({ method: "POST" })
       } else {
         rows = await sql`SELECT * FROM orders ORDER BY created_at DESC`;
       }
-      return rows.map((o) => ({
+      return (rows as any[]).map((o) => ({
         id: o.id,
         code: o.code,
         createdAt: Number(o.created_at),
@@ -408,6 +426,7 @@ export const searchOrdersDb = createServerFn({ method: "POST" })
 export const saveMediaAssetDb = createServerFn({ method: "POST" })
   .validator((d: MediaAsset) => d)
   .handler(async ({ data: m }) => {
+    const { sql } = await getDb();
     if (!sql) return;
     await sql`
       INSERT INTO media_assets (id, url, filename, uploaded_at, used_by_menu_ids)
@@ -422,6 +441,7 @@ export const saveMediaAssetDb = createServerFn({ method: "POST" })
 export const deleteMediaAssetDb = createServerFn({ method: "POST" })
   .validator((id: string) => id)
   .handler(async ({ data: id }) => {
+    const { sql } = await getDb();
     if (!sql) return;
     await sql`DELETE FROM media_assets WHERE id = ${id}`;
   });
@@ -429,6 +449,7 @@ export const deleteMediaAssetDb = createServerFn({ method: "POST" })
 export const updateMediaAssetUsageDb = createServerFn({ method: "POST" })
   .validator((d: { id: string; usedByMenuIds: string[] }) => d)
   .handler(async ({ data: d }) => {
+    const { sql } = await getDb();
     if (!sql) return;
     await sql`UPDATE media_assets SET used_by_menu_ids = ${sql.json(d.usedByMenuIds)} WHERE id = ${d.id}`;
   });
@@ -436,6 +457,7 @@ export const updateMediaAssetUsageDb = createServerFn({ method: "POST" })
 export const deleteAccountDb = createServerFn({ method: "POST" })
   .validator((id: string) => id)
   .handler(async ({ data: id }) => {
+    const { sql } = await getDb();
     if (!sql) return;
     await sql`DELETE FROM accounts WHERE id = ${id}`;
   });

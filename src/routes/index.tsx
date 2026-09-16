@@ -133,7 +133,7 @@ function Home() {
       {showWelcome && <WelcomeScreen onDone={() => setShowWelcome(false)} />}
 
       {/* Full-width Hero Banner pinned to top */}
-      <div className="-mx-2.5 sm:-mx-4 -mt-2.5 sm:-mt-3">
+      <div className="-mx-3 -mt-3">
         <PromoCarousel />
       </div>
 

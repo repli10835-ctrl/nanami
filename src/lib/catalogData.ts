@@ -75,7 +75,7 @@ export const catalogItems: MenuItem[] = [
   },
   {
     id: "m2",
-    name: "Crispy Smashed Chicken (Geprek)",
+    name: "Crispy Smashed Chicken",
     description: "Crispy smashed chicken served with fresh chili sambal.",
     price: 85,
     category: "Meals",

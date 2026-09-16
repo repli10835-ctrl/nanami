@@ -68,7 +68,7 @@ const LOGO_PRESETS = [
 const HERO_PRESETS = [
   { id: "default", name: "Default Signature Dish", url: heroImg },
   { id: "food1", name: "Bento Teriyaki Spread", url: food1 },
-  { id: "food2", name: "Crispy Geprek Feast", url: food2 },
+  { id: "food2", name: "Crispy Smashed Chicken Feast", url: food2 },
   { id: "food3", name: "Golden Crispy Snacks", url: food3 },
   { id: "food4", name: "Refreshing Matcha & Boba", url: food4 },
   {
@@ -107,7 +107,7 @@ export function CmsPanel(props: CmsPanelProps = {}) {
       if (props.onChangeCms) {
         props.onChangeCms(updated);
       } else {
-        actionsShadow.updateCms(patch);
+        actions.updateCms(patch);
       }
     },
     updateCmsAnnouncement(patch: Partial<CmsContent["announcement"]>) {
@@ -118,7 +118,7 @@ export function CmsPanel(props: CmsPanelProps = {}) {
       if (props.onChangeCms) {
         props.onChangeCms(updated);
       } else {
-        actionsShadow.updateCmsAnnouncement(patch);
+        actions.updateCmsAnnouncement(patch);
       }
     },
     updateCmsWelcome(patch: Partial<CmsContent["welcomeScreen"]>) {
@@ -129,7 +129,7 @@ export function CmsPanel(props: CmsPanelProps = {}) {
       if (props.onChangeCms) {
         props.onChangeCms(updated);
       } else {
-        actionsShadow.updateCmsWelcome(patch);
+        actions.updateCmsWelcome(patch);
       }
     },
     updateCmsSocials(patch: Partial<CmsContent["socials"]>) {
@@ -140,7 +140,7 @@ export function CmsPanel(props: CmsPanelProps = {}) {
       if (props.onChangeCms) {
         props.onChangeCms(updated);
       } else {
-        actionsShadow.updateCmsSocials(patch);
+        actions.updateCmsSocials(patch);
       }
     },
     updateCmsFaq(id: string, patch: Partial<CmsFaq>) {
@@ -151,18 +151,19 @@ export function CmsPanel(props: CmsPanelProps = {}) {
       if (props.onChangeCms) {
         props.onChangeCms(updated);
       } else {
-        actionsShadow.updateCmsFaq(id, patch);
+        actions.updateCmsFaq(id, patch);
       }
     },
-    addCmsFaq(faq: CmsFaq) {
+    addCmsFaq(faq: Omit<CmsFaq, "id"> | CmsFaq) {
+      const fullFaq: CmsFaq = "id" in faq ? faq : { ...faq, id: uid() };
       const updated = {
         ...cms,
-        faqs: [...cms.faqs, faq],
+        faqs: [...cms.faqs, fullFaq],
       };
       if (props.onChangeCms) {
         props.onChangeCms(updated);
       } else {
-        actionsShadow.addCmsFaq(faq);
+        actions.addCmsFaq(fullFaq);
       }
     },
     deleteCmsFaq(id: string) {
@@ -173,7 +174,7 @@ export function CmsPanel(props: CmsPanelProps = {}) {
       if (props.onChangeCms) {
         props.onChangeCms(updated);
       } else {
-        actionsShadow.deleteCmsFaq(id);
+        actions.deleteCmsFaq(id);
       }
     },
     savePromo(p: Promo) {
@@ -183,7 +184,7 @@ export function CmsPanel(props: CmsPanelProps = {}) {
       if (props.onChangePromos) {
         props.onChangePromos(updated);
       } else {
-        actionsShadow.savePromo(p);
+        actions.savePromo(p);
       }
     },
     deletePromo(id: string) {
@@ -191,7 +192,7 @@ export function CmsPanel(props: CmsPanelProps = {}) {
       if (props.onChangePromos) {
         props.onChangePromos(updated);
       } else {
-        actionsShadow.deletePromo(id);
+        actions.deletePromo(id);
       }
     },
     updateSettings(patch: Partial<Settings>) {
@@ -199,7 +200,7 @@ export function CmsPanel(props: CmsPanelProps = {}) {
       if (props.onChangeSettings) {
         props.onChangeSettings(updated);
       } else {
-        actionsShadow.updateSettings(patch);
+        actions.updateSettings(patch);
       }
     },
     resetCms() {
@@ -356,7 +357,9 @@ export function CmsPanel(props: CmsPanelProps = {}) {
                         <button
                           key={p.id}
                           onClick={() => {
-                            actionsShadow.updateCms({ logoUrl: p.url === defaultLogo ? "" : p.url });
+                            actionsShadow.updateCms({
+                              logoUrl: p.url === defaultLogo ? "" : p.url,
+                            });
                             triggerToast();
                           }}
                           className={`flex flex-col items-center gap-2 rounded-xl border p-2.5 text-center transition ${
@@ -389,7 +392,9 @@ export function CmsPanel(props: CmsPanelProps = {}) {
                       accept="image/*"
                       className="hidden"
                       onChange={(e) =>
-                        handleFileUpload(e, (base64) => actionsShadow.updateCms({ logoUrl: base64 }))
+                        handleFileUpload(e, (base64) =>
+                          actionsShadow.updateCms({ logoUrl: base64 }),
+                        )
                       }
                     />
                     <button
@@ -532,7 +537,9 @@ export function CmsPanel(props: CmsPanelProps = {}) {
                 <div className="flex items-center justify-between rounded-xl border border-border bg-secondary/30 p-3.5">
                   <div>
                     <p className="text-sm font-semibold text-foreground">Hero Banner Status</p>
-                    <p className="text-xs text-muted-foreground">Show hero section on home screen.</p>
+                    <p className="text-xs text-muted-foreground">
+                      Show hero section on home screen.
+                    </p>
                   </div>
                   <button
                     onClick={() => {
@@ -594,7 +601,9 @@ export function CmsPanel(props: CmsPanelProps = {}) {
                       accept="image/*"
                       className="hidden"
                       onChange={(e) =>
-                        handleFileUpload(e, (base64) => actionsShadow.updateCms({ heroImage: base64 }))
+                        handleFileUpload(e, (base64) =>
+                          actionsShadow.updateCms({ heroImage: base64 }),
+                        )
                       }
                     />
                     <button
@@ -927,7 +936,7 @@ export function CmsPanel(props: CmsPanelProps = {}) {
                         title: promoTitle.trim(),
                         subtitle: promoSubtitle.trim(),
                         badge: promoBadge.trim() || "PROMO",
-                        imageUrl: promoImage.trim() || undefined,
+                        imageUrl: promoImage.trim() || "",
                         active: true,
                       });
                       setPromoTitle("");
@@ -1163,9 +1172,11 @@ export function CmsPanel(props: CmsPanelProps = {}) {
                 <div className="flex items-center justify-between p-4 border-b">
                   <div>
                     <h3 className="font-bold">Media Library</h3>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Select Hero image</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                      Select Hero image
+                    </p>
                   </div>
-                  <button 
+                  <button
                     onClick={() => setShowHeroGallery(false)}
                     className="p-1.5 hover:bg-secondary rounded-lg transition-colors"
                   >
@@ -1173,7 +1184,7 @@ export function CmsPanel(props: CmsPanelProps = {}) {
                   </button>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4">
-                  <MediaGallery 
+                  <MediaGallery
                     selectedUrl={cms.heroImage}
                     onSelect={(url) => {
                       actionsShadow.updateCms({ heroImage: url });
@@ -1241,7 +1252,9 @@ export function CmsPanel(props: CmsPanelProps = {}) {
               <div className="flex items-center justify-between rounded-xl border border-border bg-secondary/30 p-3.5">
                 <div>
                   <p className="text-sm font-semibold text-foreground">Socials Section Status</p>
-                  <p className="text-xs text-muted-foreground">Show socials links at bottom of app.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Show socials links at bottom of app.
+                  </p>
                 </div>
                 <button
                   onClick={() => {
@@ -1260,61 +1273,61 @@ export function CmsPanel(props: CmsPanelProps = {}) {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="block text-xs text-muted-foreground">
-                Instagram Handle / URL
-                <input
-                  value={cms.socials.instagram}
-                  onChange={(e) => {
-                    actionsShadow.updateCmsSocials({ instagram: e.target.value });
-                    triggerToast();
-                  }}
-                  placeholder="@nanami.kitchen"
-                  className={fieldClass}
-                />
-              </label>
+                  Instagram Handle / URL
+                  <input
+                    value={cms.socials.instagram}
+                    onChange={(e) => {
+                      actionsShadow.updateCmsSocials({ instagram: e.target.value });
+                      triggerToast();
+                    }}
+                    placeholder="@nanami.kitchen"
+                    className={fieldClass}
+                  />
+                </label>
 
-              <label className="block text-xs text-muted-foreground">
-                TikTok Handle / URL
-                <input
-                  value={cms.socials.tiktok}
-                  onChange={(e) => {
-                    actionsShadow.updateCmsSocials({ tiktok: e.target.value });
-                    triggerToast();
-                  }}
-                  placeholder="@nanami.kitchen"
-                  className={fieldClass}
-                />
-              </label>
+                <label className="block text-xs text-muted-foreground">
+                  TikTok Handle / URL
+                  <input
+                    value={cms.socials.tiktok}
+                    onChange={(e) => {
+                      actionsShadow.updateCmsSocials({ tiktok: e.target.value });
+                      triggerToast();
+                    }}
+                    placeholder="@nanami.kitchen"
+                    className={fieldClass}
+                  />
+                </label>
 
-              <label className="block text-xs text-muted-foreground">
-                Store WhatsApp Hotline
-                <input
-                  value={cms.socials.whatsapp}
-                  onChange={(e) => {
-                    actionsShadow.updateCmsSocials({ whatsapp: e.target.value });
-                    actionsShadow.updateSettings({ whatsapp: e.target.value });
-                    triggerToast();
-                  }}
-                  placeholder="+27 82 123 4567"
-                  className={fieldClass}
-                />
-              </label>
+                <label className="block text-xs text-muted-foreground">
+                  Store WhatsApp Hotline
+                  <input
+                    value={cms.socials.whatsapp}
+                    onChange={(e) => {
+                      actionsShadow.updateCmsSocials({ whatsapp: e.target.value });
+                      actionsShadow.updateSettings({ whatsapp: e.target.value });
+                      triggerToast();
+                    }}
+                    placeholder="+27 82 123 4567"
+                    className={fieldClass}
+                  />
+                </label>
 
-              <label className="block text-xs text-muted-foreground">
-                Google Maps Location Link
-                <input
-                  value={cms.socials.mapsUrl}
-                  onChange={(e) => {
-                    actionsShadow.updateCmsSocials({ mapsUrl: e.target.value });
-                    triggerToast();
-                  }}
-                  placeholder="https://maps.google.com/?q=..."
-                  className={fieldClass}
-                />
-              </label>
+                <label className="block text-xs text-muted-foreground">
+                  Google Maps Location Link
+                  <input
+                    value={cms.socials.mapsUrl}
+                    onChange={(e) => {
+                      actionsShadow.updateCmsSocials({ mapsUrl: e.target.value });
+                      triggerToast();
+                    }}
+                    placeholder="https://maps.google.com/?q=..."
+                    className={fieldClass}
+                  />
+                </label>
+              </div>
             </div>
-          </div>
 
-          <div className="mt-4">
+            <div className="mt-4">
               <label className="block text-xs text-muted-foreground">
                 About Restaurant Story / Bio
                 <textarea
@@ -1355,7 +1368,7 @@ export function CmsPanel(props: CmsPanelProps = {}) {
 
                 <label className="block text-xs text-muted-foreground">
                   Detailed Answer
-                  <input
+                  <textarea
                     rows={3}
                     value={newAnswer}
                     onChange={(e) => setNewAnswer(e.target.value)}
@@ -1539,11 +1552,14 @@ export function CmsPanel(props: CmsPanelProps = {}) {
                           disabled={idx === 0}
                           onClick={() => {
                             const copy = [...arr];
-                            const temp = copy[idx];
-                            copy[idx] = copy[idx - 1];
-                            copy[idx - 1] = temp;
-                            actionsShadow.updateCms({ categoryOrder: copy });
-                            triggerToast();
+                            const curr = copy[idx];
+                            const prev = copy[idx - 1];
+                            if (curr && prev) {
+                              copy[idx] = prev;
+                              copy[idx - 1] = curr;
+                              actionsShadow.updateCms({ categoryOrder: copy });
+                              triggerToast();
+                            }
                           }}
                           className="rounded p-1 bg-secondary text-xs disabled:opacity-30 hover:bg-secondary/80"
                         >
@@ -1553,11 +1569,14 @@ export function CmsPanel(props: CmsPanelProps = {}) {
                           disabled={idx === arr.length - 1}
                           onClick={() => {
                             const copy = [...arr];
-                            const temp = copy[idx];
-                            copy[idx] = copy[idx + 1];
-                            copy[idx + 1] = temp;
-                            actionsShadow.updateCms({ categoryOrder: copy });
-                            triggerToast();
+                            const curr = copy[idx];
+                            const next = copy[idx + 1];
+                            if (curr && next) {
+                              copy[idx] = next;
+                              copy[idx + 1] = curr;
+                              actionsShadow.updateCms({ categoryOrder: copy });
+                              triggerToast();
+                            }
                           }}
                           className="rounded p-1 bg-secondary text-xs disabled:opacity-30 hover:bg-secondary/80"
                         >

@@ -30,8 +30,8 @@ export function InstallPrompt() {
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-32 z-40 px-4">
-      <div className="shell flex items-center gap-3 rounded-2xl border border-border bg-popover/95 px-4 py-3 shadow-lg backdrop-blur">
+    <div className="fixed bottom-16 left-1/2 -translate-x-1/2 z-40 w-full max-w-md px-3">
+      <div className="w-full flex items-center gap-3 rounded-2xl border border-border bg-popover/95 px-4 py-3 shadow-lg backdrop-blur">
         <Download className="size-5 shrink-0 text-primary" />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold">Install Nanami Kitchen</p>

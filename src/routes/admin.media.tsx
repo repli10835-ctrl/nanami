@@ -24,11 +24,7 @@ export const Route = createFileRoute("/admin/media")({
 
 function AdminMediaPage() {
   return (
-    <DashboardShell
-      role="admin"
-      title="Media Gallery"
-      subtitle="Manage and upload store images"
-    >
+    <DashboardShell role="admin" title="Media Gallery" subtitle="Manage and upload store images">
       <MediaGallery />
     </DashboardShell>
   );

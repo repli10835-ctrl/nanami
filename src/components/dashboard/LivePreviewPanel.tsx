@@ -76,7 +76,7 @@ export function LivePreviewPanel() {
     settings: s.settings,
   }));
 
-  const [selectedDevice, setSelectedDevice] = useState<DevicePreset>(DEVICES[0]);
+  const [selectedDevice, setSelectedDevice] = useState<DevicePreset>(() => DEVICES[0]!);
   const [currentPath, setCurrentPath] = useState("/");
   const [zoom, setZoom] = useState<number>(0.85);
   const [isLandscape, setIsLandscape] = useState(false);

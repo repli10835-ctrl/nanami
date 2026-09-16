@@ -67,8 +67,11 @@ async function runCategoryRegressionTest() {
     voucherCode: "",
     deliveryFee: 0,
     total: subtotal,
-    status: "new",
+    status: "Pending Payment",
+    paid: false,
     paymentMethod: "Cash on Pickup",
+    pointsEarned: 0,
+    etaMinutes: 20,
     customer: {
       name: "Andi Pratama",
       phone: "081122334455",
@@ -79,9 +82,7 @@ async function runCategoryRegressionTest() {
 
   console.log(`[Order Code]   : ${order.code}`);
   console.log(`[Customer]     : ${order.customer.name} (${order.customer.phone})`);
-  console.log(
-    `[Item Added]   : ${cartLine.name} x${cartLine.qty} (${rupiah(calc.unitPrice)})`,
-  );
+  console.log(`[Item Added]   : ${cartLine.name} x${cartLine.qty} (${rupiah(calc.unitPrice)})`);
   console.log(`[Options]      : [${cartLine.optionLabels.join(", ")}]`);
   console.log(`[Note]         : "${cartLine.note}"`);
   console.log(`[Total Amount] : ${rupiah(order.total)}`);

@@ -14,8 +14,8 @@ import { AppShell } from "@/components/AppShell";
 import { cleanWhatsappNumber, rupiah, useStore, type Order, type OrderStatus } from "@/lib/store";
 
 export const Route = createFileRoute("/tracking")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    code: typeof search.code === "string" && search.code ? search.code : undefined,
+  validateSearch: (search: Record<string, unknown>): { code?: string | undefined } => ({
+    code: typeof search["code"] === "string" && search["code"] ? search["code"] : undefined,
   }),
   head: () => ({
     meta: [
@@ -94,6 +94,7 @@ function Tracking() {
     e.preventDefault();
     if (!manualCode.trim()) return;
     navigate({
+      to: "/tracking",
       search: { code: manualCode.trim().toUpperCase() },
     });
   }

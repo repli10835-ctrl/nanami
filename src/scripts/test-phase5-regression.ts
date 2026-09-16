@@ -57,7 +57,7 @@ async function runPhase5Regression() {
     voucherCode: "",
     deliveryFee: 25,
     total: 110 + 17 + 25, // 152
-    status: "new",
+    status: "Pending Payment",
     paid: false,
     paymentMethod: "eWallet / Pay2Cell",
     pointsEarned: 1,
@@ -102,7 +102,7 @@ async function runPhase5Regression() {
     voucherCode: "",
     deliveryFee: 25,
     total: 110 + 25, // 135
-    status: "new",
+    status: "Pending Payment",
     paid: false,
     paymentMethod: "Bank Transfer / EFT",
     pointsEarned: 1,

@@ -71,7 +71,7 @@ function AdminHome() {
   const activeMenuCount = menu.filter((m) => m.available).length;
   const activeOrders = orders.filter((o) => o.status !== "Completed" && o.status !== "Cancelled");
   const totalRevenue = orders.reduce(
-    (sum, o) => (o.status !== "Cancelled" ? sum + o.totalPrice : sum),
+    (sum, o) => (o.status !== "Cancelled" ? sum + o.total : sum),
     0,
   );
 

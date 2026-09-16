@@ -17,9 +17,9 @@ export function BottomNav() {
   return (
     <nav
       suppressHydrationWarning
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-border/80 bg-popover/95 backdrop-blur-md"
+      className="fixed bottom-0 left-1/2 -translate-x-1/2 z-40 w-full max-w-md border-t border-border/80 bg-popover/95 backdrop-blur-md sm:border-x sm:border-border/40"
     >
-      <div className="w-full max-w-2xl mx-auto grid grid-cols-4">
+      <div className="w-full grid grid-cols-4">
         {items.map(({ to, label, icon: Icon }) => {
           const isActive = to === "/" ? pathname === "/" : pathname.startsWith(to);
           return (

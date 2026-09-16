@@ -62,8 +62,11 @@ async function runE2EFlowTest() {
     voucherCode: "",
     deliveryFee: 15,
     total: cartLine.unitPrice * cartLine.qty + 15,
-    status: "new",
+    status: "Pending Payment",
+    paid: false,
     paymentMethod: "eWallet / Pay2Cell",
+    pointsEarned: 1,
+    etaMinutes: 35,
     customer: {
       name: "Budi Santoso",
       phone: "081234567890",
@@ -77,15 +80,15 @@ async function runE2EFlowTest() {
   console.log(`- Customer      : ${order.customer.name} (${order.customer.phone})`);
   console.log(`- Subtotal      : ${rupiah(order.subtotal)}`);
   console.log(`- Total         : ${rupiah(order.total)}`);
-  console.log(`- Line Item 1   : ${order.lines[0].name}`);
-  console.log(`- Line 1 Options: [${order.lines[0].optionLabels.join(", ")}]`);
-  console.log(`- Line 1 Note   : "${order.lines[0].note}"`);
+  console.log(`- Line Item 1   : ${order.lines[0]?.name}`);
+  console.log(`- Line 1 Options: [${order.lines[0]?.optionLabels.join(", ")}]`);
+  console.log(`- Line 1 Note   : "${order.lines[0]?.note}"`);
 
   console.assert(
-    order.lines[0].optionLabels.join(", ") === selectedOptions.join(", "),
+    order.lines[0]?.optionLabels.join(", ") === selectedOptions.join(", "),
     "Order line options harus utuh",
   );
-  console.assert(order.lines[0].note === specialNote, "Order line note harus utuh");
+  console.assert(order.lines[0]?.note === specialNote, "Order line note harus utuh");
 
   // TITIK 4: FORMAL KONTEN STRUK (RECEIPT HTML)
   const receiptRows = order.lines

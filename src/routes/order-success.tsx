@@ -4,8 +4,8 @@ import { Bike, Check, MessageSquare, Sparkles } from "lucide-react";
 import { buildWhatsappMessage, cleanWhatsappNumber, rupiah, useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/order-success")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    code: typeof search.code === "string" && search.code ? search.code : undefined,
+  validateSearch: (search: Record<string, unknown>): { code?: string | undefined } => ({
+    code: typeof search["code"] === "string" && search["code"] ? search["code"] : undefined,
   }),
   head: () => ({
     meta: [
@@ -43,8 +43,8 @@ function OrderSuccess() {
 
   if (!order) {
     return (
-      <div className="min-h-screen bg-background px-4 pt-5">
-        <div className="shell flex min-h-screen flex-col items-center justify-center pb-10 text-center">
+      <div className="min-h-screen bg-neutral-950 text-foreground flex justify-center selection:bg-primary selection:text-primary-foreground">
+        <div className="w-full max-w-md min-h-screen bg-background relative sm:shadow-2xl sm:border-x sm:border-border/40 px-4 pt-5 flex flex-col items-center justify-center text-center">
           <p className="text-muted-foreground">No recent order found.</p>
           <Link
             to="/"
@@ -61,8 +61,8 @@ function OrderSuccess() {
   const waUrl = `https://wa.me/${targetWa}?text=${encodeURIComponent(buildWhatsappMessage(order, settings.currencySymbol))}`;
 
   return (
-    <div className="min-h-screen bg-background px-4 pt-8">
-      <div className="shell flex min-h-screen flex-col pb-10">
+    <div className="min-h-screen bg-neutral-950 text-foreground flex justify-center selection:bg-primary selection:text-primary-foreground">
+      <div className="w-full max-w-md min-h-screen bg-background relative sm:shadow-2xl sm:border-x sm:border-border/40 px-4 pt-8 pb-10 flex flex-col">
         {/* Success icon with confetti */}
         <div className="relative flex flex-col items-center pt-6 text-center">
           <div className="relative">

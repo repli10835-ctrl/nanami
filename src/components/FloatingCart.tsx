@@ -8,11 +8,11 @@ export function FloatingCart() {
   if (items === 0) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-12 z-40 px-2 sm:px-4">
-      <div className="w-full max-w-2xl mx-auto">
+    <div className="fixed bottom-14 left-1/2 -translate-x-1/2 z-40 w-full max-w-md px-3 pointer-events-none">
+      <div className="w-full pointer-events-auto">
         <Link
           to="/cart"
-          className="flex items-center gap-2 rounded-xl bg-primary px-3 py-2 text-primary-foreground shadow-md shadow-black/30 transition hover:brightness-105 active:scale-[0.99]"
+          className="flex items-center gap-2 rounded-xl bg-primary px-3.5 py-2.5 text-primary-foreground shadow-lg shadow-black/40 transition hover:brightness-105 active:scale-[0.99]"
         >
           <ShoppingCart className="size-4" />
           <span className="text-xs font-bold">{items} items</span>

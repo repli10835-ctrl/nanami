@@ -101,7 +101,7 @@ export async function auditAllMenuItems() {
     let totalMissingIds = 0;
 
     const auditResults = rows.map((row) => {
-      const { groups, missingIdCount } = upgradeOptionGroups(row.groups, row.id);
+      const { groups, missingIdCount } = upgradeOptionGroups(row["groups"], String(row["id"]));
       totalGroups += groups.length;
       groups.forEach((g) => {
         totalChoices += g.choices.length;
@@ -109,12 +109,12 @@ export async function auditAllMenuItems() {
       totalMissingIds += missingIdCount;
 
       return {
-        id: row.id,
-        name: row.name,
+        id: row["id"],
+        name: row["name"],
         groupCount: groups.length,
         choiceCount: groups.reduce((acc, g) => acc + g.choices.length, 0),
         missingIds: missingIdCount,
-        specialRequestEnabled: row.special_request_enabled,
+        specialRequestEnabled: row["special_request_enabled"],
       };
     });
 
@@ -214,14 +214,14 @@ export async function migratePhase3(options?: { singleItemId?: string }) {
       }
 
       for (const item of items) {
-        const { groups: upgradedGroups } = upgradeOptionGroups(item.groups, item.id);
+        const { groups: upgradedGroups } = upgradeOptionGroups(item["groups"], String(item["id"]));
 
         await tx`
           UPDATE menu_items 
           SET 
             groups = ${tx.json(upgradedGroups)},
             special_request_enabled = COALESCE(special_request_enabled, TRUE)
-          WHERE id = ${item.id};
+          WHERE id = ${item["id"]};
         `;
       }
 

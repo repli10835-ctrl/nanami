@@ -51,8 +51,8 @@ export const seedMenu: MenuItem[] = [
   },
   {
     id: "m2",
-    name: "Crispy Smashed Chicken (Geprek)",
-    description: "Crispy smashed chicken served with fresh chili sambal.",
+    name: "Crispy Smashed Chicken",
+    description: "Crispy smashed chicken served with fresh chili sauce.",
     price: 85,
     category: "Meals",
     image: "/src/assets/food-2.jpg",
@@ -119,7 +119,7 @@ export const seedMenu: MenuItem[] = [
 export const seedAccounts = [
   {
     id: "demo-user",
-    email: "user@nanami.id",
+    email: "user@nanamikitchen.com",
     password: "user123",
     name: "David Smith",
     phone: "0812345678",
@@ -130,7 +130,7 @@ export const seedAccounts = [
   },
   {
     id: "demo-admin",
-    email: "admin@nanami.id",
+    email: "admin@nanamikitchen.com",
     password: "admin123",
     name: "Sarah Jenkins",
     phone: "0823456789",
@@ -140,8 +140,19 @@ export const seedAccounts = [
     points: 120,
   },
   {
+    id: "demo-staff",
+    email: "staff@nanamikitchen.com",
+    password: "staff123",
+    name: "David Miller (Kitchen)",
+    phone: "0812-5555-6666",
+    role: "staff",
+    address: "Nanami Kitchen Line 1",
+    addresses: ["Nanami Kitchen Line 1"],
+    points: 0,
+  },
+  {
     id: "demo-owner",
-    email: "owner@nanami.id",
+    email: "owner@nanamikitchen.com",
     password: "owner123",
     name: "Nanami Miller",
     phone: "0834567890",
@@ -225,6 +236,9 @@ export const seedState: Partial<State> = {
     storeOpen: true,
     deliveryOn: true,
     pickupOn: true,
+    codEnabled: true,
+    vatEnabled: false,
+    vatPercent: 15,
     whatsapp: "27812345678",
     baseFee: 25,
     feePerKm: 5,
@@ -246,15 +260,15 @@ export const seedState: Partial<State> = {
   promos: [
     {
       id: "p1",
-      title: "20% OFF all menu",
-      subtitle: "Today only — use code NANAMI20",
-      badge: "Special",
-    },
-    {
-      id: "p2",
       title: "Free delivery over N$ 250",
       subtitle: "Within 5 km radius of our kitchen",
       badge: "Delivery",
+    },
+    {
+      id: "p2",
+      title: "20% OFF all menu",
+      subtitle: "Today only — use code NANAMI20",
+      badge: "Special",
     },
     {
       id: "p3",
@@ -271,8 +285,8 @@ export const seedState: Partial<State> = {
   staff: [
     {
       id: "s1",
-      name: "Nanami Putri",
-      email: "owner@nanami.id",
+      name: "Nanami Miller",
+      email: "owner@nanamikitchen.com",
       phone: "0812-1111-2222",
       role: "owner",
       active: true,
@@ -280,8 +294,8 @@ export const seedState: Partial<State> = {
     },
     {
       id: "s2",
-      name: "Rina Astuti",
-      email: "rina@nanami.id",
+      name: "Rina Adams",
+      email: "rina@nanamikitchen.com",
       phone: "0812-3333-4444",
       role: "admin",
       active: true,
@@ -289,8 +303,8 @@ export const seedState: Partial<State> = {
     },
     {
       id: "s3",
-      name: "Dimas Pratama",
-      email: "dimas@nanami.id",
+      name: "David Miller",
+      email: "david@nanamikitchen.com",
       phone: "0812-5555-6666",
       role: "staff",
       active: true,

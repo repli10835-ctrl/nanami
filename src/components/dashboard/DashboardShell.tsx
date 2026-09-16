@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
 import {
   BarChart3,
@@ -16,6 +16,11 @@ import {
   UtensilsCrossed,
   Users,
   Image as ImageIcon,
+  PanelLeft,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Menu,
+  X,
 } from "lucide-react";
 import defaultLogo from "@/assets/nanami-logo.png";
 import { useStore } from "@/lib/store";
@@ -84,24 +89,84 @@ export function DashboardShell({
   const displayLogo = cms?.logoUrl || defaultLogo;
   const storeName = settings?.storeName || "Nanami Kitchen";
 
+  const [collapsed, setCollapsed] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        return localStorage.getItem("nanami_sidebar_collapsed") === "true";
+      } catch {
+        return false;
+      }
+    }
+    return false;
+  });
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    setCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem("nanami_sidebar_collapsed", String(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-border bg-popover/60 px-3 py-5 lg:flex">
-        <div className="flex items-center gap-2 px-2">
-          <img
-            src={displayLogo}
-            alt={storeName}
-            width={32}
-            height={32}
-            className="size-8 rounded-lg object-contain"
-          />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-bold leading-tight">{storeName}</p>
-            <p className="text-[11px] text-muted-foreground">Panel {roleLabel}</p>
-          </div>
+      {/* Desktop Collapsible & Scrollable Sidebar */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 hidden flex-col border-r border-border bg-popover/90 backdrop-blur-md transition-all duration-200 ease-in-out lg:flex ${
+          collapsed ? "w-16 px-2 py-4" : "w-64 px-3.5 py-4"
+        }`}
+      >
+        {/* Top Header: Logo + Title + Collapse Toggle */}
+        <div
+          className={`flex items-center gap-2 border-b border-border/40 pb-3.5 shrink-0 ${
+            collapsed ? "justify-center flex-col gap-3" : "justify-between"
+          }`}
+        >
+          <Link
+            to={role === "owner" ? "/owner" : "/admin"}
+            className="flex items-center gap-2.5 min-w-0"
+            title={storeName}
+          >
+            <img
+              src={displayLogo}
+              alt={storeName}
+              width={32}
+              height={32}
+              className="size-8 rounded-lg object-contain shrink-0"
+            />
+            {!collapsed && (
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-bold leading-tight">{storeName}</p>
+                <p className="text-[11px] text-muted-foreground">Panel {roleLabel}</p>
+              </div>
+            )}
+          </Link>
+
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition shrink-0"
+          >
+            {collapsed ? (
+              <PanelLeftOpen className="size-4" />
+            ) : (
+              <PanelLeftClose className="size-4" />
+            )}
+          </button>
         </div>
 
-        <nav suppressHydrationWarning className="mt-6 space-y-1">
+        {/* Scrollable Nav Container */}
+        <nav
+          suppressHydrationWarning
+          className="sidebar-scroll my-3 flex-1 min-h-0 overflow-y-auto overflow-x-hidden space-y-1 pr-1"
+        >
           {nav.map(({ to, label, icon: Icon }) => {
             const isActive =
               to === "/admin" || to === "/owner" ? pathname === to : pathname.startsWith(to);
@@ -110,40 +175,183 @@ export function DashboardShell({
                 key={to}
                 to={to}
                 suppressHydrationWarning
-                className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+                title={collapsed ? label : undefined}
+                className={`group flex items-center rounded-xl py-2.5 text-sm font-medium transition ${
+                  collapsed ? "justify-center px-2" : "gap-2.5 px-3"
+                } ${
                   isActive
-                    ? "bg-primary/15 text-primary"
-                    : "text-muted-foreground hover:bg-secondary/50"
+                    ? "bg-primary/15 text-primary font-semibold shadow-xs"
+                    : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
                 }`}
               >
-                <Icon className="size-4" />
-                {label}
+                <Icon className={`size-4 shrink-0 ${isActive ? "text-primary" : ""}`} />
+                {!collapsed && <span className="truncate">{label}</span>}
               </Link>
             );
           })}
         </nav>
 
-        <div className="mt-auto space-y-1 px-1 pt-6 text-xs">
-          <Link to={role === "owner" ? "/admin" : "/owner"} className="block text-muted-foreground">
-            Switch to {role === "owner" ? "Admin" : "Owner"} panel
+        {/* Bottom Switch/Exit Links */}
+        <div className="shrink-0 border-t border-border/40 pt-3 text-xs space-y-1">
+          {collapsed ? (
+            <div className="flex flex-col items-center gap-2">
+              <Link
+                to={role === "owner" ? "/admin" : "/owner"}
+                title={`Switch to ${role === "owner" ? "Admin" : "Owner"} panel`}
+                className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition"
+              >
+                <ShieldCheck className="size-4" />
+              </Link>
+              <Link
+                to="/"
+                title="Back to customer storefront"
+                className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition"
+              >
+                <Store className="size-4" />
+              </Link>
+            </div>
+          ) : (
+            <>
+              <Link
+                to={role === "owner" ? "/admin" : "/owner"}
+                className="block truncate text-muted-foreground hover:text-foreground transition"
+              >
+                &larr; Switch to {role === "owner" ? "Admin" : "Owner"} panel
+              </Link>
+              <Link
+                to="/"
+                className="block truncate text-muted-foreground hover:text-foreground transition"
+              >
+                &larr; Back to customer storefront
+              </Link>
+            </>
+          )}
+        </div>
+      </aside>
+
+      {/* Mobile Drawer Overlay Backdrop */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs transition-opacity lg:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* Mobile Drawer Sidebar */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-border bg-popover px-4 py-4 shadow-2xl transition-transform duration-200 ease-in-out lg:hidden ${
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="flex items-center justify-between border-b border-border/40 pb-3 shrink-0">
+          <div className="flex items-center gap-2.5">
+            <img
+              src={displayLogo}
+              alt={storeName}
+              width={32}
+              height={32}
+              className="size-8 rounded-lg object-contain"
+            />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-bold leading-tight">{storeName}</p>
+              <p className="text-[11px] text-muted-foreground">Panel {roleLabel}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setMobileOpen(false)}
+            aria-label="Close sidebar"
+            className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition"
+          >
+            <X className="size-5" />
+          </button>
+        </div>
+
+        <nav
+          suppressHydrationWarning
+          className="sidebar-scroll my-3 flex-1 min-h-0 overflow-y-auto space-y-1 pr-1"
+        >
+          {nav.map(({ to, label, icon: Icon }) => {
+            const isActive =
+              to === "/admin" || to === "/owner" ? pathname === to : pathname.startsWith(to);
+            return (
+              <Link
+                key={to}
+                to={to}
+                onClick={() => setMobileOpen(false)}
+                suppressHydrationWarning
+                className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+                  isActive
+                    ? "bg-primary/15 text-primary font-semibold shadow-xs"
+                    : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
+                }`}
+              >
+                <Icon className={`size-4 shrink-0 ${isActive ? "text-primary" : ""}`} />
+                <span className="truncate">{label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="shrink-0 border-t border-border/40 pt-3 text-xs space-y-1.5">
+          <Link
+            to={role === "owner" ? "/admin" : "/owner"}
+            onClick={() => setMobileOpen(false)}
+            className="block truncate text-muted-foreground hover:text-foreground transition"
+          >
+            &larr; Switch to {role === "owner" ? "Admin" : "Owner"} panel
           </Link>
-          <Link to="/" className="block text-muted-foreground">
-            Back to customer app
+          <Link
+            to="/"
+            onClick={() => setMobileOpen(false)}
+            className="block truncate text-muted-foreground hover:text-foreground transition"
+          >
+            &larr; Back to customer storefront
           </Link>
         </div>
       </aside>
 
-      <div className="lg:pl-60">
+      {/* Main Content Area */}
+      <div
+        className={`transition-all duration-200 ease-in-out ${collapsed ? "lg:pl-16" : "lg:pl-64"}`}
+      >
         <header className="sticky top-0 z-30 border-b border-border bg-background/90 px-3 sm:px-6 py-3 sm:py-4 backdrop-blur">
           <div className="flex flex-wrap items-center justify-between gap-2.5">
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <h1 className="truncate text-lg sm:text-xl font-bold">{title}</h1>
-                <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] sm:text-[11px] font-semibold text-primary shrink-0">
-                  {roleLabel}
-                </span>
+            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+              {/* Mobile hamburger menu toggle */}
+              <button
+                type="button"
+                onClick={() => setMobileOpen(true)}
+                aria-label="Open navigation menu"
+                className="flex lg:hidden items-center justify-center size-9 rounded-xl border border-border bg-secondary/40 text-foreground hover:bg-secondary transition shrink-0"
+              >
+                <Menu className="size-4" />
+              </button>
+
+              {/* Desktop sidebar collapse toggle */}
+              <button
+                type="button"
+                onClick={toggleSidebar}
+                aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+                title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+                className="hidden lg:flex items-center justify-center size-9 rounded-xl border border-border bg-secondary/40 text-foreground hover:bg-secondary transition shrink-0"
+              >
+                {collapsed ? (
+                  <PanelLeftOpen className="size-4" />
+                ) : (
+                  <PanelLeft className="size-4" />
+                )}
+              </button>
+
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <h1 className="truncate text-lg sm:text-xl font-bold">{title}</h1>
+                  <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] sm:text-[11px] font-semibold text-primary shrink-0">
+                    {roleLabel}
+                  </span>
+                </div>
+                {subtitle && <p className="truncate text-xs text-muted-foreground">{subtitle}</p>}
               </div>
-              {subtitle && <p className="truncate text-xs text-muted-foreground">{subtitle}</p>}
             </div>
             {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
           </div>

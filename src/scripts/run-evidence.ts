@@ -40,7 +40,7 @@ interface Profile {
   signedIn: boolean;
   email: string;
   name: string;
-  role?: "user" | "admin" | "owner" | "staff";
+  role?: "user" | "admin" | "owner" | "staff" | undefined;
 }
 
 const mockState: {
@@ -52,7 +52,6 @@ const mockState: {
     signedIn: false,
     email: "",
     name: "Guest",
-    role: undefined,
   },
   accounts: [
     {

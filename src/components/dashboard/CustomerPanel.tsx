@@ -6,7 +6,7 @@ import { SectionCard, fieldClass } from "./DashboardShell";
 export function CustomerPanel() {
   const accounts = useStore((s) => s.accounts);
   const customers = accounts.filter((a) => !a.role || a.role === "user");
-  
+
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -26,7 +26,7 @@ export function CustomerPanel() {
       password: "password123", // Default password for new manual entries
       role: "user",
     };
-    
+
     actions.saveAccount(acc);
     reset();
   };
@@ -51,9 +51,11 @@ export function CustomerPanel() {
 
   return (
     <div className="grid gap-4 xl:grid-cols-[340px_1fr] xl:items-start">
-      <SectionCard 
-        title={editingId ? "Edit Customer" : "Add New Customer"} 
-        description={editingId ? "Modify customer profile details." : "Register a new customer manually."}
+      <SectionCard
+        title={editingId ? "Edit Customer" : "Add New Customer"}
+        description={
+          editingId ? "Modify customer profile details." : "Register a new customer manually."
+        }
       >
         <label className="block text-xs text-muted-foreground">
           Full name
@@ -95,7 +97,7 @@ export function CustomerPanel() {
             className={fieldClass}
           />
         </label>
-        
+
         <div className="flex gap-2 pt-1">
           <button
             disabled={!name.trim() || !email.trim()}
@@ -117,7 +119,10 @@ export function CustomerPanel() {
       </SectionCard>
 
       <div className="space-y-4">
-        <SectionCard title="Customer List" description={`${customers.length} registered customers.`}>
+        <SectionCard
+          title="Customer List"
+          description={`${customers.length} registered customers.`}
+        >
           <div className="grid gap-3">
             {customers.map((c) => (
               <div
@@ -151,7 +156,7 @@ export function CustomerPanel() {
                     <Star className="size-3 text-primary fill-primary" />
                     <span className="text-xs font-bold">{c.points || 0} pts</span>
                   </div>
-                  
+
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => edit(c)}
@@ -175,7 +180,7 @@ export function CustomerPanel() {
                 </div>
               </div>
             ))}
-            
+
             {customers.length === 0 && (
               <div className="py-12 text-center">
                 <p className="text-muted-foreground">No customers found.</p>

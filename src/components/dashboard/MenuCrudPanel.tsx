@@ -1,5 +1,15 @@
 import { useState, useRef } from "react";
-import { ImagePlus, Layers, MessageSquare, Pencil, Plus, Trash2, Upload, X, ImageIcon } from "lucide-react";
+import {
+  ImagePlus,
+  Layers,
+  MessageSquare,
+  Pencil,
+  Plus,
+  Trash2,
+  Upload,
+  X,
+  ImageIcon,
+} from "lucide-react";
 import {
   actions,
   rupiah,
@@ -152,7 +162,7 @@ export function MenuCrudPanel(props: MenuCrudPanelProps = {}) {
   const patch = (p: Partial<Draft>) => setDraft((d) => ({ ...d, ...p }));
   const list = filter === "All" ? menu : menu.filter((m) => m.category === filter);
 
-  // Validasi: nama item wajib, harga > 0, setiap grup wajib ada nama & pilihan opsinya tidak boleh bernama kosong
+  // Validation: item name required, price > 0, every group must have a name & choices must not be empty
   const hasInvalidGroup = draft.groups.some(
     (g) => !g.name.trim() || g.choices.some((c) => !c.name.trim()),
   );
@@ -620,9 +630,11 @@ export function MenuCrudPanel(props: MenuCrudPanelProps = {}) {
                 <div className="flex items-center justify-between p-4 border-b">
                   <div>
                     <h3 className="font-bold">Media Library</h3>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Select image for {draft.name || "item"}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                      Select image for {draft.name || "item"}
+                    </p>
                   </div>
-                  <button 
+                  <button
                     onClick={() => setShowGallery(false)}
                     className="p-1.5 hover:bg-secondary rounded-lg transition-colors"
                   >
@@ -630,7 +642,7 @@ export function MenuCrudPanel(props: MenuCrudPanelProps = {}) {
                   </button>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4">
-                  <MediaGallery 
+                  <MediaGallery
                     selectedUrl={draft.image}
                     onSelect={(url) => {
                       patch({ image: url });

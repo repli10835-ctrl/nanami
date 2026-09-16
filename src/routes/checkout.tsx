@@ -1,6 +1,16 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Banknote, Check, Copy, Landmark, MapPin, Wallet } from "lucide-react";
+import {
+  ArrowLeft,
+  Banknote,
+  Check,
+  Compass,
+  Copy,
+  Landmark,
+  Loader2,
+  MapPin,
+  Wallet,
+} from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import {
   actions,
@@ -13,35 +23,44 @@ import {
   rupiah,
   useStore,
 } from "@/lib/store";
+import { haversineKm } from "@/lib/geo";
 import mapImg from "@/assets/checkout-map.jpg";
 
-const PAYMENT_OPTIONS = [
+interface PaymentOption {
+  id: "ewallet" | "bank" | "cod";
+  label: string;
+  sub: string;
+  icon: typeof Wallet;
+  badges?: Array<{ text: string; bg: string }>;
+}
+
+const PAYMENT_OPTIONS: PaymentOption[] = [
   {
-    id: "ewallet" as const,
+    id: "ewallet",
     label: "eWallet / Pay2Cell",
     sub: "(Scan QR or Mobile Transfer)",
     icon: Wallet,
   },
   {
-    id: "bank" as const,
+    id: "bank",
     label: "Bank Transfer / Instant EFT",
     sub: "(ATM/MBANK/IBANK)",
     icon: Landmark,
   },
   {
-    id: "cod" as const,
+    id: "cod",
     label: "Cash on Delivery",
     sub: "(For Pickup & Delivery)",
     icon: Banknote,
   },
 ];
 type PaymentId = (typeof PAYMENT_OPTIONS)[number]["id"];
-const PAYMENT_LABELS: Record<string, string> = {
+const PAYMENT_LABELS: Record<PaymentId, string> = {
   ewallet: "eWallet / Pay2Cell",
   bank: "Bank Transfer / EFT",
   cod: "Cash on Delivery / Pickup",
 };
-const DEFAULT_ADDRESS = "12 Rosebank Road, Rosebank, Johannesburg 2196";
+const DEFAULT_ADDRESS = "12 Independence Avenue, Windhoek, Namibia";
 const STEPS = ["Address", "Payment", "Confirm"];
 
 export const Route = createFileRoute("/checkout")({
@@ -80,6 +99,7 @@ function Checkout() {
   const [phone, setPhone] = useState(profile.phone);
   const [address, setAddress] = useState(profile.address || DEFAULT_ADDRESS);
   const [editingAddress, setEditingAddress] = useState(false);
+  const [locating, setLocating] = useState(false);
   const setDistance = (km: number) => actions.setDistanceKm(km);
   const [deliveryNote, setDeliveryNote] = useState("");
   const [payment, setPayment] = useState<PaymentId>("ewallet");
@@ -95,17 +115,66 @@ function Checkout() {
   const total = Math.max(0, subtotal + vatAmount + deliveryFee - discount);
   const outOfRange = orderType === "delivery" && distance > settings.maxRadiusKm;
   const detailsMissing = !name.trim() || !phone.trim();
+  const serviceOff = orderType === "delivery" ? !settings.deliveryOn : !settings.pickupOn;
+  const storeClosed = !settings.storeOpen;
   const valid =
-    !detailsMissing && (orderType === "pickup" || address) && !outOfRange && cart.length > 0;
+    !storeClosed &&
+    !serviceOff &&
+    !detailsMissing &&
+    (orderType === "pickup" || address) &&
+    !outOfRange &&
+    cart.length > 0;
+
+  function requestCurrentLocation() {
+    if (typeof navigator === "undefined" || !("geolocation" in navigator)) {
+      setError("Geolocation is not supported by your browser.");
+      return;
+    }
+    setLocating(true);
+    setError("");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLocating(false);
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        const googleMapsLink = `https://maps.google.com/?q=${lat.toFixed(6)},${lng.toFixed(6)}`;
+        const km = Math.max(
+          1,
+          Math.round(
+            haversineKm({ lat: settings.storeLat, lng: settings.storeLng }, { lat, lng }) *
+              (settings.routeFactor || 1) *
+              10,
+          ) / 10,
+        );
+        actions.setCustomerPoint(googleMapsLink, km);
+        setDistance(km);
+        setAddress(`Current Location (${lat.toFixed(4)}, ${lng.toFixed(4)})`);
+      },
+      (err) => {
+        setLocating(false);
+        if (err.code === 1) {
+          setError(
+            "Location access was denied. Please allow permission or enter address manually.",
+          );
+        } else {
+          setError(`Unable to fetch location: ${err.message}`);
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
+  }
 
   const availablePaymentOptions = PAYMENT_OPTIONS.filter(
     (opt) => opt.id !== "cod" || settings.codEnabled !== false,
   );
   useEffect(() => {
-    if (!availablePaymentOptions.some((o) => o.id === payment)) {
-      setPayment(availablePaymentOptions[0]?.id || "ewallet");
+    const validOptions = PAYMENT_OPTIONS.filter(
+      (opt) => opt.id !== "cod" || settings.codEnabled !== false,
+    );
+    if (!validOptions.some((o) => o.id === payment)) {
+      setPayment(validOptions[0]?.id || "ewallet");
     }
-  }, [settings.codEnabled]);
+  }, [settings.codEnabled, payment]);
 
   // Send the customer back to the cart if it empties (but not right after ordering).
   const submittedRef = useRef(false);
@@ -120,6 +189,16 @@ function Checkout() {
   }
 
   function goToStep(next: number) {
+    if (storeClosed) {
+      setError("The store is currently closed. Checkout is disabled.");
+      return;
+    }
+    if (serviceOff) {
+      setError(
+        `${orderType === "delivery" ? "Delivery" : "Pickup"} service is temporarily unavailable.`,
+      );
+      return;
+    }
     if (next === 1 && outOfRange) {
       setError(`Out of delivery range (max ${settings.maxRadiusKm} km).`);
       return;
@@ -146,7 +225,7 @@ function Checkout() {
       deliveryFee,
       total,
       etaMinutes: orderType === "delivery" ? 35 : 25,
-      paymentMethod: PAYMENT_LABELS[payment],
+      paymentMethod: PAYMENT_LABELS[payment] ?? "eWallet / Pay2Cell",
       customer: { name, phone, address, deliveryNote },
     });
     actions.updateProfile({ name, phone, address });
@@ -212,12 +291,28 @@ function Checkout() {
           <section className="mt-3 rounded-xl border border-border bg-card p-3">
             <div className="flex items-start justify-between">
               <h2 className="text-sm font-bold">Delivery Address</h2>
-              <button
-                onClick={() => navigate({ to: "/address" })}
-                className="text-xs font-bold text-primary hover:underline"
-              >
-                {editingAddress ? "Done" : "Change"}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={requestCurrentLocation}
+                  disabled={locating}
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline disabled:opacity-50"
+                >
+                  {locating ? (
+                    <Loader2 className="size-3 animate-spin" />
+                  ) : (
+                    <Compass className="size-3" />
+                  )}
+                  <span>{locating ? "Locating..." : "Use GPS"}</span>
+                </button>
+                <span className="text-xs text-muted-foreground">&bull;</span>
+                <button
+                  onClick={() => navigate({ to: "/address" })}
+                  className="text-xs font-bold text-primary hover:underline"
+                >
+                  {editingAddress ? "Done" : "Change"}
+                </button>
+              </div>
             </div>
             {editingAddress ? (
               <div className="mt-2 space-y-2">
@@ -306,6 +401,16 @@ function Checkout() {
             />
           )}
 
+          {storeClosed && (
+            <p className="mt-2 rounded-lg bg-destructive/15 px-2.5 py-1.5 text-[11px] text-destructive font-medium">
+              The store is currently closed. Checkout is disabled.
+            </p>
+          )}
+          {!storeClosed && serviceOff && (
+            <p className="mt-2 rounded-lg bg-destructive/15 px-2.5 py-1.5 text-[11px] text-destructive font-medium">
+              {orderType === "delivery" ? "Delivery" : "Pickup"} service is temporarily unavailable.
+            </p>
+          )}
           {error && (
             <p className="mt-2 rounded-lg bg-destructive/15 px-2.5 py-1.5 text-[11px] text-destructive">
               {error}
@@ -313,7 +418,8 @@ function Checkout() {
           )}
           <button
             onClick={() => goToStep(1)}
-            className="mt-3 w-full rounded-xl bg-primary py-2.5 text-xs font-bold text-primary-foreground transition hover:brightness-105"
+            disabled={storeClosed || serviceOff}
+            className="mt-3 w-full rounded-xl bg-primary py-2.5 text-xs font-bold text-primary-foreground transition hover:brightness-105 disabled:bg-muted disabled:text-muted-foreground"
           >
             Continue &rarr;
           </button>
@@ -400,14 +506,14 @@ function Checkout() {
                     <>
                       <p className="flex items-center gap-2">
                         <span className="flex size-8 sm:size-9 items-center justify-center rounded-full bg-primary/15 text-xs font-black text-primary shrink-0">
-                          BCA
+                          EFT
                         </span>
                         <span className="text-base sm:text-lg font-black italic tracking-wide text-foreground truncate">
                           {settings.bankName}
                         </span>
                       </p>
                       <p className="mt-2 text-xs sm:text-sm text-muted-foreground">
-                        Bank Central Asia (BCA)
+                        Electronic Funds Transfer (EFT / Bank Wire)
                       </p>
                       <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
                         Account Name:{" "}
@@ -576,11 +682,15 @@ function Checkout() {
 
             {!valid && (
               <p className="mt-4 rounded-lg bg-destructive/15 px-3 py-2 text-xs text-destructive">
-                {detailsMissing
-                  ? "Please fill in your name and WhatsApp number in the previous step."
-                  : outOfRange
-                    ? `Outside delivery radius (max ${settings.maxRadiusKm} km).`
-                    : "Your cart is empty."}
+                {storeClosed
+                  ? "The store is currently closed. Checkout is disabled."
+                  : serviceOff
+                    ? `${orderType === "delivery" ? "Delivery" : "Pickup"} service is temporarily unavailable.`
+                    : detailsMissing
+                      ? "Please fill in your name and WhatsApp number in the previous step."
+                      : outOfRange
+                        ? `Outside delivery radius (max ${settings.maxRadiusKm} km).`
+                        : "Your cart is empty."}
               </p>
             )}
             <button

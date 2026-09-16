@@ -88,7 +88,7 @@
 @utility shell {
   margin-inline: auto;
   width: 100%;
-  max-width: 100%;
+  max-width: 28rem;
 }
 
 @utility glow-card {
@@ -101,5 +101,20 @@
   scrollbar-width: none;
   &::-webkit-scrollbar {
     display: none;
+  }
+}
+
+@utility sidebar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+  &::-webkit-scrollbar {
+    width: 5px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--color-border);
+    border-radius: 9999px;
   }
 }

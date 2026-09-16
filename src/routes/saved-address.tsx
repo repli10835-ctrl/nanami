@@ -63,8 +63,8 @@ function SavedAddressPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-10">
-      <div className="shell flex min-h-screen flex-col px-4 pt-5">
+    <div className="min-h-screen bg-neutral-950 text-foreground flex justify-center selection:bg-primary selection:text-primary-foreground">
+      <div className="w-full max-w-md min-h-screen bg-background relative sm:shadow-2xl sm:border-x sm:border-border/40 px-4 pt-5 pb-10 flex flex-col">
         {/* Header */}
         <div className="flex items-center gap-4">
           <button

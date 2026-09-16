@@ -1,10 +1,10 @@
-/** Helpers untuk titik Google Maps dan jarak antar koordinat. */
+/** Helpers for Google Maps points and distance calculations between coordinates. */
 
 export type LatLng = { lat: number; lng: number };
 
 /**
- * Mengambil koordinat dari teks: bisa "-6.2,106.8" atau tautan Google Maps
- * seperti https://maps.google.com/?q=-6.2,106.8 atau .../@-6.2,106.8,17z
+ * Extract coordinates from text: e.g. "-6.2,106.8" or Google Maps links
+ * like https://maps.google.com/?q=-6.2,106.8 or .../@-6.2,106.8,17z
  */
 export function parseLatLng(input: string): LatLng | null {
   if (!input) return null;
@@ -33,7 +33,7 @@ export function parseLatLng(input: string): LatLng | null {
   return null;
 }
 
-/** Jarak garis lurus (km) antara dua koordinat. */
+/** Straight line distance (km) between two coordinates. */
 export function haversineKm(a: LatLng, b: LatLng): number {
   const R = 6371;
   const toRad = (d: number) => (d * Math.PI) / 180;

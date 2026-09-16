@@ -68,10 +68,12 @@ async function runTestDryRun() {
     nameUnchanged: beforeRaw.name === run1Item.name,
     idUnchanged: beforeRaw.id === run1Item.id,
     groupLengthUnchanged: beforeRaw.groups.length === run1Item.groups.length,
-    choiceLengthUnchanged: beforeRaw.groups[0].choices.length === run1Item.groups[0].choices.length,
+    choiceLengthUnchanged:
+      (beforeRaw.groups[0]?.choices.length ?? 0) === (run1Item.groups[0]?.choices.length ?? 0),
     choicePricesUnchanged:
-      beforeRaw.groups[0].choices[1].price === run1Item.groups[0].choices[1].price,
-    enabledAdded: run1Item.groups[0].enabled === true && run1Item.groups[1].enabled === true,
+      (beforeRaw.groups[0]?.choices[1]?.price ?? 0) ===
+      (run1Item.groups[0]?.choices[1]?.price ?? 0),
+    enabledAdded: run1Item.groups[0]?.enabled === true && run1Item.groups[1]?.enabled === true,
     specialRequestAdded: run1Item.special_request_enabled === true,
   };
 
