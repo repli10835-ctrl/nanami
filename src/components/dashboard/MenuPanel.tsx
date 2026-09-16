@@ -8,7 +8,7 @@ export function MenuPanel({ canDelete = true }: { canDelete?: boolean }) {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
-  const [category, setCategory] = useState<Category>("Foods");
+  const [category, setCategory] = useState<Category>("Meals");
 
   return (
     <div className="grid gap-4 lg:grid-cols-[320px_1fr] lg:items-start">

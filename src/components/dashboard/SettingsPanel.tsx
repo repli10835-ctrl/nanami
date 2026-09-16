@@ -1,23 +1,32 @@
-import { actions, useStore } from "@/lib/store";
+import { Settings } from "@/lib/store";
 import { SectionCard, fieldClass } from "./DashboardShell";
 
-export function SettingsPanel({ scope = "admin" }: { scope?: "admin" | "owner" }) {
-  const settings = useStore((s) => s.settings);
-
+export function SettingsPanel({
+  scope = "admin",
+  settings,
+  onChange,
+}: {
+  scope?: "admin" | "owner";
+  settings: Settings;
+  onChange: (patch: Partial<Settings>) => void;
+}) {
   const toggles = [
     { key: "storeOpen" as const, label: "Store open" },
     { key: "deliveryOn" as const, label: "Delivery service" },
     { key: "pickupOn" as const, label: "Pickup service" },
+    { key: "codEnabled" as const, label: "Cash on Delivery (COD)" },
+    { key: "vatEnabled" as const, label: "VAT / Tax Enabled" },
   ];
 
   return (
     <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
-      <SectionCard title="Store Operations">
+      <SectionCard title="Store Operations & Tax">
         {toggles.map((t) => (
           <button
             key={t.key}
-            onClick={() => actions.updateSettings({ [t.key]: !settings[t.key] })}
-            className="flex w-full items-center justify-between rounded-xl border border-border bg-secondary/40 px-3 py-2.5 text-sm"
+            type="button"
+            onClick={() => onChange({ [t.key]: !settings[t.key] })}
+            className="flex w-full items-center justify-between rounded-xl border border-border bg-secondary/40 px-3 py-2.5 text-sm cursor-pointer"
           >
             {t.label}
             <span
@@ -32,10 +41,22 @@ export function SettingsPanel({ scope = "admin" }: { scope?: "admin" | "owner" }
           </button>
         ))}
         <label className="block text-xs text-muted-foreground">
+          VAT Percentage (%)
+          <input
+            value={settings.vatPercent ?? 15}
+            inputMode="numeric"
+            type="number"
+            min={0}
+            onChange={(e) => onChange({ vatPercent: Number(e.target.value) || 0 })}
+            className={fieldClass}
+          />
+        </label>
+        <label className="block text-xs text-muted-foreground">
           Business hours
           <input
             value={settings.openHours}
-            onChange={(e) => actions.updateSettings({ openHours: e.target.value })}
+            type="text"
+            onChange={(e) => onChange({ openHours: e.target.value })}
             className={fieldClass}
           />
         </label>
@@ -43,20 +64,24 @@ export function SettingsPanel({ scope = "admin" }: { scope?: "admin" | "owner" }
 
       <SectionCard title="Delivery Rules">
         <label className="block text-xs text-muted-foreground">
-          Base delivery fee (R)
+          Base delivery fee ({settings.currencySymbol || "N$"})
           <input
             value={settings.baseFee}
             inputMode="numeric"
-            onChange={(e) => actions.updateSettings({ baseFee: Number(e.target.value) || 0 })}
+            type="number"
+            min={0}
+            onChange={(e) => onChange({ baseFee: Number(e.target.value) || 0 })}
             className={fieldClass}
           />
         </label>
         <label className="block text-xs text-muted-foreground">
-          Delivery fee per km (R)
+          Delivery fee per km ({settings.currencySymbol || "N$"})
           <input
             value={settings.feePerKm}
             inputMode="numeric"
-            onChange={(e) => actions.updateSettings({ feePerKm: Number(e.target.value) || 0 })}
+            type="number"
+            min={0}
+            onChange={(e) => onChange({ feePerKm: Number(e.target.value) || 0 })}
             className={fieldClass}
           />
         </label>
@@ -65,7 +90,9 @@ export function SettingsPanel({ scope = "admin" }: { scope?: "admin" | "owner" }
           <input
             value={settings.maxRadiusKm}
             inputMode="numeric"
-            onChange={(e) => actions.updateSettings({ maxRadiusKm: Number(e.target.value) || 0 })}
+            type="number"
+            min={0}
+            onChange={(e) => onChange({ maxRadiusKm: Number(e.target.value) || 0 })}
             className={fieldClass}
           />
         </label>
@@ -76,7 +103,8 @@ export function SettingsPanel({ scope = "admin" }: { scope?: "admin" | "owner" }
           WhatsApp Hotline Number
           <input
             value={settings.whatsapp}
-            onChange={(e) => actions.updateSettings({ whatsapp: e.target.value })}
+            type="text"
+            onChange={(e) => onChange({ whatsapp: e.target.value })}
             className={fieldClass}
           />
         </label>
@@ -84,7 +112,8 @@ export function SettingsPanel({ scope = "admin" }: { scope?: "admin" | "owner" }
           Bank Name
           <input
             value={settings.bankName}
-            onChange={(e) => actions.updateSettings({ bankName: e.target.value })}
+            type="text"
+            onChange={(e) => onChange({ bankName: e.target.value })}
             className={fieldClass}
           />
         </label>
@@ -92,7 +121,8 @@ export function SettingsPanel({ scope = "admin" }: { scope?: "admin" | "owner" }
           Account Number
           <input
             value={settings.bankAccount}
-            onChange={(e) => actions.updateSettings({ bankAccount: e.target.value })}
+            type="text"
+            onChange={(e) => onChange({ bankAccount: e.target.value })}
             className={fieldClass}
           />
         </label>
@@ -100,7 +130,8 @@ export function SettingsPanel({ scope = "admin" }: { scope?: "admin" | "owner" }
           Account Holder Name
           <input
             value={settings.bankHolder}
-            onChange={(e) => actions.updateSettings({ bankHolder: e.target.value })}
+            type="text"
+            onChange={(e) => onChange({ bankHolder: e.target.value })}
             className={fieldClass}
           />
         </label>
@@ -108,7 +139,8 @@ export function SettingsPanel({ scope = "admin" }: { scope?: "admin" | "owner" }
           E-Wallet / Instant Pay Detail
           <input
             value={settings.ewallet}
-            onChange={(e) => actions.updateSettings({ ewallet: e.target.value })}
+            type="text"
+            onChange={(e) => onChange({ ewallet: e.target.value })}
             className={fieldClass}
           />
         </label>
@@ -117,13 +149,13 @@ export function SettingsPanel({ scope = "admin" }: { scope?: "admin" | "owner" }
       {scope === "owner" && (
         <SectionCard title="Loyalty & Security" description="Only configurable by store owner.">
           <label className="block text-xs text-muted-foreground">
-            Points earned per R 100 spent
+            Points earned per {settings.currencySymbol || "N$"} 100 spent
             <input
               value={settings.pointsPer10k}
               inputMode="numeric"
-              onChange={(e) =>
-                actions.updateSettings({ pointsPer10k: Number(e.target.value) || 0 })
-              }
+              type="number"
+              min={0}
+              onChange={(e) => onChange({ pointsPer10k: Number(e.target.value) || 0 })}
               className={fieldClass}
             />
           </label>
@@ -131,7 +163,8 @@ export function SettingsPanel({ scope = "admin" }: { scope?: "admin" | "owner" }
             Admin Panel Password
             <input
               value={settings.adminPassword}
-              onChange={(e) => actions.updateSettings({ adminPassword: e.target.value })}
+              type="text"
+              onChange={(e) => onChange({ adminPassword: e.target.value })}
               className={fieldClass}
             />
           </label>

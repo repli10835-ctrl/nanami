@@ -9,6 +9,7 @@ import {
   type StaffMember,
   type Settings,
   type CmsContent,
+  type MediaAsset,
 } from "./store";
 
 export const getDatabaseState = createServerFn({ method: "GET" }).handler(async () => {
@@ -31,6 +32,7 @@ export const getDatabaseState = createServerFn({ method: "GET" }).handler(async 
     const vouchers = await sql`SELECT * FROM vouchers ORDER BY code`;
     const accounts = await sql`SELECT * FROM accounts ORDER BY id`;
     const staff = await sql`SELECT * FROM staff ORDER BY created_at DESC`;
+    const media = await sql`SELECT * FROM media_assets ORDER BY uploaded_at DESC`;
 
     return {
       settings: settings[0]?.data,
@@ -47,6 +49,8 @@ export const getDatabaseState = createServerFn({ method: "GET" }).handler(async 
         badges: m.badges,
         stock: m.stock,
         groups: m.groups,
+        specialRequestEnabled:
+          m.special_request_enabled !== undefined ? Boolean(m.special_request_enabled) : true,
       })),
       orders: orders.map((o) => ({
         id: o.id,
@@ -65,6 +69,7 @@ export const getDatabaseState = createServerFn({ method: "GET" }).handler(async 
         pointsEarned: o.points_earned,
         etaMinutes: o.eta_minutes,
         customer: o.customer,
+        accountId: o.account_id || null,
       })),
       promos: promos.map((p) => ({
         id: p.id,
@@ -102,6 +107,13 @@ export const getDatabaseState = createServerFn({ method: "GET" }).handler(async 
         active: s.active,
         createdAt: Number(s.created_at),
       })),
+      mediaAssets: media.map((m) => ({
+        id: m.id,
+        url: m.url,
+        filename: m.filename,
+        uploadedAt: Number(m.uploaded_at),
+        usedByMenuIds: m.used_by_menu_ids || [],
+      })),
     };
   } catch (error) {
     console.error("Error fetching state from PostgreSQL database:", error);
@@ -115,7 +127,7 @@ export const saveMenuItemDb = createServerFn({ method: "POST" })
     if (!sql) return;
     try {
       await sql`
-        INSERT INTO menu_items (id, name, description, price, category, image, available, prep_minutes, badges, stock, groups)
+        INSERT INTO menu_items (id, name, description, price, category, image, available, prep_minutes, badges, stock, groups, special_request_enabled)
         VALUES (
           ${item.id}, 
           ${item.name}, 
@@ -127,7 +139,8 @@ export const saveMenuItemDb = createServerFn({ method: "POST" })
           ${item.prepMinutes}, 
           ${sql.json(item.badges)}, 
           ${item.stock ?? null}, 
-          ${sql.json(item.groups)}
+          ${sql.json(item.groups)},
+          ${item.specialRequestEnabled !== undefined ? item.specialRequestEnabled : true}
         )
         ON CONFLICT (id) DO UPDATE SET
           name = EXCLUDED.name,
@@ -139,7 +152,8 @@ export const saveMenuItemDb = createServerFn({ method: "POST" })
           prep_minutes = EXCLUDED.prep_minutes,
           badges = EXCLUDED.badges,
           stock = EXCLUDED.stock,
-          groups = EXCLUDED.groups
+          groups = EXCLUDED.groups,
+          special_request_enabled = EXCLUDED.special_request_enabled
       `;
     } catch (e) {
       console.error("Failed to save menu item to database:", e);
@@ -163,7 +177,7 @@ export const saveOrderDb = createServerFn({ method: "POST" })
     if (!sql) return;
     try {
       await sql`
-        INSERT INTO orders (id, code, created_at, type, lines, subtotal, discount, voucher_code, delivery_fee, total, status, paid, payment_method, points_earned, eta_minutes, customer)
+        INSERT INTO orders (id, code, created_at, type, lines, subtotal, discount, voucher_code, delivery_fee, total, status, paid, payment_method, points_earned, eta_minutes, customer, account_id)
         VALUES (
           ${order.id}, 
           ${order.code}, 
@@ -180,7 +194,8 @@ export const saveOrderDb = createServerFn({ method: "POST" })
           ${order.paymentMethod}, 
           ${order.pointsEarned}, 
           ${order.etaMinutes}, 
-          ${sql.json(order.customer)}
+          ${sql.json(order.customer)},
+          ${order.accountId || null}
         )
         ON CONFLICT (id) DO UPDATE SET
           status = EXCLUDED.status,
@@ -327,4 +342,100 @@ export const saveCmsDb = createServerFn({ method: "POST" })
     } catch (e) {
       console.error("Failed to save CMS content to database:", e);
     }
+  });
+
+export const searchOrdersDb = createServerFn({ method: "POST" })
+  .validator((params: { query?: string; statusFilter?: string }) => params)
+  .handler(async ({ data: { query, statusFilter } }) => {
+    if (!sql) return null;
+    try {
+      const q = query ? `%${query.trim().toLowerCase()}%` : null;
+      let rows;
+      if (q && statusFilter && statusFilter !== "all") {
+        rows = await sql`
+          SELECT * FROM orders 
+          WHERE status = ${statusFilter}
+            AND (
+              LOWER(code) LIKE ${q} 
+              OR LOWER(COALESCE(customer->>'name', '')) LIKE ${q} 
+              OR LOWER(COALESCE(customer->>'phone', '')) LIKE ${q}
+            )
+          ORDER BY created_at DESC
+        `;
+      } else if (q) {
+        rows = await sql`
+          SELECT * FROM orders 
+          WHERE 
+            LOWER(code) LIKE ${q} 
+            OR LOWER(COALESCE(customer->>'name', '')) LIKE ${q} 
+            OR LOWER(COALESCE(customer->>'phone', '')) LIKE ${q}
+          ORDER BY created_at DESC
+        `;
+      } else if (statusFilter && statusFilter !== "all") {
+        rows = await sql`
+          SELECT * FROM orders 
+          WHERE status = ${statusFilter}
+          ORDER BY created_at DESC
+        `;
+      } else {
+        rows = await sql`SELECT * FROM orders ORDER BY created_at DESC`;
+      }
+      return rows.map((o) => ({
+        id: o.id,
+        code: o.code,
+        createdAt: Number(o.created_at),
+        type: o.type as "pickup" | "delivery",
+        lines: o.lines,
+        subtotal: Number(o.subtotal),
+        discount: Number(o.discount),
+        voucherCode: o.voucher_code,
+        deliveryFee: Number(o.delivery_fee),
+        total: Number(o.total),
+        status: o.status,
+        paid: o.paid,
+        paymentMethod: o.payment_method,
+        pointsEarned: o.points_earned,
+        etaMinutes: o.eta_minutes,
+        customer: o.customer,
+        accountId: o.account_id || null,
+      })) as Order[];
+    } catch (e) {
+      console.error("Failed to search orders in database:", e);
+      return null;
+    }
+  });
+
+export const saveMediaAssetDb = createServerFn({ method: "POST" })
+  .validator((d: MediaAsset) => d)
+  .handler(async ({ data: m }) => {
+    if (!sql) return;
+    await sql`
+      INSERT INTO media_assets (id, url, filename, uploaded_at, used_by_menu_ids)
+      VALUES (${m.id}, ${m.url}, ${m.filename}, ${m.uploadedAt}, ${sql.json(m.usedByMenuIds)})
+      ON CONFLICT (id) DO UPDATE SET
+        url = EXCLUDED.url,
+        filename = EXCLUDED.filename,
+        used_by_menu_ids = EXCLUDED.used_by_menu_ids
+    `;
+  });
+
+export const deleteMediaAssetDb = createServerFn({ method: "POST" })
+  .validator((id: string) => id)
+  .handler(async ({ data: id }) => {
+    if (!sql) return;
+    await sql`DELETE FROM media_assets WHERE id = ${id}`;
+  });
+
+export const updateMediaAssetUsageDb = createServerFn({ method: "POST" })
+  .validator((d: { id: string; usedByMenuIds: string[] }) => d)
+  .handler(async ({ data: d }) => {
+    if (!sql) return;
+    await sql`UPDATE media_assets SET used_by_menu_ids = ${sql.json(d.usedByMenuIds)} WHERE id = ${d.id}`;
+  });
+
+export const deleteAccountDb = createServerFn({ method: "POST" })
+  .validator((id: string) => id)
+  .handler(async ({ data: id }) => {
+    if (!sql) return;
+    await sql`DELETE FROM accounts WHERE id = ${id}`;
   });

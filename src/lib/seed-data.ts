@@ -3,7 +3,8 @@ import { type State, type MenuItem, type Account, type CmsContent } from "./stor
 const spice = {
   id: "spice",
   name: "Spice Level",
-  type: "single",
+  type: "single" as const,
+  enabled: true,
   choices: [
     { id: "mild", name: "Mild", price: 0 },
     { id: "medium", name: "Medium", price: 0 },
@@ -14,7 +15,8 @@ const spice = {
 const size = {
   id: "size",
   name: "Size",
-  type: "single",
+  type: "single" as const,
+  enabled: true,
   choices: [
     { id: "reg", name: "Regular", price: 0 },
     { id: "large", name: "Large", price: 15 },
@@ -24,7 +26,8 @@ const size = {
 const toppings = {
   id: "topping",
   name: "Extra Toppings",
-  type: "multi",
+  type: "multi" as const,
+  enabled: true,
   choices: [
     { id: "egg", name: "Fried Egg", price: 15 },
     { id: "cheese", name: "Mozzarella Cheese", price: 20 },
@@ -32,30 +35,32 @@ const toppings = {
   ],
 };
 
-export const seedMenu = [
+export const seedMenu: MenuItem[] = [
   {
     id: "m1",
     name: "Teriyaki Chicken Bento",
     description: "Grilled teriyaki chicken with warm rice and Japanese pickles.",
     price: 95,
-    category: "Foods",
+    category: "Meals",
     image: "/src/assets/food-1.jpg",
     available: true,
     prepMinutes: 15,
     badges: ["Halal-friendly", "Contains Soy"],
     groups: [size, toppings],
+    specialRequestEnabled: true,
   },
   {
     id: "m2",
     name: "Crispy Smashed Chicken (Geprek)",
     description: "Crispy smashed chicken served with fresh chili sambal.",
     price: 85,
-    category: "Foods",
+    category: "Meals",
     image: "/src/assets/food-2.jpg",
     available: true,
     prepMinutes: 18,
     badges: ["Halal-friendly", "Spicy"],
     groups: [spice, toppings],
+    specialRequestEnabled: true,
   },
   {
     id: "m3",
@@ -68,6 +73,7 @@ export const seedMenu = [
     prepMinutes: 5,
     badges: ["Contains Dairy"],
     groups: [size],
+    specialRequestEnabled: true,
   },
   {
     id: "m4",
@@ -80,6 +86,7 @@ export const seedMenu = [
     prepMinutes: 12,
     badges: ["Contains Gluten"],
     groups: [toppings],
+    specialRequestEnabled: true,
   },
   {
     id: "m5",
@@ -92,6 +99,7 @@ export const seedMenu = [
     prepMinutes: 20,
     badges: ["Halal-friendly", "Spicy"],
     groups: [spice],
+    specialRequestEnabled: true,
   },
   {
     id: "m6",
@@ -104,6 +112,7 @@ export const seedMenu = [
     prepMinutes: 2,
     badges: ["Spicy", "Vegan"],
     groups: [],
+    specialRequestEnabled: true,
   },
 ];
 
@@ -243,14 +252,14 @@ export const seedState: Partial<State> = {
     },
     {
       id: "p2",
-      title: "Free delivery over R 250",
+      title: "Free delivery over N$ 250",
       subtitle: "Within 5 km radius of our kitchen",
       badge: "Delivery",
     },
     {
       id: "p3",
       title: "Earn points on every order",
-      subtitle: "1 point for every R 100 spent",
+      subtitle: "1 point for every N$ 100 spent",
       badge: "Loyalty",
     },
   ],

@@ -12,7 +12,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "db:push": "tsx src/scripts/db-setup.ts push",
-    "db:seed": "tsx src/scripts/db-setup.ts seed"
+    "db:seed": "tsx src/scripts/db-setup.ts seed",
+    "db:migrate:phase1": "tsx src/scripts/migrate-phase1.ts"
   },
   "overrides": {
     "rolldown": "1.2.1"

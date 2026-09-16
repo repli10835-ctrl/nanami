@@ -100,22 +100,24 @@ function Profile() {
       <div className="mt-6 grid grid-cols-2 gap-3">
         <div className="glow-card p-4">
           <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Sparkles className="size-3.5 text-primary" /> Loyalty points
+            <Sparkles className="size-3.5 text-primary" /> Loyalty Points
           </p>
           <p className="mt-1 text-xl font-bold">{profile.points}</p>
-          <p className="text-xs text-muted-foreground">{settings.pointsPer10k} point per R 100</p>
+          <p className="text-xs text-muted-foreground">
+            {settings.pointsPer10k} point per {settings.currencySymbol || "N$"} 100
+          </p>
         </div>
         <div className="glow-card p-4">
-          <p className="text-xs text-muted-foreground">Orders placed</p>
+          <p className="text-xs text-muted-foreground">Orders Placed</p>
           <p className="mt-1 text-xl font-bold">{orders.length}</p>
-          <p className="text-xs text-muted-foreground">All time</p>
+          <p className="text-xs text-muted-foreground">All Time</p>
         </div>
       </div>
 
       <div className="glow-card mt-6 divide-y divide-border overflow-hidden">
         <Row to="/orders" icon={ReceiptText} label="My Orders" />
         <Row to="/saved-address" icon={MapPin} label="Saved Addresses" />
-        <Row to="/vouchers" icon={TicketPercent} label="Vouchers & Promo" />
+        <Row to="/vouchers" icon={TicketPercent} label="Vouchers & Promos" />
         <button
           onClick={() => setShowPassword((v) => !v)}
           className="flex w-full items-center gap-3 sm:gap-4 px-3.5 sm:px-5 py-3.5 sm:py-4 text-left transition-colors hover:bg-secondary/60"
@@ -134,7 +136,7 @@ function Profile() {
             className="size-5 sm:size-6 shrink-0 text-muted-foreground"
             strokeWidth={1.8}
           />
-          <span className="flex-1 text-sm sm:text-base font-medium">Chat with us</span>
+          <span className="flex-1 text-sm sm:text-base font-medium">Chat With Us</span>
           <ChevronRight className="size-4 sm:size-5 text-muted-foreground shrink-0" />
         </a>
         <div className="flex w-full items-center gap-3 sm:gap-4 px-3.5 sm:px-5 py-3.5 sm:py-4 text-left">
@@ -150,9 +152,9 @@ function Profile() {
 
       {showPassword && (
         <div className="glow-card mt-4 space-y-3 p-4">
-          <h2 className="text-sm font-semibold">Change password</h2>
+          <h2 className="text-sm font-semibold">Change Password</h2>
           <label className="block text-xs text-muted-foreground">
-            Current password
+            Current Password
             <input
               type="password"
               value={current}
@@ -161,7 +163,7 @@ function Profile() {
             />
           </label>
           <label className="block text-xs text-muted-foreground">
-            New password
+            New Password
             <input
               type="password"
               value={next}
@@ -182,7 +184,7 @@ function Profile() {
             disabled={!current || !next}
             className="w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-40"
           >
-            Update password
+            Update Password
           </button>
         </div>
       )}

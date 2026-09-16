@@ -55,7 +55,8 @@ export async function initDb() {
         prep_minutes INTEGER NOT NULL DEFAULT 15,
         badges JSONB NOT NULL DEFAULT '[]'::jsonb,
         stock INTEGER,
-        groups JSONB NOT NULL DEFAULT '[]'::jsonb
+        groups JSONB NOT NULL DEFAULT '[]'::jsonb,
+        special_request_enabled BOOLEAN NOT NULL DEFAULT TRUE
       )
     `;
 
@@ -76,8 +77,14 @@ export async function initDb() {
         payment_method VARCHAR(100) NOT NULL,
         points_earned INTEGER NOT NULL DEFAULT 0,
         eta_minutes INTEGER NOT NULL DEFAULT 15,
-        customer JSONB NOT NULL
+        customer JSONB NOT NULL,
+        account_id VARCHAR(50)
       )
+    `;
+
+    // Ensure non-destructive backward-compatible column migrations
+    await sql`
+      ALTER TABLE orders ADD COLUMN IF NOT EXISTS account_id VARCHAR(50);
     `;
 
     await sql`
@@ -99,6 +106,16 @@ export async function initDb() {
         value NUMERIC NOT NULL,
         min_spend NUMERIC NOT NULL,
         active BOOLEAN NOT NULL DEFAULT TRUE
+      )
+    `;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS media_assets (
+        id VARCHAR(50) PRIMARY KEY,
+        url TEXT NOT NULL,
+        filename VARCHAR(255) NOT NULL,
+        uploaded_at BIGINT NOT NULL,
+        used_by_menu_ids JSONB NOT NULL DEFAULT '[]'::jsonb
       )
     `;
 

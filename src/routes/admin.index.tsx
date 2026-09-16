@@ -115,7 +115,7 @@ function AdminHome() {
           hint="Orders being prepared or delivered"
         />
         <StatCard
-          label="Registered Promos & Outlets"
+          label="Registered Vouchers & Outlets"
           value={`${vouchers.length} Promos · ${outlets.length} Outlets`}
           hint={`${staff.length} staff accounts managed`}
         />
@@ -192,13 +192,13 @@ function AdminHome() {
               </div>
             </div>
 
-            {/* Card 2: Promos & Vouchers CRUD */}
+            {/* Card 2: Vouchers & Promos CRUD */}
             <div className="glow-card flex flex-col justify-between p-5 transition hover:border-primary/50">
               <div>
                 <div className="flex size-10 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-500">
                   <Ticket className="size-5" />
                 </div>
-                <h3 className="mt-3 text-base font-bold">Promos & Vouchers (CRUD)</h3>
+                <h3 className="mt-3 text-base font-bold">Vouchers & Promos (CRUD)</h3>
                 <p className="mt-1 text-xs text-muted-foreground">
                   Create custom discount codes, set percentage or fixed discounts, minimum spend,
                   and expiry dates.
@@ -212,7 +212,7 @@ function AdminHome() {
                   to="/owner/vouchers"
                   className="block w-full rounded-xl bg-amber-500 py-2.5 text-center text-xs font-bold text-white shadow-xs hover:opacity-90"
                 >
-                  Manage Promos & Vouchers
+                  Manage Vouchers & Promos
                 </Link>
               </div>
             </div>

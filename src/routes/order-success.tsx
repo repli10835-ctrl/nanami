@@ -1,8 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Check, MessageSquare } from "lucide-react";
+import { useMemo } from "react";
+import { Bike, Check, MessageSquare, Sparkles } from "lucide-react";
 import { buildWhatsappMessage, cleanWhatsappNumber, rupiah, useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/order-success")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    code: typeof search.code === "string" && search.code ? search.code : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Order Placed — Nanami Kitchen" },
@@ -22,10 +26,20 @@ export const Route = createFileRoute("/order-success")({
 
 function OrderSuccess() {
   const navigate = useNavigate();
-  const { order, settings } = useStore((s) => ({
-    order: s.orders[0],
+  const { code } = Route.useSearch();
+  const { orders, settings, profile } = useStore((s) => ({
+    orders: s.orders,
     settings: s.settings,
+    profile: s.profile,
   }));
+
+  const order = useMemo(() => {
+    if (code) {
+      const found = orders.find((o) => o.code.trim().toUpperCase() === code.trim().toUpperCase());
+      if (found) return found;
+    }
+    return orders[0] ?? null;
+  }, [orders, code]);
 
   if (!order) {
     return (
@@ -44,7 +58,7 @@ function OrderSuccess() {
   }
 
   const targetWa = cleanWhatsappNumber(settings.whatsapp);
-  const waUrl = `https://wa.me/${targetWa}?text=${encodeURIComponent(buildWhatsappMessage(order))}`;
+  const waUrl = `https://wa.me/${targetWa}?text=${encodeURIComponent(buildWhatsappMessage(order, settings.currencySymbol))}`;
 
   return (
     <div className="min-h-screen bg-background px-4 pt-8">
@@ -92,23 +106,34 @@ function OrderSuccess() {
         </div>
 
         {/* Order summary card */}
-        <section className="mt-6 rounded-3xl border border-border bg-card p-5">
+        <section className="mt-6 rounded-3xl border border-border bg-card p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Order No.</span>
-            <span className="text-base font-bold text-foreground">#{order.code}</span>
+            <span className="font-mono text-base font-bold text-foreground">#{order.code}</span>
           </div>
           <div className="mt-3 flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Payment Method</span>
-            <span className="text-sm font-semibold text-foreground">{order.paymentMethod}</span>
+            <span className="text-sm text-muted-foreground">Type & Payment</span>
+            <span className="text-sm font-semibold capitalize text-foreground">
+              {order.type} · {order.paymentMethod}
+            </span>
           </div>
           <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
             <span className="text-base text-muted-foreground">Total Amount</span>
-            <span className="text-2xl font-bold text-foreground">{rupiah(order.total)}</span>
+            <span className="text-2xl font-bold text-primary">{rupiah(order.total)}</span>
           </div>
         </section>
 
         {/* Actions */}
         <div className="mt-auto space-y-3 pt-8">
+          <Link
+            to="/tracking"
+            search={{ code: order.code }}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-sm font-bold text-primary-foreground shadow-md transition hover:brightness-105"
+          >
+            <Bike className="size-5" />
+            Track Live Kitchen Status (#{order.code})
+          </Link>
+
           <a
             href={waUrl}
             target="_blank"
@@ -118,12 +143,28 @@ function OrderSuccess() {
             <MessageSquare className="size-5" />
             Re-open Owner WhatsApp Chat
           </a>
-          <button
-            onClick={() => navigate({ to: "/orders" })}
-            className="w-full rounded-2xl bg-secondary py-3.5 text-sm font-bold text-foreground hover:bg-secondary/80"
-          >
-            View My Order History
-          </button>
+
+          {profile.signedIn ? (
+            <button
+              onClick={() => navigate({ to: "/orders" })}
+              className="w-full rounded-2xl bg-secondary py-3.5 text-sm font-bold text-foreground hover:bg-secondary/80"
+            >
+              View My Order History
+            </button>
+          ) : (
+            <div className="rounded-2xl border border-primary/20 bg-primary/5 p-3.5 text-center">
+              <p className="text-xs text-muted-foreground">
+                Enjoyed ordering as guest? Save your address & earn loyalty points:
+              </p>
+              <Link
+                to="/register"
+                className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline"
+              >
+                <Sparkles className="size-3.5" /> Create an Account
+              </Link>
+            </div>
+          )}
+
           <Link
             to="/"
             className="flex w-full items-center justify-center rounded-2xl border border-border bg-transparent py-3 text-sm font-semibold text-muted-foreground transition hover:text-foreground"

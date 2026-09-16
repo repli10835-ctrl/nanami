@@ -9,6 +9,8 @@ import {
   LogOut,
   ShoppingBag,
   Sparkles,
+  Store,
+  UtensilsCrossed,
   Zap,
 } from "lucide-react";
 import defaultLogo from "@/assets/nanami-logo.png";
@@ -58,10 +60,10 @@ function LoginPage() {
   const [show, setShow] = useState(false);
   const [error, setError] = useState("");
 
-  function handleDirectRoute(role?: "user" | "admin" | "owner") {
+  function handleDirectRoute(role?: "user" | "admin" | "owner" | "staff") {
     if (role === "owner") {
       navigate({ to: redirect && redirect.startsWith("/owner") ? redirect : "/owner" });
-    } else if (role === "admin") {
+    } else if (role === "admin" || role === "staff") {
       navigate({ to: redirect && redirect.startsWith("/admin") ? redirect : "/admin" });
     } else {
       navigate({
@@ -78,19 +80,19 @@ function LoginPage() {
     setError("");
     const result = actions.signIn(email, password);
     if (!result.ok) {
-      setError(result.error ?? "Terjadi kesalahan.");
+      setError(result.error ?? "An error occurred.");
       return;
     }
     handleDirectRoute(result.role);
   }
 
-  function handleQuickDemoLogin(role: "user" | "admin" | "owner") {
+  function handleQuickDemoLogin(role: "user" | "admin" | "owner" | "staff") {
     setError("");
     const res = actions.loginAsDemo(role);
     if (res.ok) {
       handleDirectRoute(res.role);
     } else {
-      setError(res.error ?? "Gagal masuk dengan akun demo.");
+      setError(res.error ?? "Failed to sign in with demo account.");
     }
   }
 
@@ -196,8 +198,17 @@ function LoginPage() {
           />
           <h1 className="mt-3 text-2xl font-bold tracking-tight">Sign In to {storeName}</h1>
           <p className="mt-1.5 text-xs text-muted-foreground">
-            Please sign in to access menu items, cart, orders, or operational dashboard.
+            Sign In is Optional for customers to manage profiles and loyalty rewards. Guest Checkout
+            is Always Supported.
           </p>
+          <div className="mt-4 flex justify-center">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/60 px-4 py-2 text-xs font-semibold text-foreground transition hover:bg-secondary"
+            >
+              <Store className="size-3.5" /> Continue to Storefront as Guest
+            </Link>
+          </div>
         </div>
 
         {/* Demo Accounts Section */}
@@ -248,6 +259,45 @@ function LoginPage() {
                 <button
                   type="button"
                   onClick={() => handleFillDemo("user@nanami.id", "user123")}
+                  className="rounded-xl border border-border bg-secondary/40 px-3 py-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
+                >
+                  Fill Form
+                </button>
+              </div>
+            </div>
+
+            {/* Demo Staff (Kitchen) */}
+            <div className="rounded-2xl border border-border/80 bg-card/90 p-3 shadow-sm transition hover:border-primary/40">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
+                    <UtensilsCrossed className="size-4" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-foreground">Staff / Kitchen</span>
+                      <span className="rounded bg-emerald-500/15 px-1.5 py-0.2 text-[10px] font-semibold text-emerald-500">
+                        Kitchen & Orders
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      staff@nanami.id &bull; pass:{" "}
+                      <span className="font-mono text-foreground font-semibold">staff123</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-2.5 flex items-center gap-2 pt-2 border-t border-border/50">
+                <button
+                  type="button"
+                  onClick={() => handleQuickDemoLogin("staff")}
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 py-2 text-xs font-bold text-white shadow-sm hover:opacity-90"
+                >
+                  <UtensilsCrossed className="size-3.5" /> Sign In as Kitchen Staff
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleFillDemo("staff@nanami.id", "staff123")}
                   className="rounded-xl border border-border bg-secondary/40 px-3 py-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
                 >
                   Fill Form
@@ -335,6 +385,35 @@ function LoginPage() {
           </div>
         </div>
 
+        {/* Google Sign In */}
+        <div className="mt-5">
+          <button
+            type="button"
+            onClick={() => handleQuickDemoLogin("user")}
+            className="flex w-full items-center justify-center gap-3 rounded-2xl border border-border bg-card py-3 text-xs font-bold text-foreground shadow-sm transition hover:bg-secondary/40"
+          >
+            <svg className="size-4" viewBox="0 0 24 24">
+              <path
+                fill="#4285F4"
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+              />
+              <path
+                fill="#34A853"
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+              />
+              <path
+                fill="#EA4335"
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+              />
+            </svg>
+            Continue with Google
+          </button>
+        </div>
+
         {/* Divider */}
         <div className="relative my-6 text-center">
           <div className="absolute inset-0 flex items-center">
@@ -400,9 +479,9 @@ function LoginPage() {
         </form>
 
         <p className="mt-5 text-center text-xs text-muted-foreground">
-          Don't have an account yet?{" "}
+          Don&apos;t have an account yet?{" "}
           <Link to="/register" className="font-semibold text-primary underline underline-offset-2">
-            Register new account
+            Register New Account
           </Link>
         </p>
       </div>

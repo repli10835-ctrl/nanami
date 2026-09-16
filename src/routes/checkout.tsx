@@ -17,37 +17,31 @@ import mapImg from "@/assets/checkout-map.jpg";
 
 const PAYMENT_OPTIONS = [
   {
-    id: "ewallet",
-    label: "E-Wallet",
-    sub: "(GoPay, OVO, Dana, ShopeePay)",
+    id: "ewallet" as const,
+    label: "eWallet / Pay2Cell",
+    sub: "(Scan QR or Mobile Transfer)",
     icon: Wallet,
-    badges: [
-      { text: "GP", bg: "#00AED6" },
-      { text: "OVO", bg: "#4C3494" },
-      { text: "D", bg: "#118EE9" },
-      { text: "S", bg: "#EE4E2C" },
-    ],
   },
   {
-    id: "bank",
+    id: "bank" as const,
     label: "Bank Transfer / Instant EFT",
     sub: "(ATM/MBANK/IBANK)",
     icon: Landmark,
   },
   {
-    id: "cod",
+    id: "cod" as const,
     label: "Cash on Delivery",
     sub: "(For Pickup & Delivery)",
     icon: Banknote,
   },
-] as const;
+];
 type PaymentId = (typeof PAYMENT_OPTIONS)[number]["id"];
-const PAYMENT_LABELS: Record<PaymentId, string> = {
-  ewallet: "E-Wallet (GoPay / OVO / Dana / ShopeePay)",
+const PAYMENT_LABELS: Record<string, string> = {
+  ewallet: "eWallet / Pay2Cell",
   bank: "Bank Transfer / EFT",
   cod: "Cash on Delivery / Pickup",
 };
-const DEFAULT_ADDRESS = "Jl. Melati No.12, Kec. Sukasari, Jakarta Selatan 12430";
+const DEFAULT_ADDRESS = "12 Rosebank Road, Rosebank, Johannesburg 2196";
 const STEPS = ["Address", "Payment", "Confirm"];
 
 export const Route = createFileRoute("/checkout")({
@@ -95,11 +89,23 @@ function Checkout() {
   const deliveryFee = deliveryFeeFor(settings, orderType, distance, subtotal);
   const voucher = findVoucher(vouchers, voucherCode);
   const discount = discountFor(subtotal, voucher);
-  const total = Math.max(0, subtotal + deliveryFee - discount);
+  const vatAmount = settings.vatEnabled
+    ? Math.round((subtotal * (settings.vatPercent ?? 15)) / 100)
+    : 0;
+  const total = Math.max(0, subtotal + vatAmount + deliveryFee - discount);
   const outOfRange = orderType === "delivery" && distance > settings.maxRadiusKm;
   const detailsMissing = !name.trim() || !phone.trim();
   const valid =
     !detailsMissing && (orderType === "pickup" || address) && !outOfRange && cart.length > 0;
+
+  const availablePaymentOptions = PAYMENT_OPTIONS.filter(
+    (opt) => opt.id !== "cod" || settings.codEnabled !== false,
+  );
+  useEffect(() => {
+    if (!availablePaymentOptions.some((o) => o.id === payment)) {
+      setPayment(availablePaymentOptions[0]?.id || "ewallet");
+    }
+  }, [settings.codEnabled]);
 
   // Send the customer back to the cart if it empties (but not right after ordering).
   const submittedRef = useRef(false);
@@ -133,6 +139,8 @@ function Checkout() {
       type: orderType,
       lines: cart,
       subtotal,
+      vatAmount: settings.vatEnabled ? vatAmount : undefined,
+      vatPercent: settings.vatEnabled ? (settings.vatPercent ?? 15) : undefined,
       discount,
       voucherCode: discount > 0 ? voucherCode : "",
       deliveryFee,
@@ -143,9 +151,9 @@ function Checkout() {
     });
     actions.updateProfile({ name, phone, address });
     const targetWa = cleanWhatsappNumber(settings.whatsapp);
-    const textMsg = encodeURIComponent(buildWhatsappMessage(order));
+    const textMsg = encodeURIComponent(buildWhatsappMessage(order, settings.currencySymbol));
     window.open(`https://wa.me/${targetWa}?text=${textMsg}`, "_blank");
-    navigate({ to: "/order-success" });
+    navigate({ to: "/order-success", search: { code: order.code } });
   }
 
   const field =
@@ -315,14 +323,14 @@ function Checkout() {
       {step === 1 && (
         <>
           <section className="mt-3 rounded-xl border border-border bg-card p-3">
-            <h2 className="text-xs font-bold">Your details</h2>
+            <h2 className="text-xs font-bold">Your Details</h2>
             <div className="mt-2 space-y-2">
               <label className="block text-[11px] text-muted-foreground">
-                Full name
+                Full Name
                 <input value={name} onChange={(e) => setName(e.target.value)} className={field} />
               </label>
               <label className="block text-[11px] text-muted-foreground">
-                WhatsApp number
+                WhatsApp Number
                 <input value={phone} onChange={(e) => setPhone(e.target.value)} className={field} />
               </label>
             </div>
@@ -330,7 +338,7 @@ function Checkout() {
 
           {/* Payment method options */}
           <section className="mt-3 overflow-hidden rounded-xl border border-border bg-card">
-            {PAYMENT_OPTIONS.map((opt, i) => {
+            {availablePaymentOptions.map((opt, i) => {
               const Icon = opt.icon;
               const selected = payment === opt.id;
               return (
@@ -499,6 +507,12 @@ function Checkout() {
               <span className="text-muted-foreground">Subtotal</span>
               <span>{rupiah(subtotal)}</span>
             </div>
+            {settings.vatEnabled && (
+              <div className="mt-2 flex justify-between text-sm">
+                <span className="text-muted-foreground">VAT ({settings.vatPercent ?? 15}%)</span>
+                <span>{rupiah(vatAmount)}</span>
+              </div>
+            )}
             {discount > 0 && (
               <div className="mt-2 flex justify-between text-sm">
                 <span className="text-muted-foreground">Voucher ({voucherCode})</span>
@@ -507,7 +521,7 @@ function Checkout() {
             )}
             {orderType === "delivery" && deliveryFee > 0 && (
               <div className="mt-2 flex justify-between text-sm">
-                <span className="text-muted-foreground">Delivery fee</span>
+                <span className="text-muted-foreground">Delivery Fee</span>
                 <span>{rupiah(deliveryFee)}</span>
               </div>
             )}

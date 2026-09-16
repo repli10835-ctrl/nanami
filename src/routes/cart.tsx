@@ -28,6 +28,9 @@ function CartPage() {
     distanceKm: s.distanceKm,
   }));
   const { subtotal } = cartTotals(cart);
+  const vatAmount = settings.vatEnabled
+    ? Math.round((subtotal * (settings.vatPercent ?? 15)) / 100)
+    : 0;
   const deliveryFee =
     cart.length > 0 ? deliveryFeeFor(settings, orderType, distanceKm, subtotal) : 0;
   const voucher = vouchers.find((v) => v.code === voucherCode && v.active);
@@ -37,7 +40,7 @@ function CartPage() {
         ? Math.round((subtotal * voucher.value) / 100)
         : voucher.value
       : 0;
-  const total = Math.max(0, subtotal + deliveryFee - discount);
+  const total = Math.max(0, subtotal + vatAmount + deliveryFee - discount);
   const serviceOff = orderType === "delivery" ? !settings.deliveryOn : !settings.pickupOn;
   const blocked = !settings.storeOpen || serviceOff || cart.length === 0;
 
@@ -134,6 +137,12 @@ function CartPage() {
               <span className="text-muted-foreground">Subtotal</span>
               <span className="font-semibold">{rupiah(subtotal)}</span>
             </div>
+            {settings.vatEnabled && (
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">VAT ({settings.vatPercent ?? 15}%)</span>
+                <span className="font-semibold">{rupiah(vatAmount)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">Delivery Fee</span>
               <span className="text-muted-foreground">

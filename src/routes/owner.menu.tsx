@@ -20,7 +20,7 @@ export const Route = createFileRoute("/owner/menu")({
   component: () => (
     <DashboardShell
       role="owner"
-      title="Menu catalog"
+      title="Menu Catalog"
       subtitle="Add, edit, and delete items along with prices and images"
     >
       <MenuCrudPanel />

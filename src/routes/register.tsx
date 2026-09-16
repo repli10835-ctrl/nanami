@@ -131,7 +131,7 @@ function RegisterPage() {
           />
         </label>
         <label className="block text-xs text-muted-foreground">
-          Delivery Address (optional)
+          Delivery Address (Optional)
           <textarea
             value={address}
             onChange={(e) => setAddress(e.target.value)}
@@ -205,7 +205,7 @@ function RegisterPage() {
       <p className="mt-5 text-center text-sm text-muted-foreground">
         Already have an account?{" "}
         <Link to="/login" className="font-semibold text-primary">
-          Sign in here
+          Sign In Here
         </Link>
       </p>
       <p className="mt-3 text-center text-xs text-muted-foreground">

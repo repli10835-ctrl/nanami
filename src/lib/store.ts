@@ -16,16 +16,22 @@ import {
   saveStaffDb,
   saveSettingsDb,
   saveCmsDb,
+  saveMediaAssetDb,
+  deleteMediaAssetDb,
+  updateMediaAssetUsageDb,
+  deleteAccountDb,
 } from "./server-functions";
+import { formatCurrency, setCurrencySymbol } from "./currency";
 
-export type Category = "Foods" | "Snacks" | "Drinks" | "Combos" | "Others";
-export const CATEGORIES: Category[] = ["Foods", "Snacks", "Drinks", "Combos", "Others"];
+export type Category = "Meals" | "Snacks" | "Drinks" | "Combos" | "Others";
+export const CATEGORIES: Category[] = ["Meals", "Snacks", "Drinks", "Combos", "Others"];
 
 export type OptionChoice = { id: string; name: string; price: number };
 export type OptionGroup = {
   id: string;
   name: string;
   type: "single" | "multi";
+  enabled?: boolean;
   choices: OptionChoice[];
 };
 
@@ -41,6 +47,7 @@ export type MenuItem = {
   badges: string[];
   stock?: number | null;
   groups: OptionGroup[];
+  specialRequestEnabled?: boolean;
 };
 
 export type CartLine = {
@@ -68,6 +75,8 @@ export type Order = {
   type: "pickup" | "delivery";
   lines: CartLine[];
   subtotal: number;
+  vatAmount?: number;
+  vatPercent?: number;
   discount: number;
   voucherCode: string;
   deliveryFee: number;
@@ -78,6 +87,7 @@ export type Order = {
   pointsEarned: number;
   etaMinutes: number;
   customer: { name: string; phone: string; address: string; deliveryNote: string };
+  accountId?: string | null;
 };
 
 export type Promo = {
@@ -97,6 +107,14 @@ export type CmsFaq = {
   active: boolean;
 };
 
+export type MediaAsset = {
+  id: string;
+  url: string;
+  filename: string;
+  uploadedAt: number;
+  usedByMenuIds: string[];
+};
+
 export type CmsContent = {
   logoUrl: string;
   brandName: string;
@@ -108,6 +126,7 @@ export type CmsContent = {
   heroTitleLine2: string;
   heroSlogan: string;
   heroCtaText: string;
+  heroActive: boolean;
   announcement: {
     enabled: boolean;
     text: string;
@@ -127,9 +146,13 @@ export type CmsContent = {
     tiktok: string;
     whatsapp: string;
     mapsUrl: string;
+    active: boolean;
   };
   aboutStory: string;
   faqs: CmsFaq[];
+  mustTryItemIds: string[];
+  categoryOrder: Category[];
+  categoryNames: Record<Category, string>;
 };
 
 export type Voucher = {
@@ -141,25 +164,29 @@ export type Voucher = {
 };
 
 export type Settings = {
+  currencySymbol?: string;
   storeName: string;
   storeTagline: string;
   storeAddress: string;
   storeOpen: boolean;
   deliveryOn: boolean;
   pickupOn: boolean;
+  codEnabled: boolean;
+  vatEnabled: boolean;
+  vatPercent: number;
   whatsapp: string;
   baseFee: number;
   feePerKm: number;
   maxRadiusKm: number;
-  /** Titik Google Maps lokasi usaha (tautan atau "lat,lng"). */
+  /** Store's Google Maps location point (link or "lat,lng"). */
   storeMapsUrl: string;
   storeLat: number;
   storeLng: number;
-  /** Ongkir minimum yang ditagihkan ke pelanggan. */
+  /** Minimum delivery fee charged to customer. */
   minFee: number;
-  /** Gratis ongkir jika subtotal >= nilai ini (0 = nonaktif). */
+  /** Free delivery if subtotal >= this value (0 = disabled). */
   freeDeliveryAbove: number;
-  /** Faktor jalan: jarak lurus dikali angka ini (mis. 1.3). */
+  /** Route factor: straight distance multiplied by this (e.g. 1.3). */
   routeFactor: number;
   bankName: string;
   bankAccount: string;
@@ -179,7 +206,7 @@ export type Profile = {
   points: number;
   signedIn: boolean;
   method: string;
-  role?: "user" | "admin" | "owner";
+  role?: "user" | "admin" | "owner" | "staff";
 };
 
 export type Account = {
@@ -188,7 +215,7 @@ export type Account = {
   password: string;
   name: string;
   phone: string;
-  role?: "user" | "admin" | "owner";
+  role?: "user" | "admin" | "owner" | "staff";
   address?: string;
   addresses?: string[];
   points?: number;
@@ -210,7 +237,7 @@ export type State = {
   orderType: "pickup" | "delivery";
   orderTypeChosen: boolean;
   distanceKm: number;
-  /** Titik Google Maps pelanggan (tautan atau "lat,lng"). */
+  /** Customer's Google Maps point (link or "lat,lng"). */
   customerMapsUrl: string;
   menu: MenuItem[];
   cart: CartLine[];
@@ -222,6 +249,7 @@ export type State = {
   voucherCode: string;
   accounts: Account[];
   staff: StaffMember[];
+  mediaAssets: MediaAsset[];
   adminUnlocked: boolean;
   cms: CmsContent;
 };
@@ -230,6 +258,7 @@ const spice: OptionGroup = {
   id: "spice",
   name: "Spice Level",
   type: "single",
+  enabled: true,
   choices: [
     { id: "mild", name: "Mild", price: 0 },
     { id: "medium", name: "Medium", price: 0 },
@@ -241,6 +270,7 @@ const size: OptionGroup = {
   id: "size",
   name: "Size",
   type: "single",
+  enabled: true,
   choices: [
     { id: "reg", name: "Regular", price: 0 },
     { id: "large", name: "Large", price: 15 },
@@ -251,6 +281,7 @@ const toppings: OptionGroup = {
   id: "topping",
   name: "Extra Toppings",
   type: "multi",
+  enabled: true,
   choices: [
     { id: "egg", name: "Fried Egg", price: 15 },
     { id: "cheese", name: "Mozzarella Cheese", price: 20 },
@@ -258,30 +289,32 @@ const toppings: OptionGroup = {
   ],
 };
 
-const seedMenu: MenuItem[] = [
+export const seedMenu: MenuItem[] = [
   {
     id: "m1",
     name: "Teriyaki Chicken Bento",
     description: "Grilled teriyaki chicken with warm rice and Japanese pickles.",
     price: 95,
-    category: "Foods",
+    category: "Meals",
     image: food1,
     available: true,
     prepMinutes: 15,
     badges: ["Halal-friendly", "Contains Soy"],
     groups: [size, toppings],
+    specialRequestEnabled: true,
   },
   {
     id: "m2",
     name: "Crispy Smashed Chicken (Geprek)",
     description: "Crispy smashed chicken served with fresh chili sambal.",
     price: 85,
-    category: "Foods",
+    category: "Meals",
     image: food2,
     available: true,
     prepMinutes: 18,
     badges: ["Halal-friendly", "Spicy"],
     groups: [spice, toppings],
+    specialRequestEnabled: true,
   },
   {
     id: "m3",
@@ -294,6 +327,7 @@ const seedMenu: MenuItem[] = [
     prepMinutes: 5,
     badges: ["Contains Dairy"],
     groups: [size],
+    specialRequestEnabled: true,
   },
   {
     id: "m4",
@@ -306,6 +340,7 @@ const seedMenu: MenuItem[] = [
     prepMinutes: 12,
     badges: ["Contains Gluten"],
     groups: [toppings],
+    specialRequestEnabled: true,
   },
   {
     id: "m5",
@@ -318,6 +353,7 @@ const seedMenu: MenuItem[] = [
     prepMinutes: 20,
     badges: ["Halal-friendly", "Spicy"],
     groups: [spice],
+    specialRequestEnabled: true,
   },
   {
     id: "m6",
@@ -330,6 +366,7 @@ const seedMenu: MenuItem[] = [
     prepMinutes: 2,
     badges: ["Spicy", "Vegan"],
     groups: [],
+    specialRequestEnabled: true,
   },
 ];
 
@@ -357,6 +394,17 @@ export const DEMO_ACCOUNTS: Account[] = [
     points: 120,
   },
   {
+    id: "demo-staff",
+    email: "staff@nanami.id",
+    password: "staff123",
+    name: "Dimas Pratama (Kitchen)",
+    phone: "0812-5555-6666",
+    role: "staff",
+    address: "Nanami Kitchen Line 1",
+    addresses: ["Nanami Kitchen Line 1"],
+    points: 0,
+  },
+  {
     id: "demo-owner",
     email: "owner@nanami.id",
     password: "owner123",
@@ -381,6 +429,7 @@ export const defaultCmsContent: CmsContent = {
   heroTitleLine2: "Made with Love",
   heroSlogan: "Good Food. Made with Love",
   heroCtaText: "Order Now",
+  heroActive: true,
   announcement: {
     enabled: true,
     text: "🎉 Special Promo: Get 20% OFF all menu items with voucher code NANAMI20!",
@@ -400,6 +449,7 @@ export const defaultCmsContent: CmsContent = {
     tiktok: "@nanami.kitchen",
     whatsapp: "27812345678",
     mapsUrl: "https://maps.google.com/?q=Nanami+Kitchen",
+    active: true,
   },
   aboutStory:
     "Nanami Kitchen serves authentic Japanese bento boxes, fiery crispy smashed chicken, and refreshing handcrafted beverages prepared fresh daily using high-quality ingredients.",
@@ -431,6 +481,15 @@ export const defaultCmsContent: CmsContent = {
       active: true,
     },
   ],
+  mustTryItemIds: ["m1", "m2", "m3", "m4"],
+  categoryOrder: ["Meals", "Snacks", "Drinks", "Combos", "Others"],
+  categoryNames: {
+    Meals: "Meals",
+    Snacks: "Snacks",
+    Drinks: "Drinks",
+    Combos: "Combos",
+    Others: "Others",
+  },
 };
 
 const defaultState: State = {
@@ -442,12 +501,16 @@ const defaultState: State = {
   cart: [],
   orders: [],
   settings: {
+    currencySymbol: "N$",
     storeName: "Nanami Kitchen",
     storeTagline: "Japanese comfort food, made fresh daily",
     storeAddress: "12 Rosebank Road, Rosebank, Johannesburg",
     storeOpen: true,
     deliveryOn: true,
     pickupOn: true,
+    codEnabled: true,
+    vatEnabled: false,
+    vatPercent: 15,
     whatsapp: "27812345678",
     baseFee: 25,
     feePerKm: 5,
@@ -486,14 +549,14 @@ const defaultState: State = {
     },
     {
       id: "p2",
-      title: "Free delivery over R 250",
+      title: "Free delivery over N$ 250",
       subtitle: "Within 5 km radius of our kitchen",
       badge: "Delivery",
     },
     {
       id: "p3",
       title: "Earn points on every order",
-      subtitle: "1 point for every R 100 spent",
+      subtitle: "1 point for every N$ 100 spent",
       badge: "Loyalty",
     },
   ],
@@ -533,6 +596,7 @@ const defaultState: State = {
     },
   ],
   adminUnlocked: false,
+  mediaAssets: [],
   cms: defaultCmsContent,
 };
 
@@ -590,6 +654,9 @@ export const actions = {
     try {
       const data = await getDatabaseState();
       if (data) {
+        if (data.settings?.currencySymbol) {
+          setCurrencySymbol(data.settings.currencySymbol);
+        }
         set((s) => ({
           ...s,
           settings: data.settings ? { ...s.settings, ...data.settings } : s.settings,
@@ -613,7 +680,7 @@ export const actions = {
   setDistanceKm(km: number) {
     set((s) => ({ ...s, distanceKm: Math.max(0.1, Math.round(km * 10) / 10) }));
   },
-  /** Simpan titik Google Maps pelanggan beserta jarak hasil hitungan. */
+  /** Save customer's Google Maps point and the calculated distance. */
   setCustomerPoint(url: string, km: number) {
     set((s) => ({
       ...s,
@@ -686,18 +753,18 @@ export const actions = {
   signIn(
     email: string,
     password: string,
-  ): { ok: boolean; error?: string; role?: "user" | "admin" | "owner" } {
+  ): { ok: boolean; error?: string; role?: "user" | "admin" | "owner" | "staff" } {
     const clean = email.trim().toLowerCase();
     const account =
       state.accounts.find((a) => a.email.toLowerCase() === clean) ||
       DEMO_ACCOUNTS.find((a) => a.email.toLowerCase() === clean);
     if (!account || account.password !== password)
-      return { ok: false, error: "Email atau kata sandi tidak sesuai." };
+      return { ok: false, error: "Invalid email or password." };
 
     const role = account.role ?? "user";
     set((s) => ({
       ...s,
-      adminUnlocked: role === "admin" || role === "owner",
+      adminUnlocked: role === "admin" || role === "owner" || role === "staff",
       profile: {
         ...s.profile,
         name: account.name,
@@ -714,13 +781,13 @@ export const actions = {
     }));
     return { ok: true, role };
   },
-  loginAsDemo(role: "user" | "admin" | "owner"): {
+  loginAsDemo(role: "user" | "admin" | "owner" | "staff"): {
     ok: boolean;
     error?: string;
-    role?: "user" | "admin" | "owner";
+    role?: "user" | "admin" | "owner" | "staff";
   } {
     const demo = DEMO_ACCOUNTS.find((a) => a.role === role);
-    if (!demo) return { ok: false, error: "Akun demo tidak ditemukan." };
+    if (!demo) return { ok: false, error: "Demo account not found." };
     return this.signIn(demo.email, demo.password);
   },
   changePassword(currentPassword: string, newPassword: string): { ok: boolean; error?: string } {
@@ -811,7 +878,15 @@ export const actions = {
     set((s) => ({ ...s, cart: [], voucherCode: "" }));
   },
   placeOrder(order: Omit<Order, "id" | "code" | "createdAt" | "status" | "paid" | "pointsEarned">) {
-    const pointsEarned = Math.floor(order.total / 10000) * state.settings.pointsPer10k;
+    const isMember = Boolean(state.profile.signedIn);
+    const pointsEarned = isMember
+      ? Math.floor(order.total / 10000) * state.settings.pointsPer10k
+      : 0;
+    const accountId = isMember
+      ? state.accounts.find((a) => a.email.toLowerCase() === state.profile.email.toLowerCase())
+          ?.id || null
+      : null;
+
     const full: Order = {
       ...order,
       id: uid(),
@@ -820,6 +895,7 @@ export const actions = {
       status: "Pending Payment",
       paid: false,
       pointsEarned,
+      accountId,
     };
     set((s) => {
       const updatedMenu = s.menu.map((m) => {
@@ -837,12 +913,17 @@ export const actions = {
       // Save order to db
       saveOrderDb(full).catch(console.error);
 
-      // Save updated points for profile
-      const account = s.accounts.find((a) => a.email === s.profile.email);
-      const updatedPoints = s.profile.points + pointsEarned;
-      if (account) {
-        const updatedAcc = { ...account, points: updatedPoints };
-        saveAccountDb(updatedAcc).catch(console.error);
+      // Save updated points for profile only if member
+      let updatedPoints = s.profile.points;
+      if (isMember && s.profile.email) {
+        const account = s.accounts.find(
+          (a) => a.email.toLowerCase() === s.profile.email.toLowerCase(),
+        );
+        updatedPoints = s.profile.points + pointsEarned;
+        if (account) {
+          const updatedAcc = { ...account, points: updatedPoints };
+          saveAccountDb(updatedAcc).catch(console.error);
+        }
       }
 
       return {
@@ -851,7 +932,7 @@ export const actions = {
         cart: [],
         voucherCode: "",
         menu: updatedMenu,
-        profile: { ...s.profile, points: updatedPoints },
+        profile: isMember ? { ...s.profile, points: updatedPoints } : s.profile,
       };
     });
     return full;
@@ -881,17 +962,64 @@ export const actions = {
     });
   },
   saveMenuItem(item: MenuItem) {
-    set((s) => ({
-      ...s,
-      menu: s.menu.some((m) => m.id === item.id)
-        ? s.menu.map((m) => (m.id === item.id ? item : m))
-        : [...s.menu, item],
-    }));
-    saveMenuItemDb(item).catch(console.error);
+    set((s) => {
+      const oldItem = s.menu.find((m) => m.id === item.id);
+      let updatedMediaAssets = [...s.mediaAssets];
+
+      if (!oldItem || oldItem.image !== item.image) {
+        if (oldItem && oldItem.image) {
+          updatedMediaAssets = updatedMediaAssets.map((asset) => {
+            if (asset.url === oldItem.image) {
+              const newUsage = asset.usedByMenuIds.filter((id) => id !== item.id);
+              updateMediaAssetUsageDb({ id: asset.id, usedByMenuIds: newUsage }).catch(console.error);
+              return { ...asset, usedByMenuIds: newUsage };
+            }
+            return asset;
+          });
+        }
+        if (item.image) {
+          updatedMediaAssets = updatedMediaAssets.map((asset) => {
+            if (asset.url === item.image) {
+              const newUsage = Array.from(new Set([...asset.usedByMenuIds, item.id]));
+              updateMediaAssetUsageDb({ id: asset.id, usedByMenuIds: newUsage }).catch(console.error);
+              return { ...asset, usedByMenuIds: newUsage };
+            }
+            return asset;
+          });
+        }
+      }
+
+      saveMenuItemDb(item).catch(console.error);
+      return {
+        ...s,
+        menu: s.menu.some((m) => m.id === item.id)
+          ? s.menu.map((m) => (m.id === item.id ? item : m))
+          : [...s.menu, item],
+        mediaAssets: updatedMediaAssets,
+      };
+    });
   },
   deleteMenuItem(id: string) {
-    set((s) => ({ ...s, menu: s.menu.filter((m) => m.id !== id) }));
-    deleteMenuItemDb(id).catch(console.error);
+    set((s) => {
+      const item = s.menu.find((m) => m.id === id);
+      let updatedMediaAssets = [...s.mediaAssets];
+      if (item && item.image) {
+        updatedMediaAssets = updatedMediaAssets.map((asset) => {
+          if (asset.url === item.image) {
+            const newUsage = asset.usedByMenuIds.filter((uid) => uid !== id);
+            updateMediaAssetUsageDb({ id: asset.id, usedByMenuIds: newUsage }).catch(console.error);
+            return { ...asset, usedByMenuIds: newUsage };
+          }
+          return asset;
+        });
+      }
+      deleteMenuItemDb(id).catch(console.error);
+      return {
+        ...s,
+        menu: s.menu.filter((m) => m.id !== id),
+        mediaAssets: updatedMediaAssets,
+      };
+    });
   },
   toggleAvailability(id: string) {
     set((s) => {
@@ -952,6 +1080,9 @@ export const actions = {
   },
   updateSettings(patch: Partial<Settings>) {
     set((s) => {
+      if (patch.currencySymbol) {
+        setCurrencySymbol(patch.currencySymbol);
+      }
       const updated = { ...s.settings, ...patch };
       saveSettingsDb(updated).catch(console.error);
       return { ...s, settings: updated };
@@ -961,18 +1092,24 @@ export const actions = {
     set((s) => {
       const updatedProfile = { ...s.profile, ...patch };
 
-      // Update matching user account in db
-      const account = s.accounts.find((a) => a.email === s.profile.email);
-      if (account) {
-        const updatedAcc = {
-          ...account,
-          name: updatedProfile.name || account.name,
-          phone: updatedProfile.phone || account.phone,
-          address: updatedProfile.address || account.address,
-          addresses: updatedProfile.addresses.length ? updatedProfile.addresses : account.addresses,
-          points: updatedProfile.points,
-        };
-        saveAccountDb(updatedAcc).catch(console.error);
+      // Update matching user account in db only if user is logged in
+      if (s.profile.signedIn && s.profile.email) {
+        const account = s.accounts.find(
+          (a) => a.email.toLowerCase() === s.profile.email.toLowerCase(),
+        );
+        if (account) {
+          const updatedAcc = {
+            ...account,
+            name: updatedProfile.name || account.name,
+            phone: updatedProfile.phone || account.phone,
+            address: updatedProfile.address || account.address,
+            addresses: updatedProfile.addresses.length
+              ? updatedProfile.addresses
+              : account.addresses,
+            points: updatedProfile.points,
+          };
+          saveAccountDb(updatedAcc).catch(console.error);
+        }
       }
 
       return { ...s, profile: updatedProfile };
@@ -1051,6 +1188,38 @@ export const actions = {
       return { ...s, cms: updated };
     });
   },
+  saveMediaAsset(asset: MediaAsset) {
+    set((s) => ({
+      ...s,
+      mediaAssets: s.mediaAssets.some((m) => m.id === asset.id)
+        ? s.mediaAssets.map((m) => (m.id === asset.id ? asset : m))
+        : [...s.mediaAssets, asset],
+    }));
+    saveMediaAssetDb(asset).catch(console.error);
+  },
+  deleteMediaAsset(id: string) {
+    set((s) => ({
+      ...s,
+      mediaAssets: s.mediaAssets.filter((m) => m.id !== id),
+    }));
+    deleteMediaAssetDb(id).catch(console.error);
+  },
+  saveAccount(acc: Account) {
+    set((s) => ({
+      ...s,
+      accounts: s.accounts.some((a) => a.id === acc.id)
+        ? s.accounts.map((a) => (a.id === acc.id ? acc : a))
+        : [...s.accounts, acc],
+    }));
+    saveAccountDb(acc).catch(console.error);
+  },
+  deleteAccount(id: string) {
+    set((s) => ({
+      ...s,
+      accounts: s.accounts.filter((a) => a.id !== id),
+    }));
+    deleteAccountDb(id).catch(console.error);
+  },
   resetCms() {
     set((s) => {
       saveCmsDb(defaultCmsContent).catch(console.error);
@@ -1066,8 +1235,10 @@ export function uid() {
   return Math.random().toString(36).slice(2, 10);
 }
 
+export { formatCurrency } from "./currency";
+
 export function rupiah(n: number) {
-  return "R " + Math.round(n).toLocaleString("en-ZA");
+  return formatCurrency(n, state?.settings?.currencySymbol || "N$");
 }
 
 export function formatRand(n: number) {
@@ -1094,54 +1265,7 @@ export function deliveryFeeFor(
   return Math.max(settings.minFee ?? 0, Math.round(fee));
 }
 
-export function cleanWhatsappNumber(raw?: string) {
-  if (!raw) return "27812345678";
-  let cleaned = raw.replace(/\D/g, "");
-  if (cleaned.startsWith("0")) {
-    cleaned = "27" + cleaned.slice(1);
-  }
-  return cleaned || "27812345678";
-}
-
-export function buildWhatsappMessage(order: Order) {
-  const lines = order.lines
-    .map(
-      (l) =>
-        `• *${l.qty}x ${l.name}*${l.optionLabels.length ? ` (${l.optionLabels.join(", ")})` : ""}${
-          l.note ? `\n  Note: ${l.note}` : ""
-        }\n  Subtotal: ${rupiah(l.unitPrice * l.qty)}`,
-    )
-    .join("\n\n");
-
-  return [
-    `*NEW ORDER #${order.code}*`,
-    `------------------------------------------`,
-    `👤 *CUSTOMER DETAILS:*`,
-    `• Name: ${order.customer.name}`,
-    `• WhatsApp No: ${order.customer.phone}`,
-    `• Order Type: ${order.type === "delivery" ? "🚚 Delivery" : "🛍️ Pickup (Takeaway)"}`,
-    order.type === "delivery" ? `• Delivery Address: ${order.customer.address}` : "",
-    order.customer.deliveryNote ? `• Location Note: ${order.customer.deliveryNote}` : "",
-    `------------------------------------------`,
-    `🍱 *ORDERED ITEMS:*`,
-    lines,
-    `------------------------------------------`,
-    `💵 *PAYMENT SUMMARY:*`,
-    `• Items Subtotal: ${rupiah(order.subtotal)}`,
-    order.discount
-      ? `• Voucher Discount${order.voucherCode ? ` (${order.voucherCode})` : ""}: -${rupiah(order.discount)}`
-      : "",
-    order.type === "delivery" ? `• Delivery Fee: ${rupiah(order.deliveryFee)}` : "",
-    `*💰 TOTAL AMOUNT: ${rupiah(order.total)}*`,
-    `------------------------------------------`,
-    `💳 *PAYMENT METHOD (MANUAL):*`,
-    `• ${order.paymentMethod}`,
-    "",
-    `_Hello Admin / Owner, I have placed the order above via Nanami Kitchen. Please confirm and process my order. Thank you!_`,
-  ]
-    .filter(Boolean)
-    .join("\n");
-}
+export { buildWhatsappMessage, cleanWhatsappNumber } from "./whatsapp";
 
 export function findVoucher(vouchers: Voucher[], code: string) {
   const clean = code.trim().toUpperCase();

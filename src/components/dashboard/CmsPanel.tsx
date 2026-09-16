@@ -20,9 +20,23 @@ import {
   Tag,
   Trash2,
   Upload,
+  UtensilsCrossed,
   Volume2,
+  X,
+  Pencil,
 } from "lucide-react";
-import { actions, defaultCmsContent, uid, useStore, type CmsFaq, type Promo } from "@/lib/store";
+import {
+  actions,
+  CATEGORIES,
+  defaultCmsContent,
+  rupiah,
+  uid,
+  useStore,
+  type CmsFaq,
+  type Promo,
+  type CmsContent,
+  type Settings,
+} from "@/lib/store";
 import defaultLogo from "@/assets/nanami-logo.png";
 import heroImg from "@/assets/hero.jpg";
 import food1 from "@/assets/food-1.jpg";
@@ -30,6 +44,7 @@ import food2 from "@/assets/food-2.jpg";
 import food3 from "@/assets/food-3.jpg";
 import food4 from "@/assets/food-4.jpg";
 import { SectionCard, fieldClass } from "./DashboardShell";
+import { MediaGallery } from "./MediaGallery";
 
 const LOGO_PRESETS = [
   { id: "default", name: "Default Nanami Logo", url: defaultLogo },
@@ -63,18 +78,147 @@ const HERO_PRESETS = [
   },
 ];
 
-export function CmsPanel() {
-  const { cms, promos, settings } = useStore((s) => ({
+interface CmsPanelProps {
+  cms?: CmsContent;
+  promos?: Promo[];
+  settings?: Settings;
+  onChangeCms?: (cms: CmsContent) => void;
+  onChangePromos?: (promos: Promo[]) => void;
+  onChangeSettings?: (settings: Settings) => void;
+  onResetCms?: () => void;
+}
+
+export function CmsPanel(props: CmsPanelProps = {}) {
+  const storeData = useStore((s) => ({
     cms: s.cms || defaultCmsContent,
     promos: s.promos,
     settings: s.settings,
+    menu: s.menu,
   }));
 
+  const cms = props.cms || storeData.cms;
+  const promos = props.promos || storeData.promos;
+  const settings = props.settings || storeData.settings;
+  const menu = storeData.menu;
+
+  const actionsShadow = {
+    updateCms(patch: Partial<CmsContent>) {
+      const updated = { ...cms, ...patch };
+      if (props.onChangeCms) {
+        props.onChangeCms(updated);
+      } else {
+        actionsShadow.updateCms(patch);
+      }
+    },
+    updateCmsAnnouncement(patch: Partial<CmsContent["announcement"]>) {
+      const updated = {
+        ...cms,
+        announcement: { ...cms.announcement, ...patch },
+      };
+      if (props.onChangeCms) {
+        props.onChangeCms(updated);
+      } else {
+        actionsShadow.updateCmsAnnouncement(patch);
+      }
+    },
+    updateCmsWelcome(patch: Partial<CmsContent["welcomeScreen"]>) {
+      const updated = {
+        ...cms,
+        welcomeScreen: { ...cms.welcomeScreen, ...patch },
+      };
+      if (props.onChangeCms) {
+        props.onChangeCms(updated);
+      } else {
+        actionsShadow.updateCmsWelcome(patch);
+      }
+    },
+    updateCmsSocials(patch: Partial<CmsContent["socials"]>) {
+      const updated = {
+        ...cms,
+        socials: { ...cms.socials, ...patch },
+      };
+      if (props.onChangeCms) {
+        props.onChangeCms(updated);
+      } else {
+        actionsShadow.updateCmsSocials(patch);
+      }
+    },
+    updateCmsFaq(id: string, patch: Partial<CmsFaq>) {
+      const updated = {
+        ...cms,
+        faqs: cms.faqs.map((f) => (f.id === id ? { ...f, ...patch } : f)),
+      };
+      if (props.onChangeCms) {
+        props.onChangeCms(updated);
+      } else {
+        actionsShadow.updateCmsFaq(id, patch);
+      }
+    },
+    addCmsFaq(faq: CmsFaq) {
+      const updated = {
+        ...cms,
+        faqs: [...cms.faqs, faq],
+      };
+      if (props.onChangeCms) {
+        props.onChangeCms(updated);
+      } else {
+        actionsShadow.addCmsFaq(faq);
+      }
+    },
+    deleteCmsFaq(id: string) {
+      const updated = {
+        ...cms,
+        faqs: cms.faqs.filter((f) => f.id !== id),
+      };
+      if (props.onChangeCms) {
+        props.onChangeCms(updated);
+      } else {
+        actionsShadow.deleteCmsFaq(id);
+      }
+    },
+    savePromo(p: Promo) {
+      const updated = promos.some((x) => x.id === p.id)
+        ? promos.map((x) => (x.id === p.id ? p : x))
+        : [...promos, p];
+      if (props.onChangePromos) {
+        props.onChangePromos(updated);
+      } else {
+        actionsShadow.savePromo(p);
+      }
+    },
+    deletePromo(id: string) {
+      const updated = promos.filter((p) => p.id !== id);
+      if (props.onChangePromos) {
+        props.onChangePromos(updated);
+      } else {
+        actionsShadow.deletePromo(id);
+      }
+    },
+    updateSettings(patch: Partial<Settings>) {
+      const updated = { ...settings, ...patch };
+      if (props.onChangeSettings) {
+        props.onChangeSettings(updated);
+      } else {
+        actionsShadow.updateSettings(patch);
+      }
+    },
+    resetCms() {
+      if (props.onResetCms) {
+        props.onResetCms();
+      } else {
+        actions.resetCms();
+      }
+    },
+  };
+
+  const actions = actionsShadow;
+
   const [activeTab, setActiveTab] = useState<
-    "branding" | "hero" | "announcement" | "promos" | "welcome" | "socials" | "faqs"
+    "branding" | "hero" | "announcement" | "promos" | "welcome" | "socials" | "faqs" | "catalog"
   >("branding");
 
   const [saveToast, setSaveToast] = useState(false);
+  const [showHeroGallery, setShowHeroGallery] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const heroInputRef = useRef<HTMLInputElement>(null);
   const promoInputRef = useRef<HTMLInputElement>(null);
@@ -174,6 +318,7 @@ export function CmsPanel() {
           { key: "welcome", label: "Welcome Screen", icon: Sparkles },
           { key: "socials", label: "Contact & Socials", icon: Share2 },
           { key: "faqs", label: "FAQ & Help", icon: HelpCircle },
+          { key: "catalog", label: "Catalog & Must Try", icon: UtensilsCrossed },
         ].map(({ key, label, icon: Icon }) => (
           <button
             key={key}
@@ -211,7 +356,7 @@ export function CmsPanel() {
                         <button
                           key={p.id}
                           onClick={() => {
-                            actions.updateCms({ logoUrl: p.url === defaultLogo ? "" : p.url });
+                            actionsShadow.updateCms({ logoUrl: p.url === defaultLogo ? "" : p.url });
                             triggerToast();
                           }}
                           className={`flex flex-col items-center gap-2 rounded-xl border p-2.5 text-center transition ${
@@ -244,7 +389,7 @@ export function CmsPanel() {
                       accept="image/*"
                       className="hidden"
                       onChange={(e) =>
-                        handleFileUpload(e, (base64) => actions.updateCms({ logoUrl: base64 }))
+                        handleFileUpload(e, (base64) => actionsShadow.updateCms({ logoUrl: base64 }))
                       }
                     />
                     <button
@@ -264,7 +409,7 @@ export function CmsPanel() {
                       placeholder="https://example.com/logo.png"
                       value={cms.logoUrl}
                       onChange={(e) => {
-                        actions.updateCms({ logoUrl: e.target.value });
+                        actionsShadow.updateCms({ logoUrl: e.target.value });
                         triggerToast();
                       }}
                       className={fieldClass}
@@ -284,7 +429,7 @@ export function CmsPanel() {
                   <input
                     value={cms.brandName}
                     onChange={(e) => {
-                      actions.updateCms({ brandName: e.target.value });
+                      actionsShadow.updateCms({ brandName: e.target.value });
                       triggerToast();
                     }}
                     placeholder="nanami"
@@ -300,7 +445,7 @@ export function CmsPanel() {
                   <input
                     value={cms.brandSuffix}
                     onChange={(e) => {
-                      actions.updateCms({ brandSuffix: e.target.value });
+                      actionsShadow.updateCms({ brandSuffix: e.target.value });
                       triggerToast();
                     }}
                     placeholder="kitchen"
@@ -318,8 +463,8 @@ export function CmsPanel() {
                   <input
                     value={cms.tagline}
                     onChange={(e) => {
-                      actions.updateCms({ tagline: e.target.value });
-                      actions.updateSettings({ storeTagline: e.target.value });
+                      actionsShadow.updateCms({ tagline: e.target.value });
+                      actionsShadow.updateSettings({ storeTagline: e.target.value });
                       triggerToast();
                     }}
                     placeholder="Good food, made with love."
@@ -384,6 +529,26 @@ export function CmsPanel() {
               description="Primary image featured at the top of home screen and welcome splash."
             >
               <div className="space-y-4">
+                <div className="flex items-center justify-between rounded-xl border border-border bg-secondary/30 p-3.5">
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Hero Banner Status</p>
+                    <p className="text-xs text-muted-foreground">Show hero section on home screen.</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      actionsShadow.updateCms({ heroActive: !cms.heroActive });
+                      triggerToast();
+                    }}
+                    className={`rounded-full px-4 py-1.5 text-xs font-bold transition ${
+                      cms.heroActive
+                        ? "bg-primary text-primary-foreground shadow-sm shadow-primary/30"
+                        : "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {cms.heroActive ? "ACTIVE" : "INACTIVE"}
+                  </button>
+                </div>
+
                 <div>
                   <label className="text-xs font-semibold text-foreground">
                     Select From Image Library
@@ -395,7 +560,7 @@ export function CmsPanel() {
                         <button
                           key={p.id}
                           onClick={() => {
-                            actions.updateCms({ heroImage: p.url === heroImg ? "" : p.url });
+                            actionsShadow.updateCms({ heroImage: p.url === heroImg ? "" : p.url });
                             triggerToast();
                           }}
                           className={`group relative overflow-hidden rounded-xl border text-left transition ${
@@ -429,7 +594,7 @@ export function CmsPanel() {
                       accept="image/*"
                       className="hidden"
                       onChange={(e) =>
-                        handleFileUpload(e, (base64) => actions.updateCms({ heroImage: base64 }))
+                        handleFileUpload(e, (base64) => actionsShadow.updateCms({ heroImage: base64 }))
                       }
                     />
                     <button
@@ -449,7 +614,7 @@ export function CmsPanel() {
                       placeholder="https://example.com/hero-dish.jpg"
                       value={cms.heroImage}
                       onChange={(e) => {
-                        actions.updateCms({ heroImage: e.target.value });
+                        actionsShadow.updateCms({ heroImage: e.target.value });
                         triggerToast();
                       }}
                       className={fieldClass}
@@ -469,7 +634,7 @@ export function CmsPanel() {
                   <input
                     value={cms.heroTitleLine1}
                     onChange={(e) => {
-                      actions.updateCms({ heroTitleLine1: e.target.value });
+                      actionsShadow.updateCms({ heroTitleLine1: e.target.value });
                       triggerToast();
                     }}
                     placeholder="Good Food."
@@ -481,7 +646,7 @@ export function CmsPanel() {
                   <input
                     value={cms.heroTitleLine2}
                     onChange={(e) => {
-                      actions.updateCms({ heroTitleLine2: e.target.value });
+                      actionsShadow.updateCms({ heroTitleLine2: e.target.value });
                       triggerToast();
                     }}
                     placeholder="Made with Love"
@@ -496,7 +661,7 @@ export function CmsPanel() {
                   <input
                     value={cms.heroCtaText}
                     onChange={(e) => {
-                      actions.updateCms({ heroCtaText: e.target.value });
+                      actionsShadow.updateCms({ heroCtaText: e.target.value });
                       triggerToast();
                     }}
                     placeholder="Order Now"
@@ -509,7 +674,7 @@ export function CmsPanel() {
                   <input
                     value={cms.heroSlogan}
                     onChange={(e) => {
-                      actions.updateCms({ heroSlogan: e.target.value });
+                      actionsShadow.updateCms({ heroSlogan: e.target.value });
                       triggerToast();
                     }}
                     placeholder="Good Food. Made with Love"
@@ -580,7 +745,7 @@ export function CmsPanel() {
                 </div>
                 <button
                   onClick={() => {
-                    actions.updateCmsAnnouncement({ enabled: !cms.announcement.enabled });
+                    actionsShadow.updateCmsAnnouncement({ enabled: !cms.announcement.enabled });
                     triggerToast();
                   }}
                   className={`rounded-full px-4 py-1.5 text-xs font-bold transition ${
@@ -600,7 +765,7 @@ export function CmsPanel() {
                     <input
                       value={cms.announcement.text}
                       onChange={(e) => {
-                        actions.updateCmsAnnouncement({ text: e.target.value });
+                        actionsShadow.updateCmsAnnouncement({ text: e.target.value });
                         triggerToast();
                       }}
                       placeholder="🎉 Today's Promo: 20% discount with code..."
@@ -615,7 +780,7 @@ export function CmsPanel() {
                     <select
                       value={cms.announcement.type}
                       onChange={(e) => {
-                        actions.updateCmsAnnouncement({
+                        actionsShadow.updateCmsAnnouncement({
                           type: e.target.value as "info" | "promo" | "warning",
                         });
                         triggerToast();
@@ -636,7 +801,7 @@ export function CmsPanel() {
                   <input
                     value={cms.announcement.link || ""}
                     onChange={(e) => {
-                      actions.updateCmsAnnouncement({ link: e.target.value });
+                      actionsShadow.updateCmsAnnouncement({ link: e.target.value });
                       triggerToast();
                     }}
                     placeholder="/vouchers or /menu"
@@ -689,7 +854,7 @@ export function CmsPanel() {
       {activeTab === "promos" && (
         <div className="space-y-6">
           <div className="grid gap-6 lg:grid-cols-12">
-            {/* Form Tambah Promo */}
+            {/* Add Promo Form */}
             <div className="space-y-4 lg:col-span-5">
               <SectionCard
                 title="Add New Promo Banner"
@@ -757,7 +922,7 @@ export function CmsPanel() {
                   <button
                     disabled={!promoTitle}
                     onClick={() => {
-                      actions.savePromo({
+                      actionsShadow.savePromo({
                         id: uid(),
                         title: promoTitle.trim(),
                         subtitle: promoSubtitle.trim(),
@@ -813,7 +978,34 @@ export function CmsPanel() {
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => {
-                              actions.deletePromo(p.id);
+                              actionsShadow.savePromo({ ...p, active: !p.active });
+                              triggerToast();
+                            }}
+                            className={`rounded-full px-2.5 py-1 text-[10px] font-bold transition ${
+                              p.active !== false
+                                ? "bg-primary/20 text-primary"
+                                : "bg-muted text-muted-foreground"
+                            }`}
+                          >
+                            {p.active !== false ? "ACTIVE" : "INACTIVE"}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setPromoTitle(p.title);
+                              setPromoSubtitle(p.subtitle);
+                              setPromoBadge(p.badge);
+                              setPromoImage(p.imageUrl || "");
+                              actionsShadow.deletePromo(p.id);
+                              triggerToast();
+                            }}
+                            className="rounded-lg p-2 text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
+                            title="Edit Promo (Pops back to form)"
+                          >
+                            <Pencil className="size-4" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              actionsShadow.deletePromo(p.id);
                               triggerToast();
                             }}
                             className="rounded-lg p-2 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
@@ -850,7 +1042,7 @@ export function CmsPanel() {
                   </div>
                   <button
                     onClick={() => {
-                      actions.updateCmsWelcome({ enabled: !cms.welcomeScreen.enabled });
+                      actionsShadow.updateCmsWelcome({ enabled: !cms.welcomeScreen.enabled });
                       triggerToast();
                     }}
                     className={`rounded-full px-4 py-1.5 text-xs font-bold transition ${
@@ -869,7 +1061,7 @@ export function CmsPanel() {
                     <input
                       value={cms.welcomeScreen.title}
                       onChange={(e) => {
-                        actions.updateCmsWelcome({ title: e.target.value });
+                        actionsShadow.updateCmsWelcome({ title: e.target.value });
                         triggerToast();
                       }}
                       placeholder="nanami"
@@ -881,7 +1073,7 @@ export function CmsPanel() {
                     <input
                       value={cms.welcomeScreen.subtitle}
                       onChange={(e) => {
-                        actions.updateCmsWelcome({ subtitle: e.target.value });
+                        actionsShadow.updateCmsWelcome({ subtitle: e.target.value });
                         triggerToast();
                       }}
                       placeholder="kitchen"
@@ -897,7 +1089,7 @@ export function CmsPanel() {
                       rows={2}
                       value={cms.welcomeScreen.slogan}
                       onChange={(e) => {
-                        actions.updateCmsWelcome({ slogan: e.target.value });
+                        actionsShadow.updateCmsWelcome({ slogan: e.target.value });
                         triggerToast();
                       }}
                       placeholder="Good Food.&#10;Made with Love"
@@ -916,7 +1108,7 @@ export function CmsPanel() {
                       max="6"
                       value={cms.welcomeScreen.durationSec}
                       onChange={(e) => {
-                        actions.updateCmsWelcome({
+                        actionsShadow.updateCmsWelcome({
                           durationSec: parseFloat(e.target.value) || 2.6,
                         });
                         triggerToast();
@@ -937,25 +1129,26 @@ export function CmsPanel() {
                     className="hidden"
                     onChange={(e) =>
                       handleFileUpload(e, (base64) =>
-                        actions.updateCmsWelcome({ imageUrl: base64 }),
+                        actionsShadow.updateCmsWelcome({ imageUrl: base64 }),
                       )
                     }
                   />
-                  <div className="grid gap-2 sm:grid-cols-2">
+                  <div className="grid gap-3 pt-2 sm:grid-cols-2">
                     <button
                       type="button"
-                      onClick={() => welcomeInputRef.current?.click()}
-                      className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-secondary/30 px-3 py-2 text-xs font-semibold text-muted-foreground transition hover:border-primary hover:text-foreground"
+                      onClick={() => setShowHeroGallery(true)}
+                      className="flex items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/5 px-3 py-2 text-xs font-semibold text-primary transition hover:bg-primary/10"
                     >
-                      <Upload className="size-4" /> Upload Splash Photo
+                      <ImageIcon className="size-4" /> Browse Media Library
                     </button>
                     <input
+                      type="url"
+                      placeholder="Or paste image URL (https://...)"
                       value={cms.welcomeScreen.imageUrl || ""}
                       onChange={(e) => {
-                        actions.updateCmsWelcome({ imageUrl: e.target.value });
+                        actionsShadow.updateCmsWelcome({ imageUrl: e.target.value });
                         triggerToast();
                       }}
-                      placeholder="Or paste image URL (https://...)"
                       className={fieldClass}
                     />
                   </div>
@@ -963,6 +1156,35 @@ export function CmsPanel() {
               </div>
             </SectionCard>
           </div>
+
+          {showHeroGallery && (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 animate-in fade-in duration-200">
+              <div className="relative max-w-4xl w-full max-h-[90vh] bg-background rounded-3xl overflow-hidden shadow-2xl flex flex-col">
+                <div className="flex items-center justify-between p-4 border-b">
+                  <div>
+                    <h3 className="font-bold">Media Library</h3>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Select Hero image</p>
+                  </div>
+                  <button 
+                    onClick={() => setShowHeroGallery(false)}
+                    className="p-1.5 hover:bg-secondary rounded-lg transition-colors"
+                  >
+                    <X className="size-5" />
+                  </button>
+                </div>
+                <div className="flex-1 overflow-y-auto p-4">
+                  <MediaGallery 
+                    selectedUrl={cms.heroImage}
+                    onSelect={(url) => {
+                      actionsShadow.updateCms({ heroImage: url });
+                      setShowHeroGallery(false);
+                      triggerToast();
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Welcome Screen Mockup */}
           <div className="space-y-4 lg:col-span-5">
@@ -1015,13 +1237,34 @@ export function CmsPanel() {
             title="Social Links & Public Contact"
             description="WhatsApp hotline, Instagram, TikTok, and Google Maps links shown to customers."
           >
-            <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block text-xs text-muted-foreground">
+            <div className="space-y-6">
+              <div className="flex items-center justify-between rounded-xl border border-border bg-secondary/30 p-3.5">
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Socials Section Status</p>
+                  <p className="text-xs text-muted-foreground">Show socials links at bottom of app.</p>
+                </div>
+                <button
+                  onClick={() => {
+                    actionsShadow.updateCmsSocials({ active: !cms.socials.active });
+                    triggerToast();
+                  }}
+                  className={`rounded-full px-4 py-1.5 text-xs font-bold transition ${
+                    cms.socials.active
+                      ? "bg-primary text-primary-foreground shadow-sm shadow-primary/30"
+                      : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {cms.socials.active ? "ACTIVE" : "INACTIVE"}
+                </button>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block text-xs text-muted-foreground">
                 Instagram Handle / URL
                 <input
                   value={cms.socials.instagram}
                   onChange={(e) => {
-                    actions.updateCmsSocials({ instagram: e.target.value });
+                    actionsShadow.updateCmsSocials({ instagram: e.target.value });
                     triggerToast();
                   }}
                   placeholder="@nanami.kitchen"
@@ -1034,7 +1277,7 @@ export function CmsPanel() {
                 <input
                   value={cms.socials.tiktok}
                   onChange={(e) => {
-                    actions.updateCmsSocials({ tiktok: e.target.value });
+                    actionsShadow.updateCmsSocials({ tiktok: e.target.value });
                     triggerToast();
                   }}
                   placeholder="@nanami.kitchen"
@@ -1047,8 +1290,8 @@ export function CmsPanel() {
                 <input
                   value={cms.socials.whatsapp}
                   onChange={(e) => {
-                    actions.updateCmsSocials({ whatsapp: e.target.value });
-                    actions.updateSettings({ whatsapp: e.target.value });
+                    actionsShadow.updateCmsSocials({ whatsapp: e.target.value });
+                    actionsShadow.updateSettings({ whatsapp: e.target.value });
                     triggerToast();
                   }}
                   placeholder="+27 82 123 4567"
@@ -1061,7 +1304,7 @@ export function CmsPanel() {
                 <input
                   value={cms.socials.mapsUrl}
                   onChange={(e) => {
-                    actions.updateCmsSocials({ mapsUrl: e.target.value });
+                    actionsShadow.updateCmsSocials({ mapsUrl: e.target.value });
                     triggerToast();
                   }}
                   placeholder="https://maps.google.com/?q=..."
@@ -1069,15 +1312,16 @@ export function CmsPanel() {
                 />
               </label>
             </div>
+          </div>
 
-            <div className="mt-4">
+          <div className="mt-4">
               <label className="block text-xs text-muted-foreground">
                 About Restaurant Story / Bio
                 <textarea
                   rows={3}
                   value={cms.aboutStory}
                   onChange={(e) => {
-                    actions.updateCms({ aboutStory: e.target.value });
+                    actionsShadow.updateCms({ aboutStory: e.target.value });
                     triggerToast();
                   }}
                   placeholder="Short story about Nanami Kitchen's origin, authentic Japanese bento recipes, and culinary passion..."
@@ -1123,7 +1367,7 @@ export function CmsPanel() {
                 <button
                   disabled={!newQuestion.trim() || !newAnswer.trim()}
                   onClick={() => {
-                    actions.addCmsFaq({
+                    actionsShadow.addCmsFaq({
                       question: newQuestion,
                       answer: newAnswer,
                       active: true,
@@ -1162,21 +1406,168 @@ export function CmsPanel() {
                             {f.answer}
                           </p>
                         </div>
-                        <button
-                          onClick={() => {
-                            actions.deleteCmsFaq(f.id);
-                            triggerToast();
-                          }}
-                          className="rounded-lg p-1.5 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
-                          aria-label={`Delete FAQ ${f.question}`}
-                        >
-                          <Trash2 className="size-4" />
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              actionsShadow.updateCmsFaq(f.id, { active: !f.active });
+                              triggerToast();
+                            }}
+                            className={`rounded-full px-2.5 py-1 text-[10px] font-bold transition ${
+                              f.active
+                                ? "bg-primary/20 text-primary"
+                                : "bg-muted text-muted-foreground"
+                            }`}
+                          >
+                            {f.active ? "ACTIVE" : "INACTIVE"}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setNewQuestion(f.question);
+                              setNewAnswer(f.answer);
+                              actionsShadow.deleteCmsFaq(f.id);
+                              triggerToast();
+                            }}
+                            className="rounded-lg p-1.5 text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
+                            title="Edit FAQ"
+                          >
+                            <Pencil className="size-4" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              actionsShadow.deleteCmsFaq(f.id);
+                              triggerToast();
+                            }}
+                            className="rounded-lg p-1.5 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
+                            aria-label={`Delete FAQ ${f.question}`}
+                          >
+                            <Trash2 className="size-4" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
+            </SectionCard>
+          </div>
+        </div>
+      )}
+
+      {/* TAB: CATALOG & MUST TRY */}
+      {activeTab === "catalog" && (
+        <div className="grid gap-6 lg:grid-cols-12">
+          <div className="space-y-6 lg:col-span-6">
+            <SectionCard
+              title="Must Try! Section Items"
+              description="Select which menu items appear in the Must Try! grid at the top of the customer catalog."
+            >
+              <div className="space-y-2">
+                {menu.map((m) => {
+                  const isMustTry = (cms.mustTryItemIds || []).includes(m.id);
+                  return (
+                    <label
+                      key={m.id}
+                      className="flex items-center justify-between rounded-xl border border-border bg-card p-3 cursor-pointer hover:bg-secondary/40 transition"
+                    >
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={m.image}
+                          alt={m.name}
+                          className="size-10 rounded-lg object-cover"
+                        />
+                        <div>
+                          <p className="text-xs font-bold text-foreground">{m.name}</p>
+                          <p className="text-[11px] text-muted-foreground">
+                            {m.category} • {rupiah(m.price)}
+                          </p>
+                        </div>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={isMustTry}
+                        onChange={(e) => {
+                          const current = cms.mustTryItemIds || ["m1", "m2", "m3", "m4"];
+                          const updated = e.target.checked
+                            ? [...current, m.id]
+                            : current.filter((id) => id !== m.id);
+                          actionsShadow.updateCms({ mustTryItemIds: updated });
+                          triggerToast();
+                        }}
+                        className="size-4 rounded border-border text-primary focus:ring-primary"
+                      />
+                    </label>
+                  );
+                })}
+              </div>
+            </SectionCard>
+          </div>
+
+          <div className="space-y-6 lg:col-span-6">
+            <SectionCard
+              title="Category Order & Renaming"
+              description="Customize category display order and rename category labels for the customer app."
+            >
+              <div className="space-y-3">
+                {(cms.categoryOrder || CATEGORIES).map((cat, idx, arr) => {
+                  const currentName = (cms.categoryNames || {})[cat] || cat;
+                  return (
+                    <div
+                      key={cat}
+                      className="flex items-center gap-2 rounded-xl border border-border bg-card p-3"
+                    >
+                      <div className="flex-1">
+                        <label className="text-[10px] font-bold text-muted-foreground uppercase">
+                          Position {idx + 1} ({cat})
+                        </label>
+                        <input
+                          type="text"
+                          value={currentName}
+                          onChange={(e) => {
+                            const newNames = {
+                              ...(cms.categoryNames || {}),
+                              [cat]: e.target.value,
+                            };
+                            actionsShadow.updateCms({ categoryNames: newNames });
+                          }}
+                          onBlur={() => triggerToast()}
+                          className={fieldClass}
+                          placeholder="Display Name"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1 pt-4">
+                        <button
+                          disabled={idx === 0}
+                          onClick={() => {
+                            const copy = [...arr];
+                            const temp = copy[idx];
+                            copy[idx] = copy[idx - 1];
+                            copy[idx - 1] = temp;
+                            actionsShadow.updateCms({ categoryOrder: copy });
+                            triggerToast();
+                          }}
+                          className="rounded p-1 bg-secondary text-xs disabled:opacity-30 hover:bg-secondary/80"
+                        >
+                          ▲
+                        </button>
+                        <button
+                          disabled={idx === arr.length - 1}
+                          onClick={() => {
+                            const copy = [...arr];
+                            const temp = copy[idx];
+                            copy[idx] = copy[idx + 1];
+                            copy[idx + 1] = temp;
+                            actionsShadow.updateCms({ categoryOrder: copy });
+                            triggerToast();
+                          }}
+                          className="rounded p-1 bg-secondary text-xs disabled:opacity-30 hover:bg-secondary/80"
+                        >
+                          ▼
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </SectionCard>
           </div>
         </div>

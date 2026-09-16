@@ -5,9 +5,10 @@ import defaultHeroImg from "@/assets/hero.jpg";
 import { useStore } from "@/lib/store";
 
 export function PromoCarousel() {
-  const { promos, cms } = useStore((s) => ({
-    promos: s.promos,
+  const { promos, cms, settings } = useStore((s) => ({
+    promos: s.promos.filter((p) => p.active !== false),
     cms: s.cms,
+    settings: s.settings,
   }));
   const [index, setIndex] = useState(0);
 
@@ -17,12 +18,49 @@ export function PromoCarousel() {
     return () => clearInterval(timer);
   }, [promos.length]);
 
-  if (promos.length === 0) return null;
+  if (cms?.heroActive === false) return null;
+  if (promos.length === 0) {
+    // Show fallback hero if no promos but hero is active
+    const bgImage = cms?.heroImage || defaultHeroImg;
+    const ctaText = cms?.heroCtaText || "Order Now";
+    return (
+      <section className="mt-2">
+        <div className="relative overflow-hidden rounded-xl border border-border/60">
+          <img
+            src={bgImage}
+            alt="Nanami Kitchen signature dish"
+            width={1024}
+            height={640}
+            className="h-32 sm:h-36 w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/85 to-transparent" />
+          <div className="absolute inset-y-0 left-0 flex w-2/3 flex-col justify-center gap-0.5 pl-3 pr-2">
+            <p className="text-[10px] font-extrabold uppercase tracking-wider text-primary">
+              SIGNATURE
+            </p>
+            <p className="text-base sm:text-lg font-black leading-tight text-primary line-clamp-1">
+              {cms?.heroTitleLine1 || "Good Food."} {cms?.heroTitleLine2 || "Made with Love"}
+            </p>
+            <p className="text-[11px] text-muted-foreground line-clamp-1">{cms?.heroSlogan || "Delicious food daily."}</p>
+            <Link
+              to="/menu"
+              className="mt-1 inline-flex w-fit items-center gap-1 rounded-lg bg-primary px-2.5 py-1 text-[11px] font-bold text-primary-foreground transition hover:brightness-105"
+            >
+              {ctaText} <ChevronRight className="size-3.5" />
+            </Link>
+          </div>
+        </div>
+      </section>
+    );
+  }
   const promo = promos[Math.min(index, promos.length - 1)];
   if (!promo) return null;
 
   const bgImage = promo.imageUrl || cms?.heroImage || defaultHeroImg;
   const ctaText = cms?.heroCtaText || "Order Now";
+  const symbol = settings?.currencySymbol || "N$";
+  const title = promo.title.replace(/\b(R|N\$)\s*(\d+)/g, `${symbol} $2`);
+  const subtitle = promo.subtitle.replace(/\b(R|N\$)\s*(\d+)/g, `${symbol} $2`);
 
   return (
     <section className="mt-2">
@@ -40,9 +78,9 @@ export function PromoCarousel() {
             {promo.badge}
           </p>
           <p className="text-base sm:text-lg font-black leading-tight text-primary line-clamp-1">
-            {promo.title}
+            {title}
           </p>
-          <p className="text-[11px] text-muted-foreground line-clamp-1">{promo.subtitle}</p>
+          <p className="text-[11px] text-muted-foreground line-clamp-1">{subtitle}</p>
           <Link
             to="/menu"
             className="mt-1 inline-flex w-fit items-center gap-1 rounded-lg bg-primary px-2.5 py-1 text-[11px] font-bold text-primary-foreground transition hover:brightness-105"

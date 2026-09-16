@@ -84,7 +84,7 @@ function OwnerHome() {
       </div>
 
       <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard label="Total Orders" value={String(orders.length)} hint="All time" />
+        <StatCard label="Total Orders" value={String(orders.length)} hint="All Time" />
         <StatCard
           label="Cancelled Orders"
           value={String(orders.filter((o) => o.status === "Cancelled").length)}
@@ -104,7 +104,7 @@ function OwnerHome() {
             {trend.map((t) => (
               <div key={t.label} className="flex flex-1 flex-col items-center gap-1.5">
                 <span className="text-[10px] text-muted-foreground">
-                  {t.total ? "R" + Math.round(t.total) : "R0"}
+                  {t.total ? rupiah(t.total) : rupiah(0)}
                 </span>
                 <div
                   className="w-full rounded-t-lg bg-primary/70"

@@ -15,36 +15,41 @@ import {
   Ticket,
   UtensilsCrossed,
   Users,
+  Image as ImageIcon,
 } from "lucide-react";
 import defaultLogo from "@/assets/nanami-logo.png";
 import { useStore } from "@/lib/store";
 
-export type DashboardRole = "admin" | "owner";
+export type DashboardRole = "admin" | "owner" | "staff";
 
 type NavItem = { to: string; label: string; icon: typeof LayoutDashboard };
 
+const STAFF_NAV: NavItem[] = [
+  { to: "/admin", label: "Kitchen Board", icon: LayoutDashboard },
+  { to: "/admin/orders", label: "Order Management", icon: ClipboardList },
+  { to: "/admin/stock", label: "Stock Availability", icon: UtensilsCrossed },
+];
+
 const ADMIN_NAV: NavItem[] = [
-  { to: "/admin", label: "Overview & Kitchen", icon: LayoutDashboard },
+  { to: "/admin", label: "Kitchen Board", icon: LayoutDashboard },
+  { to: "/admin/orders", label: "Order Management", icon: ClipboardList },
   { to: "/admin/menu", label: "Menu Catalog (CRUD)", icon: UtensilsCrossed },
-  { to: "/admin/orders", label: "Daily Orders", icon: ClipboardList },
+  { to: "/admin/media", label: "Media Library", icon: ImageIcon },
   { to: "/admin/stock", label: "Stock Availability", icon: UtensilsCrossed },
   { to: "/admin/customers", label: "Customers", icon: Users },
-  { to: "/owner/vouchers", label: "Promos & Vouchers", icon: Ticket },
-  { to: "/owner/cms", label: "Content & CMS", icon: LayoutTemplate },
-  { to: "/owner/outlets", label: "Outlets Directory", icon: Store },
-  { to: "/owner/staff", label: "Accounts & Staff", icon: ShieldCheck },
-  { to: "/owner/shipping", label: "Delivery Rates", icon: Truck },
   { to: "/admin/reports", label: "Reports & Analytics", icon: BarChart3 },
   { to: "/admin/settings", label: "Operations & Settings", icon: Settings },
 ];
 
 const OWNER_NAV: NavItem[] = [
   { to: "/owner", label: "Overview", icon: LayoutDashboard },
+  { to: "/admin/orders", label: "Order Management", icon: ClipboardList },
   { to: "/owner/finance", label: "Finance", icon: Coins },
   { to: "/owner/menu", label: "Catalog", icon: UtensilsCrossed },
+  { to: "/admin/media", label: "Media Library", icon: ImageIcon },
   { to: "/owner/cms", label: "Content CMS", icon: LayoutTemplate },
   { to: "/owner/preview", label: "Live Preview", icon: Smartphone },
-  { to: "/owner/vouchers", label: "Promos & Vouchers", icon: Ticket },
+  { to: "/owner/vouchers", label: "Vouchers & Promos", icon: Ticket },
   { to: "/owner/staff", label: "Accounts & Staff", icon: ShieldCheck },
   { to: "/owner/outlets", label: "Outlets", icon: Store },
   { to: "/owner/shipping", label: "Delivery Rates", icon: Truck },
@@ -65,9 +70,16 @@ export function DashboardShell({
   actions?: ReactNode;
   children: ReactNode;
 }) {
-  const nav = role === "owner" ? OWNER_NAV : ADMIN_NAV;
-  const roleLabel = role === "owner" ? "Owner" : "Admin";
-  const { cms, settings } = useStore((s) => ({ cms: s.cms, settings: s.settings }));
+  const { cms, settings, profile } = useStore((s) => ({
+    cms: s.cms,
+    settings: s.settings,
+    profile: s.profile,
+  }));
+  const effectiveRole = profile.role === "staff" ? "staff" : role;
+  const nav =
+    effectiveRole === "staff" ? STAFF_NAV : effectiveRole === "owner" ? OWNER_NAV : ADMIN_NAV;
+  const roleLabel =
+    effectiveRole === "staff" ? "Kitchen Staff" : effectiveRole === "owner" ? "Owner" : "Admin";
   const { pathname } = useLocation();
   const displayLogo = cms?.logoUrl || defaultLogo;
   const storeName = settings?.storeName || "Nanami Kitchen";

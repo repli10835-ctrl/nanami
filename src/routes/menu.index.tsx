@@ -17,10 +17,10 @@ export const Route = createFileRoute("/menu/")({
       {
         name: "description",
         content:
-          "Browse foods, snacks, drinks and combos from Nanami Kitchen and add them in one tap.",
+          "Browse meals, snacks, drinks and combos from Nanami Kitchen and add them in one tap.",
       },
       { property: "og:title", content: "Menu — Nanami Kitchen" },
-      { property: "og:description", content: "Foods, snacks, drinks and combos ready to order." },
+      { property: "og:description", content: "Meals, snacks, drinks and combos ready to order." },
     ],
   }),
   component: MenuPage,
@@ -29,7 +29,7 @@ export const Route = createFileRoute("/menu/")({
 function MenuPage() {
   const { category } = Route.useSearch();
   const menu = useStore((s) => s.menu);
-  const [tab, setTab] = useState<Category>(category ?? "Foods");
+  const [tab, setTab] = useState<Category>(category ?? "Meals");
   const [q, setQ] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
 

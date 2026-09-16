@@ -1,10 +1,48 @@
 import { ReactNode, useEffect, useState } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { ChefHat, Crown, LogIn, ShieldAlert, ShoppingBag, Store } from "lucide-react";
+import {
+  ChefHat,
+  Crown,
+  LogIn,
+  ShieldAlert,
+  ShoppingBag,
+  Store,
+  UtensilsCrossed,
+} from "lucide-react";
 import logo from "@/assets/nanami-logo.png";
 import { actions, useStore } from "@/lib/store";
 
 const PUBLIC_AUTH_PATHS = ["/login", "/register", "/auth"];
+
+function isCustomerRestrictedPath(pathname: string): boolean {
+  return (
+    pathname === "/profile" ||
+    pathname.startsWith("/profile/") ||
+    pathname === "/orders" ||
+    pathname.startsWith("/orders/") ||
+    pathname === "/saved-address" ||
+    pathname.startsWith("/saved-address/")
+  );
+}
+
+function isStaffAllowedAdminPath(pathname: string): boolean {
+  return (
+    pathname === "/admin" ||
+    pathname === "/admin/" ||
+    pathname === "/admin/orders" ||
+    pathname.startsWith("/admin/orders/") ||
+    pathname === "/admin/stock" ||
+    pathname.startsWith("/admin/stock/")
+  );
+}
+
+function isStaffOrAdminPath(pathname: string): boolean {
+  return pathname === "/admin" || pathname.startsWith("/admin/");
+}
+
+function isOwnerPath(pathname: string): boolean {
+  return pathname === "/owner" || pathname.startsWith("/owner/");
+}
 
 export function AuthGuard({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -13,32 +51,61 @@ export function AuthGuard({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false);
 
   const isAuthPage = PUBLIC_AUTH_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+  const isOwnerArea = isOwnerPath(pathname);
+  const isAdminArea = isStaffOrAdminPath(pathname);
+  const isCustomerMemberArea = isCustomerRestrictedPath(pathname);
 
   useEffect(() => {
     setMounted(true);
 
     if (isAuthPage) return;
 
-    if (!profile.signedIn) {
-      const targetSearch = pathname && pathname !== "/" ? { redirect: pathname } : undefined;
-      navigate({
-        to: "/login",
-        search: targetSearch,
-        replace: true,
-      });
+    // 1. Owner pages check: strictly role "owner" only
+    if (isOwnerArea) {
+      if (!profile.signedIn) {
+        navigate({ to: "/login", search: { redirect: pathname }, replace: true });
+        return;
+      }
+      if (profile.role !== "owner") {
+        navigate({ to: "/admin", replace: true });
+        return;
+      }
       return;
     }
 
-    if (pathname.startsWith("/owner") && profile.role !== "owner" && profile.role !== "admin") {
-      navigate({ to: "/admin", replace: true });
+    // 2. Admin / Kitchen pages check: staff, admin, and owner
+    if (isAdminArea) {
+      if (!profile.signedIn) {
+        navigate({ to: "/login", search: { redirect: pathname }, replace: true });
+        return;
+      }
+      if (profile.role === "user") {
+        navigate({ to: "/", replace: true });
+        return;
+      }
+      // Granular protection: staff only gets Kitchen (/admin), Orders (/admin/orders), and Stock (/admin/stock)
+      if (profile.role === "staff" && !isStaffAllowedAdminPath(pathname)) {
+        navigate({ to: "/admin", replace: true });
+        return;
+      }
       return;
     }
 
-    if (pathname.startsWith("/admin") && profile.role === "user") {
-      navigate({ to: "/", replace: true });
+    // 3. Customer member-only pages (Profile, Orders, Saved Address)
+    if (isCustomerMemberArea && !profile.signedIn) {
+      navigate({ to: "/login", search: { redirect: pathname }, replace: true });
       return;
     }
-  }, [isAuthPage, profile.signedIn, profile.role, pathname, navigate]);
+  }, [
+    isAuthPage,
+    isOwnerArea,
+    isAdminArea,
+    isCustomerMemberArea,
+    profile.signedIn,
+    profile.role,
+    pathname,
+    navigate,
+  ]);
 
   // If visiting login, register or auth, allow immediately
   if (isAuthPage) {
@@ -51,24 +118,52 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     return <>{children}</>;
   }
 
-  // Not signed in: redirect to login and prevent viewing protected pages
-  if (!profile.signedIn) {
-    return <UnauthenticatedGate pathname={pathname} />;
+  // Check Owner access (strictly owner only)
+  if (isOwnerArea) {
+    if (!profile.signedIn) {
+      return <UnauthenticatedGate pathname={pathname} title="Owner Portal Access" />;
+    }
+    if (profile.role !== "owner") {
+      return (
+        <RoleUnauthorizedGate
+          requiredRole="owner"
+          currentRole={profile.role ?? "user"}
+          message="Executive financials, staff assignments, and store settings are restricted to Owner access."
+        />
+      );
+    }
   }
 
-  // Role authorization checks
-  if (pathname.startsWith("/owner") && profile.role !== "owner" && profile.role !== "admin") {
-    return <RoleUnauthorizedGate requiredRole="owner" currentRole={profile.role ?? "user"} />;
+  // Check Admin / Staff access
+  if (isAdminArea) {
+    if (!profile.signedIn) {
+      return <UnauthenticatedGate pathname={pathname} title="Kitchen & Admin Portal Access" />;
+    }
+    if (profile.role === "user") {
+      return <RoleUnauthorizedGate requiredRole="admin" currentRole="user" />;
+    }
+    // Granular protection for staff role
+    if (profile.role === "staff" && !isStaffAllowedAdminPath(pathname)) {
+      return (
+        <RoleUnauthorizedGate
+          requiredRole="admin"
+          currentRole="staff"
+          message="Kitchen staff have access to the Kitchen Board, Orders, and Stock. Catalog CRUD, Customers, and Store Settings require Admin or Owner access."
+        />
+      );
+    }
   }
 
-  if (pathname.startsWith("/admin") && profile.role === "user") {
-    return <RoleUnauthorizedGate requiredRole="admin" currentRole="user" />;
+  // Check Customer member-only pages
+  if (isCustomerMemberArea && !profile.signedIn) {
+    return <UnauthenticatedGate pathname={pathname} title="Member Account Required" />;
   }
 
+  // All other customer routes (/, /menu, /cart, /checkout, /order-success, /tracking, /address, /vouchers) are 100% public
   return <>{children}</>;
 }
 
-function UnauthenticatedGate({ pathname }: { pathname: string }) {
+function UnauthenticatedGate({ pathname, title }: { pathname: string; title?: string }) {
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -85,10 +180,9 @@ function UnauthenticatedGate({ pathname }: { pathname: string }) {
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 text-center">
       <div className="mx-auto max-w-sm rounded-3xl border border-border bg-card p-6 shadow-xl">
         <img src={logo} alt="Nanami Kitchen" width={64} height={64} className="mx-auto size-16" />
-        <h2 className="mt-4 text-xl font-bold">Please Sign In First</h2>
+        <h2 className="mt-4 text-xl font-bold">{title || "Please Sign In First"}</h2>
         <p className="mt-2 text-xs text-muted-foreground">
-          To protect order safety and store data, Nanami Kitchen pages are accessible after logging
-          in.
+          Sign in to access your saved profile and loyalty account, or explore our menu as a guest.
         </p>
 
         <div className="mt-6 flex flex-col gap-2.5">
@@ -100,10 +194,13 @@ function UnauthenticatedGate({ pathname }: { pathname: string }) {
             <LogIn className="size-4" /> Sign In Now
           </Link>
           <Link
-            to="/register"
+            to="/"
             className="flex w-full items-center justify-center gap-2 rounded-full border border-border bg-secondary/40 py-2.5 text-xs font-semibold text-foreground hover:bg-secondary/70"
           >
-            Create New Account
+            <Store className="size-3.5" /> Continue as Guest (Storefront)
+          </Link>
+          <Link to="/register" className="text-xs text-muted-foreground hover:text-foreground pt-1">
+            Don't have an account? Register
           </Link>
         </div>
 
@@ -111,7 +208,7 @@ function UnauthenticatedGate({ pathname }: { pathname: string }) {
           <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
             Or Quick Switch Demo Account:
           </p>
-          <div className="mt-3 grid grid-cols-3 gap-2">
+          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
             <button
               onClick={() => {
                 actions.loginAsDemo("user");
@@ -121,6 +218,16 @@ function UnauthenticatedGate({ pathname }: { pathname: string }) {
             >
               <ShoppingBag className="size-4 text-primary" />
               <span className="text-[11px] font-bold">User</span>
+            </button>
+            <button
+              onClick={() => {
+                actions.loginAsDemo("staff");
+                navigate({ to: "/admin" });
+              }}
+              className="flex flex-col items-center gap-1 rounded-xl border border-border bg-secondary/30 p-2.5 text-center transition hover:bg-secondary/60"
+            >
+              <UtensilsCrossed className="size-4 text-primary" />
+              <span className="text-[11px] font-bold">Staff</span>
             </button>
             <button
               onClick={() => {
@@ -152,9 +259,11 @@ function UnauthenticatedGate({ pathname }: { pathname: string }) {
 function RoleUnauthorizedGate({
   requiredRole,
   currentRole,
+  message,
 }: {
   requiredRole: "admin" | "owner";
   currentRole: string;
+  message?: string;
 }) {
   const navigate = useNavigate();
 
@@ -168,22 +277,33 @@ function RoleUnauthorizedGate({
           Restricted to {requiredRole === "owner" ? "Owner" : "Admin / Staff"} Access
         </h2>
         <p className="mt-2 text-xs text-muted-foreground">
-          Your current account ({currentRole}) does not have permission to access {requiredRole}{" "}
-          pages.
+          {message ||
+            `Your current account (${currentRole}) does not have permission to access ${requiredRole} pages.`}
         </p>
 
         <div className="mt-6 flex flex-col gap-2">
+          {currentRole === "staff" && (
+            <button
+              onClick={() => {
+                navigate({ to: "/admin" });
+              }}
+              className="flex w-full items-center justify-center gap-2 rounded-full bg-primary py-3 text-sm font-bold text-primary-foreground shadow-sm hover:opacity-95"
+            >
+              <UtensilsCrossed className="size-4" /> Go to Kitchen Board
+            </button>
+          )}
+
           <button
             onClick={() => {
               actions.loginAsDemo(requiredRole);
               navigate({ to: `/${requiredRole}` });
             }}
-            className="flex w-full items-center justify-center gap-2 rounded-full bg-primary py-3 text-sm font-bold text-primary-foreground shadow-sm hover:opacity-95"
+            className="flex w-full items-center justify-center gap-2 rounded-full border border-border bg-secondary/40 py-2.5 text-xs font-semibold text-foreground hover:bg-secondary/70"
           >
             {requiredRole === "owner" ? (
-              <Crown className="size-4" />
+              <Crown className="size-4 text-primary" />
             ) : (
-              <ChefHat className="size-4" />
+              <ChefHat className="size-4 text-primary" />
             )}
             Switch to Demo {requiredRole.toUpperCase()}
           </button>

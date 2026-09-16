@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
-import { ChefHat, Crown, ShoppingBag, X, Zap } from "lucide-react";
+import { ChefHat, Crown, ShoppingBag, UtensilsCrossed, X, Zap } from "lucide-react";
 import { actions, useStore } from "@/lib/store";
 
 const ROLES = [
@@ -13,18 +13,27 @@ const ROLES = [
     match: (p: string) => !p.startsWith("/admin") && !p.startsWith("/owner"),
   },
   {
+    key: "staff" as const,
+    to: "/admin",
+    label: "Staff",
+    sublabel: "Kitchen",
+    icon: UtensilsCrossed,
+    match: (p: string) => p === "/admin" || p === "/admin/orders" || p === "/admin/stock",
+  },
+  {
     key: "admin" as const,
     to: "/admin",
     label: "Admin",
-    sublabel: "Kitchen",
+    sublabel: "Manager",
     icon: ChefHat,
-    match: (p: string) => p.startsWith("/admin"),
+    match: (p: string) =>
+      p.startsWith("/admin") && p !== "/admin" && p !== "/admin/orders" && p !== "/admin/stock",
   },
   {
     key: "owner" as const,
     to: "/owner",
     label: "Owner",
-    sublabel: "Owner",
+    sublabel: "Executive",
     icon: Crown,
     match: (p: string) => p.startsWith("/owner"),
   },
@@ -46,7 +55,7 @@ export function RoleSwitcher() {
     return null;
   }
 
-  function handleSelectRole(roleKey: "user" | "admin" | "owner", to: string) {
+  function handleSelectRole(roleKey: "user" | "staff" | "admin" | "owner", to: string) {
     if (!profile.signedIn || profile.role !== roleKey) {
       actions.loginAsDemo(roleKey);
     }
@@ -69,7 +78,7 @@ export function RoleSwitcher() {
   }
 
   return (
-    <div className="fixed bottom-24 right-3 z-50 rounded-2xl border border-border bg-popover/95 p-2.5 shadow-xl backdrop-blur max-w-[280px]">
+    <div className="fixed bottom-24 right-3 z-50 rounded-2xl border border-border bg-popover/95 p-2.5 shadow-xl backdrop-blur max-w-[320px]">
       <div className="mb-2 flex items-center justify-between gap-2 px-1">
         <div className="flex items-center gap-1 text-[11px] font-bold text-foreground">
           <Zap className="size-3.5 text-primary fill-primary" />
@@ -84,7 +93,7 @@ export function RoleSwitcher() {
         </button>
       </div>
 
-      <div className="grid grid-cols-3 gap-1.5">
+      <div className="grid grid-cols-4 gap-1.5">
         {ROLES.map((r) => {
           const isCurrentRoute = r.match(pathname);
           const isCurrentRole = profile.signedIn && profile.role === r.key;

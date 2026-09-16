@@ -7,12 +7,12 @@ import { actions, cartTotals, discountFor, findVoucher, rupiah, useStore } from 
 export const Route = createFileRoute("/vouchers")({
   head: () => ({
     meta: [
-      { title: "Vouchers & Promo — Nanami Kitchen" },
+      { title: "Vouchers & Promos — Nanami Kitchen" },
       {
         name: "description",
         content: "Apply promo codes and browse available Nanami Kitchen vouchers.",
       },
-      { property: "og:title", content: "Vouchers & Promo — Nanami Kitchen" },
+      { property: "og:title", content: "Vouchers & Promos — Nanami Kitchen" },
       { property: "og:description", content: "Apply promo codes and browse available vouchers." },
     ],
   }),
@@ -54,7 +54,7 @@ function Vouchers() {
         <Link to="/profile" aria-label="Back" className="rounded-full p-1 text-foreground">
           <ArrowLeft className="size-6" />
         </Link>
-        <h1 className="text-2xl font-bold">Vouchers & Promo</h1>
+        <h1 className="text-2xl font-bold">Vouchers & Promos</h1>
       </div>
 
       <div className="glow-card mt-6 flex items-center gap-3 p-4">
@@ -62,7 +62,8 @@ function Vouchers() {
         <div>
           <p className="text-sm font-semibold">{profile.points} loyalty points</p>
           <p className="text-xs text-muted-foreground">
-            Earn {settings.pointsPer10k} point for every R 100 you spend.
+            Earn {settings.pointsPer10k} point for every {settings.currencySymbol || "N$"} 100 you
+            spend.
           </p>
         </div>
       </div>
@@ -94,7 +95,7 @@ function Vouchers() {
         </p>
       )}
 
-      <h2 className="mt-7 text-lg font-semibold">Available vouchers</h2>
+      <h2 className="mt-7 text-lg font-semibold">Available Vouchers</h2>
       <div className="mt-3 space-y-3">
         {active.length === 0 && (
           <p className="text-sm text-muted-foreground">No vouchers available right now.</p>
@@ -131,7 +132,7 @@ function Vouchers() {
         to="/cart"
         className="mt-7 block rounded-full bg-primary py-3.5 text-center text-sm font-bold text-primary-foreground"
       >
-        Back to cart
+        Back to Cart
       </Link>
     </AppShell>
   );

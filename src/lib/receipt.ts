@@ -17,11 +17,23 @@ export function printReceipt(order: Order) {
           )}</td></tr>`,
       )
       .join("");
+    const vatRow =
+      order.vatAmount && order.vatAmount > 0
+        ? `<tr><td>VAT (${order.vatPercent ?? 15}%)</td><td align="right">${rupiah(order.vatAmount)}</td></tr>`
+        : "";
+    const deliveryRow =
+      order.deliveryFee > 0
+        ? `<tr><td>Delivery Fee</td><td align="right">${rupiah(order.deliveryFee)}</td></tr>`
+        : "";
+    const discountRow =
+      order.discount > 0
+        ? `<tr><td>Discount</td><td align="right">-${rupiah(order.discount)}</td></tr>`
+        : "";
     w.document.write(
       `<pre style="font-family:monospace;font-size:12px">NANAMI KITCHEN\nOrder ${order.code}\n${new Date(
         order.createdAt,
       ).toLocaleString("id-ID")}\n${order.type.toUpperCase()} · ${order.customer.name}\n</pre>` +
-        `<table style="width:100%;font-family:monospace;font-size:12px">${rows}</table>` +
+        `<table style="width:100%;font-family:monospace;font-size:12px">${rows}${vatRow}${deliveryRow}${discountRow}</table>` +
         `<pre style="font-family:monospace;font-size:12px">\nTotal ${rupiah(order.total)}\n${
           order.paymentMethod
         }</pre>`,

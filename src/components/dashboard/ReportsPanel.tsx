@@ -24,7 +24,7 @@ export function ReportsPanel() {
         <StatCard label="Today" value={rupiah(sum(today))} hint={`${today.length} orders`} />
         <StatCard label="7 Days" value={rupiah(sum(week))} hint={`${week.length} orders`} />
         <StatCard label="30 Days" value={rupiah(sum(month))} hint={`${month.length} orders`} />
-        <StatCard label="Average Order" value={rupiah(Math.round(avg))} hint="All time" />
+        <StatCard label="Average Order" value={rupiah(Math.round(avg))} hint="All Time" />
       </div>
 
       <SectionCard title="Top Selling Items">

@@ -1,20 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
-import { DailyOrdersPanel } from "@/components/dashboard/DailyOrdersPanel";
+import { OrderManagementPanel } from "@/components/dashboard/OrderManagementPanel";
 
 export const Route = createFileRoute("/admin/orders")({
   head: () => ({
     meta: [
-      { title: "Daily Orders — Admin Panel Nanami Kitchen" },
+      { title: "Order Management — Admin & Kitchen Panel Nanami Kitchen" },
       {
         name: "description",
         content:
-          "Nanami Kitchen daily order summary complete with 7-day history and receipt printing.",
+          "Manage incoming orders, track preparation stages, filter by status, search customers, and print thermal receipts.",
       },
-      { property: "og:title", content: "Daily Orders — Admin Panel Nanami Kitchen" },
+      { property: "og:title", content: "Order Management — Nanami Kitchen" },
       {
         property: "og:description",
-        content: "Daily order recap and quick history for Nanami Kitchen.",
+        content: "Scannable order workflow table with status management and customer search.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -23,10 +23,10 @@ export const Route = createFileRoute("/admin/orders")({
   component: () => (
     <DashboardShell
       role="admin"
-      title="Daily orders"
-      subtitle="Today's recap and past 7 days history"
+      title="Order Management"
+      subtitle="Search, track, and update active orders across the kitchen pipeline"
     >
-      <DailyOrdersPanel />
+      <OrderManagementPanel />
     </DashboardShell>
   ),
 });

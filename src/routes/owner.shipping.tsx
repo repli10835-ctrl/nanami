@@ -1,9 +1,12 @@
+import { useState, useEffect, useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
 import { MapPin } from "lucide-react";
 import { DashboardShell, SectionCard } from "@/components/dashboard/DashboardShell";
-import { actions, deliveryFeeFor, rupiah, useStore } from "@/lib/store";
+import { actions, deliveryFeeFor, rupiah, useStore, type Settings } from "@/lib/store";
 import { haversineKm, mapsLink, parseLatLng } from "@/lib/geo";
+import { useUnsavedChanges } from "@/hooks/useUnsavedChanges";
+import { StickySaveBar } from "@/components/StickySaveBar";
+import { UnsavedChangesPrompt } from "@/components/UnsavedChangesPrompt";
 
 export const Route = createFileRoute("/owner/shipping")({
   head: () => ({
@@ -49,16 +52,29 @@ const inputCls =
   "mt-1 w-full rounded-xl border border-input bg-secondary/40 px-3 py-2.5 text-sm outline-none focus:border-primary";
 
 function ShippingPage() {
-  const settings = useStore((s) => s.settings);
+  const globalSettings = useStore((s) => s.settings);
+  const [localSettings, setLocalSettings] = useState(() => globalSettings);
+  const [saving, setSaving] = useState(false);
 
-  const [mapsUrl, setMapsUrl] = useState(settings.storeMapsUrl);
+  const [mapsUrl, setMapsUrl] = useState(() => localSettings.storeMapsUrl);
   const [mapsError, setMapsError] = useState("");
   const [testUrl, setTestUrl] = useState("");
   const [testSubtotal, setTestSubtotal] = useState(150);
 
+  useEffect(() => {
+    setLocalSettings(globalSettings);
+    setMapsUrl(globalSettings.storeMapsUrl);
+  }, [globalSettings]);
+
+  const { isDirty, markSaved, resetToSnapshot, blocker } = useUnsavedChanges(localSettings);
+
+  const handleFieldChange = (patch: Partial<Settings>) => {
+    setLocalSettings((prev) => ({ ...prev, ...patch }));
+  };
+
   const storePoint = useMemo(
-    () => ({ lat: settings.storeLat, lng: settings.storeLng }),
-    [settings.storeLat, settings.storeLng],
+    () => ({ lat: localSettings.storeLat, lng: localSettings.storeLng }),
+    [localSettings.storeLat, localSettings.storeLng],
   );
 
   function saveStorePoint() {
@@ -70,24 +86,43 @@ function ShippingPage() {
       return;
     }
     setMapsError("");
-    actions.updateSettings({ storeMapsUrl: mapsUrl.trim(), storeLat: p.lat, storeLng: p.lng });
+    handleFieldChange({ storeMapsUrl: mapsUrl.trim(), storeLat: p.lat, storeLng: p.lng });
   }
 
   const test = useMemo(() => {
     const p = parseLatLng(testUrl);
     if (!p) return null;
     const straight = haversineKm(storePoint, p);
-    const km = straight * (settings.routeFactor || 1);
+    const km = straight * (localSettings.routeFactor || 1);
     return {
       point: p,
       straight,
       km,
-      fee: deliveryFeeFor(settings, "delivery", km, testSubtotal),
-      outOfRange: km > settings.maxRadiusKm,
+      fee: deliveryFeeFor(localSettings, "delivery", km, testSubtotal),
+      outOfRange: km > localSettings.maxRadiusKm,
     };
-  }, [testUrl, testSubtotal, settings, storePoint]);
+  }, [testUrl, testSubtotal, localSettings, storePoint]);
 
-  const table = [1, 2, 3, 5, 7, 10].filter((km) => km <= settings.maxRadiusKm + 2);
+  const table = [1, 2, 3, 5, 7, 10].filter((km) => km <= localSettings.maxRadiusKm + 2);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await actions.updateSettings(localSettings);
+      markSaved(localSettings);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleReset = () => {
+    const snapshot = resetToSnapshot();
+    setLocalSettings(snapshot);
+    setMapsUrl(snapshot.storeMapsUrl);
+    setMapsError("");
+  };
 
   return (
     <DashboardShell
@@ -95,7 +130,7 @@ function ShippingPage() {
       title="Delivery rates"
       subtitle="Calculate delivery fees from Google Maps business location to customer location"
     >
-      <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+      <div className="grid gap-4 lg:grid-cols-2 lg:items-start pb-20">
         <SectionCard
           title="Business store location"
           description="Delivery distance is calculated starting from this point."
@@ -107,6 +142,7 @@ function ShippingPage() {
             >
               <input
                 value={mapsUrl}
+                type="text"
                 onChange={(e) => setMapsUrl(e.target.value)}
                 placeholder="https://www.google.com/maps?q=-26.145,28.043"
                 className={inputCls}
@@ -115,10 +151,11 @@ function ShippingPage() {
             {mapsError ? <p className="text-xs text-destructive">{mapsError}</p> : null}
             <div className="flex flex-wrap items-center gap-2">
               <button
+                type="button"
                 onClick={saveStorePoint}
-                className="rounded-full bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
+                className="rounded-full bg-primary px-4 py-2 text-xs font-bold text-primary-foreground cursor-pointer hover:brightness-105"
               >
-                Save point
+                Apply Location Point
               </button>
               <a
                 href={mapsLink(storePoint)}
@@ -140,40 +177,43 @@ function ShippingPage() {
           description="Delivery Fee = Base fee + (distance in km × rate per km)."
         >
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Base fee (R)">
+            <Field label={`Base fee (${localSettings.currencySymbol || "N$"})`}>
               <input
                 type="number"
                 min={0}
-                value={settings.baseFee}
-                onChange={(e) => actions.updateSettings({ baseFee: Number(e.target.value) || 0 })}
+                value={localSettings.baseFee}
+                onChange={(e) => handleFieldChange({ baseFee: Number(e.target.value) || 0 })}
                 className={inputCls}
               />
             </Field>
-            <Field label="Rate per km (R)">
+            <Field label={`Rate per km (${localSettings.currencySymbol || "N$"})`}>
               <input
                 type="number"
                 min={0}
-                value={settings.feePerKm}
-                onChange={(e) => actions.updateSettings({ feePerKm: Number(e.target.value) || 0 })}
+                value={localSettings.feePerKm}
+                onChange={(e) => handleFieldChange({ feePerKm: Number(e.target.value) || 0 })}
                 className={inputCls}
               />
             </Field>
-            <Field label="Minimum delivery fee (R)">
+            <Field label={`Minimum delivery fee (${localSettings.currencySymbol || "N$"})`}>
               <input
                 type="number"
                 min={0}
-                value={settings.minFee}
-                onChange={(e) => actions.updateSettings({ minFee: Number(e.target.value) || 0 })}
+                value={localSettings.minFee}
+                onChange={(e) => handleFieldChange({ minFee: Number(e.target.value) || 0 })}
                 className={inputCls}
               />
             </Field>
-            <Field label="Free delivery threshold (R)" hint="Set to 0 to disable free delivery.">
+            <Field
+              label={`Free delivery threshold (${localSettings.currencySymbol || "N$"})`}
+              hint="Set to 0 to disable free delivery."
+            >
               <input
                 type="number"
                 min={0}
-                value={settings.freeDeliveryAbove}
+                value={localSettings.freeDeliveryAbove}
                 onChange={(e) =>
-                  actions.updateSettings({ freeDeliveryAbove: Number(e.target.value) || 0 })
+                  handleFieldChange({ freeDeliveryAbove: Number(e.target.value) || 0 })
                 }
                 className={inputCls}
               />
@@ -182,9 +222,9 @@ function ShippingPage() {
               <input
                 type="number"
                 min={1}
-                value={settings.maxRadiusKm}
+                value={localSettings.maxRadiusKm}
                 onChange={(e) =>
-                  actions.updateSettings({ maxRadiusKm: Math.max(1, Number(e.target.value) || 1) })
+                  handleFieldChange({ maxRadiusKm: Math.max(1, Number(e.target.value) || 1) })
                 }
                 className={inputCls}
               />
@@ -197,9 +237,9 @@ function ShippingPage() {
                 type="number"
                 step="0.1"
                 min={1}
-                value={settings.routeFactor}
+                value={localSettings.routeFactor}
                 onChange={(e) =>
-                  actions.updateSettings({ routeFactor: Math.max(1, Number(e.target.value) || 1) })
+                  handleFieldChange({ routeFactor: Math.max(1, Number(e.target.value) || 1) })
                 }
                 className={inputCls}
               />
@@ -220,7 +260,7 @@ function ShippingPage() {
                 className={inputCls}
               />
             </Field>
-            <Field label="Order subtotal (R)">
+            <Field label={`Order subtotal (${localSettings.currencySymbol || "N$"})`}>
               <input
                 type="number"
                 min={0}
@@ -241,7 +281,7 @@ function ShippingPage() {
                 <p className="mt-1 text-lg font-bold text-primary">{rupiah(test.fee)}</p>
                 {test.outOfRange ? (
                   <p className="mt-1 text-xs text-destructive">
-                    Outside maximum delivery radius of {settings.maxRadiusKm} km.
+                    Outside maximum delivery radius of {localSettings.maxRadiusKm} km.
                   </p>
                 ) : null}
               </div>
@@ -253,17 +293,20 @@ function ShippingPage() {
           <ul className="divide-y divide-border text-sm">
             {table.map((km) => (
               <li key={km} className="flex items-center justify-between py-2.5">
-                <span className={km > settings.maxRadiusKm ? "text-muted-foreground" : ""}>
-                  {km} km {km > settings.maxRadiusKm ? "(outside radius)" : ""}
+                <span className={km > localSettings.maxRadiusKm ? "text-muted-foreground" : ""}>
+                  {km} km {km > localSettings.maxRadiusKm ? "(outside radius)" : ""}
                 </span>
                 <span className="font-semibold">
-                  {rupiah(deliveryFeeFor(settings, "delivery", km))}
+                  {rupiah(deliveryFeeFor(localSettings, "delivery", km))}
                 </span>
               </li>
             ))}
           </ul>
         </SectionCard>
       </div>
+
+      <StickySaveBar isDirty={isDirty} onSave={handleSave} onReset={handleReset} saving={saving} />
+      <UnsavedChangesPrompt blocker={blocker} />
     </DashboardShell>
   );
 }
