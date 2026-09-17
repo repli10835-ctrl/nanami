@@ -233,59 +233,6 @@ function LoginPage() {
             >
               {loading ? "Signing in..." : "Sign In"}
             </button>
-
-            {/* Quick credential selection for fast switching */}
-            <div className="mt-4 pt-3 border-t border-border">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
-                Quick autofill role accounts:
-              </p>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEmail("owner@nanami.id");
-                    setPassword("owner123");
-                    setError("");
-                  }}
-                  className="rounded-lg border border-border bg-secondary/40 px-2.5 py-1 text-[11px] font-semibold text-foreground hover:bg-secondary transition"
-                >
-                  👑 Owner (owner@nanami.id)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEmail("admin@nanami.id");
-                    setPassword("admin123");
-                    setError("");
-                  }}
-                  className="rounded-lg border border-border bg-secondary/40 px-2.5 py-1 text-[11px] font-semibold text-foreground hover:bg-secondary transition"
-                >
-                  🍳 Admin (admin@nanami.id)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEmail("staff@nanami.id");
-                    setPassword("staff123");
-                    setError("");
-                  }}
-                  className="rounded-lg border border-border bg-secondary/40 px-2.5 py-1 text-[11px] font-semibold text-foreground hover:bg-secondary transition"
-                >
-                  🥢 Staff (staff@nanami.id)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEmail("user@nanami.id");
-                    setPassword("user123");
-                    setError("");
-                  }}
-                  className="rounded-lg border border-border bg-secondary/40 px-2.5 py-1 text-[11px] font-semibold text-foreground hover:bg-secondary transition"
-                >
-                  🛍️ User (user@nanami.id)
-                </button>
-              </div>
-            </div>
           </form>
         </div>
 
