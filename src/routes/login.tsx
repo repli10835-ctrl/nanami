@@ -57,6 +57,7 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   function handleDirectRoute(role?: "user" | "admin" | "owner" | "staff") {
     if (role === "owner") {
@@ -73,15 +74,22 @@ function LoginPage() {
     }
   }
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    const result = actions.signIn(email, password);
-    if (!result.ok) {
-      setError(result.error ?? "Invalid email or password. Please check your credentials.");
-      return;
+    setLoading(true);
+    try {
+      const result = await actions.signIn(email, password);
+      if (!result.ok) {
+        setError(result.error ?? "Invalid email or password. Please check your credentials.");
+        return;
+      }
+      handleDirectRoute(result.role);
+    } catch {
+      setError("An unexpected error occurred during sign in. Please try again.");
+    } finally {
+      setLoading(false);
     }
-    handleDirectRoute(result.role);
   }
 
   if (profile.signedIn) {
@@ -220,11 +228,64 @@ function LoginPage() {
 
             <button
               type="submit"
-              disabled={!email || !password}
+              disabled={!email || !password || loading}
               className="!mt-5 w-full rounded-full bg-primary py-3.5 text-sm font-bold text-primary-foreground shadow-sm transition hover:opacity-95 disabled:opacity-40"
             >
-              Sign In
+              {loading ? "Signing in..." : "Sign In"}
             </button>
+
+            {/* Quick credential selection for fast switching */}
+            <div className="mt-4 pt-3 border-t border-border">
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                Quick autofill role accounts:
+              </p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail("owner@nanami.id");
+                    setPassword("owner123");
+                    setError("");
+                  }}
+                  className="rounded-lg border border-border bg-secondary/40 px-2.5 py-1 text-[11px] font-semibold text-foreground hover:bg-secondary transition"
+                >
+                  👑 Owner (owner@nanami.id)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail("admin@nanami.id");
+                    setPassword("admin123");
+                    setError("");
+                  }}
+                  className="rounded-lg border border-border bg-secondary/40 px-2.5 py-1 text-[11px] font-semibold text-foreground hover:bg-secondary transition"
+                >
+                  🍳 Admin (admin@nanami.id)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail("staff@nanami.id");
+                    setPassword("staff123");
+                    setError("");
+                  }}
+                  className="rounded-lg border border-border bg-secondary/40 px-2.5 py-1 text-[11px] font-semibold text-foreground hover:bg-secondary transition"
+                >
+                  🥢 Staff (staff@nanami.id)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail("user@nanami.id");
+                    setPassword("user123");
+                    setError("");
+                  }}
+                  className="rounded-lg border border-border bg-secondary/40 px-2.5 py-1 text-[11px] font-semibold text-foreground hover:bg-secondary transition"
+                >
+                  🛍️ User (user@nanami.id)
+                </button>
+              </div>
+            </div>
           </form>
         </div>
 

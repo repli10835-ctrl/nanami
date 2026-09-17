@@ -16,9 +16,140 @@ async function getDb() {
   return { sql, initDb, seedDbIfEmpty };
 }
 
+export function getEnvAccounts(): Account[] {
+  const accounts: Account[] = [];
+  const envOwnerEmail = process.env["OWNER_EMAIL"]?.trim().toLowerCase();
+  const envOwnerPass = process.env["OWNER_PASSWORD"];
+  if (envOwnerEmail && envOwnerPass) {
+    accounts.push({
+      id: "env-owner",
+      email: envOwnerEmail,
+      password: envOwnerPass,
+      name: "Nanami Owner",
+      phone: "0834567890",
+      role: "owner",
+      address: "HQ Nanami Kitchen, Jakarta",
+      addresses: ["HQ Nanami Kitchen, Jakarta"],
+      points: 1500,
+    });
+  }
+
+  const envAdminEmail = process.env["ADMIN_EMAIL"]?.trim().toLowerCase();
+  const envAdminPass = process.env["ADMIN_PASSWORD"];
+  if (envAdminEmail && envAdminPass) {
+    accounts.push({
+      id: "env-admin",
+      email: envAdminEmail,
+      password: envAdminPass,
+      name: "Kitchen Admin",
+      phone: "0823456789",
+      role: "admin",
+      address: "Kitchen 1, Nanami Kitchen",
+      addresses: ["Kitchen 1, Nanami Kitchen"],
+      points: 120,
+    });
+  }
+
+  const envStaffEmail = process.env["STAFF_EMAIL"]?.trim().toLowerCase();
+  const envStaffPass = process.env["STAFF_PASSWORD"];
+  if (envStaffEmail && envStaffPass) {
+    accounts.push({
+      id: "env-staff",
+      email: envStaffEmail,
+      password: envStaffPass,
+      name: "Kitchen Staff",
+      phone: "0812-5555-6666",
+      role: "staff",
+      address: "Nanami Kitchen Line 1",
+      addresses: ["Nanami Kitchen Line 1"],
+      points: 0,
+    });
+  }
+
+  return accounts;
+}
+
+export const loginServerFn = createServerFn({ method: "POST" })
+  .validator((d: { email: string; password: string }) => d)
+  .handler(async ({ data }) => {
+    const cleanEmail = data.email.trim().toLowerCase();
+    const cleanPassword = data.password;
+
+    // 1. Check process.env accounts
+    const envAccounts = getEnvAccounts();
+    const envMatch = envAccounts.find(
+      (a) => a.email.toLowerCase() === cleanEmail && a.password === cleanPassword,
+    );
+    if (envMatch) {
+      return { ok: true, account: envMatch };
+    }
+
+    // 2. Check PostgreSQL database
+    const { sql } = await getDb();
+    if (sql) {
+      try {
+        const rows = (await sql`
+          SELECT * FROM accounts 
+          WHERE LOWER(email) = ${cleanEmail} AND password = ${cleanPassword} 
+          LIMIT 1
+        `) as any[];
+        if (rows.length > 0) {
+          const a = rows[0];
+          return {
+            ok: true,
+            account: {
+              id: a.id,
+              email: a.email,
+              password: a.password,
+              name: a.name,
+              phone: a.phone,
+              role: (a.role || "user") as "user" | "admin" | "owner" | "staff",
+              address: a.address,
+              addresses: a.addresses || [],
+              points: a.points || 0,
+            },
+          };
+        }
+      } catch (err) {
+        console.warn("DB login lookup failed:", err);
+      }
+    }
+
+    // 3. Check seed accounts
+    const { seedAccounts } = await import("./seed-data");
+    const seedMatch = seedAccounts.find(
+      (a) => a.email.toLowerCase() === cleanEmail && a.password === cleanPassword,
+    );
+    if (seedMatch) {
+      return { ok: true, account: seedMatch as unknown as Account };
+    }
+
+    return { ok: false, error: "Invalid email or password." };
+  });
+
 export const getDatabaseState = createServerFn({ method: "GET" }).handler(async () => {
+  const envAccounts = getEnvAccounts();
   const { sql, initDb, seedDbIfEmpty } = await getDb();
-  if (!sql) return null;
+  if (!sql) {
+    const { seedState } = await import("./seed-data");
+    const mergedAccounts: Account[] = [...envAccounts];
+    for (const sa of seedState.accounts) {
+      if (!mergedAccounts.some((a) => a.email.toLowerCase() === sa.email.toLowerCase())) {
+        mergedAccounts.push(sa);
+      }
+    }
+    return {
+      settings: seedState.settings,
+      cms: seedState.cms,
+      menu: seedState.menu,
+      orders: seedState.orders,
+      promos: seedState.promos,
+      vouchers: seedState.vouchers,
+      accounts: mergedAccounts,
+      staff: seedState.staff,
+      mediaAssets: [],
+    };
+  }
   try {
     const ok = await initDb();
     if (!ok) {
@@ -39,6 +170,25 @@ export const getDatabaseState = createServerFn({ method: "GET" }).handler(async 
     const accounts = (await sql`SELECT * FROM accounts ORDER BY id`) as any[];
     const staff = (await sql`SELECT * FROM staff ORDER BY created_at DESC`) as any[];
     const media = (await sql`SELECT * FROM media_assets ORDER BY uploaded_at DESC`) as any[];
+
+    const mappedAccounts: Account[] = accounts.map((a) => ({
+      id: a.id,
+      email: a.email,
+      password: a.password,
+      name: a.name,
+      phone: a.phone,
+      role: a.role,
+      address: a.address,
+      addresses: a.addresses,
+      points: a.points,
+    }));
+
+    const mergedAccounts: Account[] = [...envAccounts];
+    for (const a of mappedAccounts) {
+      if (!mergedAccounts.some((ea) => ea.email.toLowerCase() === a.email.toLowerCase())) {
+        mergedAccounts.push(a);
+      }
+    }
 
     return {
       settings: settings[0]?.data,
@@ -93,17 +243,7 @@ export const getDatabaseState = createServerFn({ method: "GET" }).handler(async 
         minSpend: Number(v.min_spend),
         active: v.active,
       })),
-      accounts: accounts.map((a) => ({
-        id: a.id,
-        email: a.email,
-        password: a.password,
-        name: a.name,
-        phone: a.phone,
-        role: a.role,
-        address: a.address,
-        addresses: a.addresses,
-        points: a.points,
-      })),
+      accounts: mergedAccounts,
       staff: staff.map((s) => ({
         id: s.id,
         name: s.name,

@@ -145,6 +145,8 @@ export async function initDb() {
       )
     `;
 
+    await syncEnvAccounts();
+
     console.log("PostgreSQL tables checked/created successfully.");
     isInitialized = true;
     return true;
@@ -153,6 +155,75 @@ export async function initDb() {
     // Fall back silently to the default state/in-memory store.
     isInitialized = false;
     return false;
+  }
+}
+
+export async function syncEnvAccounts() {
+  if (!sql) return;
+  try {
+    const envAccounts = [
+      process.env["OWNER_EMAIL"] && process.env["OWNER_PASSWORD"]
+        ? {
+            id: "env-owner",
+            email: process.env["OWNER_EMAIL"].trim().toLowerCase(),
+            password: process.env["OWNER_PASSWORD"],
+            name: "Nanami Owner",
+            phone: "0834567890",
+            role: "owner",
+            address: "HQ Nanami Kitchen, Jakarta",
+            addresses: ["HQ Nanami Kitchen, Jakarta"],
+            points: 1500,
+          }
+        : null,
+      process.env["ADMIN_EMAIL"] && process.env["ADMIN_PASSWORD"]
+        ? {
+            id: "env-admin",
+            email: process.env["ADMIN_EMAIL"].trim().toLowerCase(),
+            password: process.env["ADMIN_PASSWORD"],
+            name: "Kitchen Admin",
+            phone: "0823456789",
+            role: "admin",
+            address: "Kitchen 1, Nanami Kitchen",
+            addresses: ["Kitchen 1, Nanami Kitchen"],
+            points: 120,
+          }
+        : null,
+      process.env["STAFF_EMAIL"] && process.env["STAFF_PASSWORD"]
+        ? {
+            id: "env-staff",
+            email: process.env["STAFF_EMAIL"].trim().toLowerCase(),
+            password: process.env["STAFF_PASSWORD"],
+            name: "Kitchen Staff",
+            phone: "0812-5555-6666",
+            role: "staff",
+            address: "Nanami Kitchen Line 1",
+            addresses: ["Nanami Kitchen Line 1"],
+            points: 0,
+          }
+        : null,
+    ].filter(Boolean);
+
+    for (const acc of envAccounts) {
+      if (!acc) continue;
+      await sql`
+        INSERT INTO accounts (id, email, password, name, phone, role, address, addresses, points)
+        VALUES (${acc.id}, ${acc.email}, ${acc.password}, ${acc.name}, ${acc.phone}, ${acc.role}, ${acc.address}, ${sql.json(acc.addresses)}, ${acc.points})
+        ON CONFLICT (email) DO UPDATE SET
+          password = EXCLUDED.password,
+          role = EXCLUDED.role,
+          name = EXCLUDED.name
+      `;
+      await sql`
+        INSERT INTO staff (id, name, email, phone, role, active, created_at)
+        VALUES (${acc.id}, ${acc.name}, ${acc.email}, ${acc.phone}, ${acc.role}, true, ${Date.now()})
+        ON CONFLICT (email) DO UPDATE SET
+          role = EXCLUDED.role,
+          name = EXCLUDED.name,
+          active = true
+      `;
+    }
+  } catch (err) {
+    console.warn("Could not sync env account into db:", err);
   }
 }
 

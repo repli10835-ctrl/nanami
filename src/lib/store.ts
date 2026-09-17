@@ -20,6 +20,7 @@ import {
   deleteMediaAssetDb,
   updateMediaAssetUsageDb,
   deleteAccountDb,
+  loginServerFn,
 } from "./server-functions";
 import { formatCurrency, setCurrencySymbol } from "./currency";
 
@@ -372,7 +373,51 @@ export const seedMenu: MenuItem[] = [
 
 export const DEMO_ACCOUNTS: Account[] = [
   {
+    id: "demo-owner",
+    email: "owner@nanami.id",
+    password: "owner123",
+    name: "Nanami Owner",
+    phone: "0834567890",
+    role: "owner",
+    address: "HQ Nanami Kitchen, Jakarta",
+    addresses: ["HQ Nanami Kitchen, Jakarta"],
+    points: 1500,
+  },
+  {
+    id: "demo-admin",
+    email: "admin@nanami.id",
+    password: "admin123",
+    name: "Kitchen Admin",
+    phone: "0823456789",
+    role: "admin",
+    address: "Kitchen 1, Nanami Kitchen",
+    addresses: ["Kitchen 1, Nanami Kitchen"],
+    points: 120,
+  },
+  {
+    id: "demo-staff",
+    email: "staff@nanami.id",
+    password: "staff123",
+    name: "Kitchen Staff",
+    phone: "0812-5555-6666",
+    role: "staff",
+    address: "Nanami Kitchen Line 1",
+    addresses: ["Nanami Kitchen Line 1"],
+    points: 0,
+  },
+  {
     id: "demo-user",
+    email: "user@nanami.id",
+    password: "user123",
+    name: "Customer Nanami",
+    phone: "0812345678",
+    role: "user",
+    address: "Jl. Sudirman No. 10, Jakarta",
+    addresses: ["Jl. Sudirman No. 10, Jakarta"],
+    points: 350,
+  },
+  {
+    id: "legacy-user",
     email: "user@nanamikitchen.com",
     password: "user123",
     name: "David Smith",
@@ -383,7 +428,7 @@ export const DEMO_ACCOUNTS: Account[] = [
     points: 350,
   },
   {
-    id: "demo-admin",
+    id: "legacy-admin",
     email: "admin@nanamikitchen.com",
     password: "admin123",
     name: "Sarah Jenkins",
@@ -394,7 +439,7 @@ export const DEMO_ACCOUNTS: Account[] = [
     points: 120,
   },
   {
-    id: "demo-staff",
+    id: "legacy-staff",
     email: "staff@nanamikitchen.com",
     password: "staff123",
     name: "David Miller (Kitchen)",
@@ -405,7 +450,7 @@ export const DEMO_ACCOUNTS: Account[] = [
     points: 0,
   },
   {
-    id: "demo-owner",
+    id: "legacy-owner",
     email: "owner@nanamikitchen.com",
     password: "owner123",
     name: "Nanami Miller",
@@ -569,8 +614,8 @@ const defaultState: State = {
   staff: [
     {
       id: "s1",
-      name: "Nanami Miller",
-      email: "owner@nanamikitchen.com",
+      name: "Nanami Owner",
+      email: "owner@nanami.id",
       phone: "0812-1111-2222",
       role: "owner",
       active: true,
@@ -578,8 +623,8 @@ const defaultState: State = {
     },
     {
       id: "s2",
-      name: "Rina Adams",
-      email: "rina@nanamikitchen.com",
+      name: "Kitchen Admin",
+      email: "admin@nanami.id",
       phone: "0812-3333-4444",
       role: "admin",
       active: true,
@@ -587,12 +632,21 @@ const defaultState: State = {
     },
     {
       id: "s3",
-      name: "David Miller",
-      email: "david@nanamikitchen.com",
+      name: "Kitchen Staff",
+      email: "staff@nanami.id",
       phone: "0812-5555-6666",
       role: "staff",
       active: true,
       createdAt: Date.parse("2025-06-18"),
+    },
+    {
+      id: "s4",
+      name: "Nanami Miller",
+      email: "owner@nanamikitchen.com",
+      phone: "0812-1111-2222",
+      role: "owner",
+      active: true,
+      createdAt: Date.parse("2025-01-10"),
     },
   ],
   adminUnlocked: false,
@@ -600,11 +654,35 @@ const defaultState: State = {
   cms: defaultCmsContent,
 };
 
+if (typeof window !== "undefined") {
+  try {
+    const saved = localStorage.getItem("nanami_auth_profile");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed && parsed.signedIn) {
+        defaultState.profile = parsed;
+        defaultState.adminUnlocked =
+          parsed.role === "admin" || parsed.role === "owner" || parsed.role === "staff";
+      }
+    }
+  } catch (e) {
+    console.debug(e);
+  }
+}
+
 let state: State = defaultState;
 const listeners = new Set<() => void>();
 
 function set(updater: (s: State) => State) {
   state = updater(state);
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem("nanami_auth_profile", JSON.stringify(state.profile));
+      localStorage.setItem("nanami_admin_unlocked", JSON.stringify(state.adminUnlocked));
+    } catch (e) {
+      console.debug(e);
+    }
+  }
   listeners.forEach((l) => l());
 }
 
@@ -751,14 +829,32 @@ export const actions = {
     saveAccountDb({ data: account }).catch(console.error);
     return { ok: true, role: "user" };
   },
-  signIn(
+  async signIn(
     email: string,
     password: string,
-  ): { ok: boolean; error?: string; role?: "user" | "admin" | "owner" | "staff" } {
+  ): Promise<{ ok: boolean; error?: string; role?: "user" | "admin" | "owner" | "staff" }> {
     const clean = email.trim().toLowerCase();
-    const account =
-      state.accounts.find((a) => a.email.toLowerCase() === clean) ||
-      DEMO_ACCOUNTS.find((a) => a.email.toLowerCase() === clean);
+    let account =
+      state.accounts.find((a) => a.email.toLowerCase() === clean && a.password === password) ||
+      DEMO_ACCOUNTS.find((a) => a.email.toLowerCase() === clean && a.password === password);
+
+    if (!account) {
+      try {
+        const res = await loginServerFn({ data: { email: clean, password } });
+        if (res.ok && res.account) {
+          account = res.account;
+          set((s) => ({
+            ...s,
+            accounts: s.accounts.some((a) => a.email.toLowerCase() === clean)
+              ? s.accounts.map((a) => (a.email.toLowerCase() === clean ? account! : a))
+              : [...s.accounts, account!],
+          }));
+        }
+      } catch (err) {
+        console.warn("Server login fallback error:", err);
+      }
+    }
+
     if (!account || account.password !== password)
       return { ok: false, error: "Invalid email or password." };
 
@@ -768,14 +864,16 @@ export const actions = {
       adminUnlocked: role === "admin" || role === "owner" || role === "staff",
       profile: {
         ...s.profile,
-        name: account.name,
-        email: account.email,
-        phone: account.phone,
+        name: account!.name,
+        email: account!.email,
+        phone: account!.phone,
         role,
-        address: account.address || s.profile.address,
+        address: account!.address || s.profile.address,
         addresses:
-          account.addresses && account.addresses.length ? account.addresses : s.profile.addresses,
-        points: account.points !== undefined ? account.points : s.profile.points,
+          account!.addresses && account!.addresses.length
+            ? account!.addresses
+            : s.profile.addresses,
+        points: account!.points !== undefined ? account!.points : s.profile.points,
         signedIn: true,
         method: "Email",
       },
@@ -789,7 +887,24 @@ export const actions = {
   } {
     const demo = DEMO_ACCOUNTS.find((a) => a.role === role);
     if (!demo) return { ok: false, error: "Demo account not found." };
-    return this.signIn(demo.email, demo.password);
+    const cleanRole = demo.role ?? role;
+    set((s) => ({
+      ...s,
+      adminUnlocked: cleanRole === "admin" || cleanRole === "owner" || cleanRole === "staff",
+      profile: {
+        ...s.profile,
+        name: demo.name,
+        email: demo.email,
+        phone: demo.phone,
+        role: cleanRole,
+        address: demo.address || s.profile.address,
+        addresses: demo.addresses && demo.addresses.length ? demo.addresses : s.profile.addresses,
+        points: demo.points !== undefined ? demo.points : s.profile.points,
+        signedIn: true,
+        method: "Demo",
+      },
+    }));
+    return { ok: true, role: cleanRole };
   },
   changePassword(currentPassword: string, newPassword: string): { ok: boolean; error?: string } {
     const email = state.profile.email;
@@ -805,6 +920,14 @@ export const actions = {
     return { ok: true };
   },
   signOut() {
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.removeItem("nanami_auth_profile");
+        localStorage.removeItem("nanami_admin_unlocked");
+      } catch (e) {
+        console.debug(e);
+      }
+    }
     set((s) => ({ ...s, profile: { ...defaultState.profile }, adminUnlocked: false }));
   },
   unlockAdmin(password: string): boolean {
