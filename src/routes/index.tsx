@@ -23,6 +23,8 @@ import {
   defaultCmsContent,
   rupiah,
   useStore,
+  resolveMenuImage,
+  handleImageError,
   type MenuItem,
 } from "@/lib/store";
 
@@ -288,9 +290,11 @@ function Home() {
               <button onClick={() => setActive(m)} className="block w-full text-left">
                 <div className="p-1.5 pb-0">
                   <img
-                    src={m.image}
+                    src={resolveMenuImage(m.image)}
                     alt={m.name}
                     loading="lazy"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => handleImageError(e)}
                     className="aspect-square w-full rounded-lg object-cover"
                   />
                 </div>
@@ -344,9 +348,11 @@ function Home() {
                       aria-label={m.name}
                     >
                       <img
-                        src={m.image}
+                        src={resolveMenuImage(m.image)}
                         alt={m.name}
                         loading="lazy"
+                        referrerPolicy="no-referrer"
+                        onError={(e) => handleImageError(e)}
                         className="size-20 rounded-lg object-cover"
                       />
                     </button>

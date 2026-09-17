@@ -22,6 +22,8 @@ import {
   findVoucher,
   rupiah,
   useStore,
+  resolveMenuImage,
+  handleImageError,
 } from "@/lib/store";
 import { haversineKm } from "@/lib/geo";
 import mapImg from "@/assets/checkout-map.jpg";
@@ -581,7 +583,7 @@ function Checkout() {
             <div className="mt-4 border-t border-border" />
             <div className="mt-4 space-y-5">
               {cart.map((line) => {
-                const img = menu.find((m) => m.id === line.itemId)?.image;
+                const img = resolveMenuImage(menu.find((m) => m.id === line.itemId)?.image);
                 return (
                   <div key={line.id} className="flex items-start gap-3">
                     {img && (
@@ -591,6 +593,8 @@ function Checkout() {
                         width={56}
                         height={56}
                         loading="lazy"
+                        referrerPolicy="no-referrer"
+                        onError={(e) => handleImageError(e)}
                         className="size-14 shrink-0 rounded-full object-cover"
                       />
                     )}

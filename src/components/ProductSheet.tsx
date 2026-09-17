@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Minus, Plus, Share2, X, Clock } from "lucide-react";
-import { actions, rupiah, type MenuItem } from "@/lib/store";
+import { actions, rupiah, resolveMenuImage, handleImageError, type MenuItem } from "@/lib/store";
 
 export function ProductSheet({ item, onClose }: { item: MenuItem; onClose: () => void }) {
   const [selected, setSelected] = useState<Record<string, string[]>>(() => {
@@ -62,9 +62,11 @@ export function ProductSheet({ item, onClose }: { item: MenuItem; onClose: () =>
       >
         <div className="relative">
           <img
-            src={item.image}
+            src={resolveMenuImage(item.image)}
             alt={item.name}
             loading="lazy"
+            referrerPolicy="no-referrer"
+            onError={(e) => handleImageError(e)}
             className="h-48 w-full rounded-t-3xl object-cover"
           />
           <button

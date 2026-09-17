@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ChevronRight, Truck } from "lucide-react";
 import defaultHeroImg from "@/assets/hero.jpg";
-import { useStore } from "@/lib/store";
+import { useStore, resolveMenuImage, handleImageError } from "@/lib/store";
 
 export function PromoCarousel() {
   const { promos, cms, settings } = useStore((s) => ({
@@ -65,7 +65,10 @@ export function PromoCarousel() {
   const promo = promos[Math.min(index, promos.length - 1)];
   if (!promo) return null;
 
-  const bgImage = promo.imageUrl || cms?.heroImage || defaultHeroImg;
+  const bgImage = resolveMenuImage(
+    promo.imageUrl || cms?.heroImage || defaultHeroImg,
+    defaultHeroImg,
+  );
   const ctaText = cms?.heroCtaText || "Order Now";
   const symbol = settings?.currencySymbol || "N$";
   const title = promo.title.replace(/\b(R|N\$)\s*(\d+)/g, `${symbol} $2`);
@@ -79,6 +82,8 @@ export function PromoCarousel() {
           alt="Nanami Kitchen signature dish"
           width={1024}
           height={640}
+          referrerPolicy="no-referrer"
+          onError={(e) => handleImageError(e, defaultHeroImg)}
           className="h-44 sm:h-48 w-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/85 to-transparent" />

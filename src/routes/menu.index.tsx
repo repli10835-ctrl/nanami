@@ -2,7 +2,15 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { ChevronLeft, Plus, Search } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
-import { actions, CATEGORIES, rupiah, useStore, type Category } from "@/lib/store";
+import {
+  actions,
+  CATEGORIES,
+  rupiah,
+  useStore,
+  resolveMenuImage,
+  handleImageError,
+  type Category,
+} from "@/lib/store";
 
 type MenuSearch = { category?: Category };
 
@@ -99,9 +107,11 @@ function MenuPage() {
               className="shrink-0"
             >
               <img
-                src={m.image}
+                src={resolveMenuImage(m.image)}
                 alt={m.name}
                 loading="lazy"
+                referrerPolicy="no-referrer"
+                onError={(e) => handleImageError(e)}
                 className="size-18 sm:size-20 rounded-lg object-cover"
               />
             </Link>

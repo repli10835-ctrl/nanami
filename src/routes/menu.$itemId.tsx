@@ -1,7 +1,14 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Check, ChevronLeft, Clock, Flame, Heart, Minus, Plus, Share2, Star } from "lucide-react";
-import { actions, rupiah, useStore, type MenuItem } from "@/lib/store";
+import {
+  actions,
+  rupiah,
+  useStore,
+  resolveMenuImage,
+  handleImageError,
+  type MenuItem,
+} from "@/lib/store";
 
 export const Route = createFileRoute("/menu/$itemId")({
   loader: () => null,
@@ -103,7 +110,14 @@ function MenuDetailContent({ item }: { item: MenuItem }) {
       <div className="w-full max-w-md min-h-screen bg-background relative sm:shadow-2xl sm:border-x sm:border-border/40 pb-32 flex flex-col">
         {/* Hero */}
         <div className="relative">
-          <img src={item.image} alt={item.name} className="h-64 w-full object-cover" />
+          <img
+            src={resolveMenuImage(item.image)}
+            alt={item.name}
+            loading="lazy"
+            referrerPolicy="no-referrer"
+            onError={(e) => handleImageError(e)}
+            className="h-64 w-full object-cover"
+          />
           <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-transparent to-background" />
           <button
             onClick={() => navigate({ to: "/menu" })}

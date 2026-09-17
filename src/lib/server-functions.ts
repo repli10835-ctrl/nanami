@@ -153,7 +153,24 @@ export const getDatabaseState = createServerFn({ method: "GET" }).handler(async 
   try {
     const ok = await initDb();
     if (!ok) {
-      return null;
+      const { seedState } = await import("./seed-data");
+      const mergedAccounts: Account[] = [...envAccounts];
+      for (const sa of seedState.accounts) {
+        if (!mergedAccounts.some((a) => a.email.toLowerCase() === sa.email.toLowerCase())) {
+          mergedAccounts.push(sa);
+        }
+      }
+      return {
+        settings: seedState.settings,
+        cms: seedState.cms,
+        menu: seedState.menu,
+        orders: seedState.orders,
+        promos: seedState.promos,
+        vouchers: seedState.vouchers,
+        accounts: mergedAccounts,
+        staff: seedState.staff,
+        mediaAssets: [],
+      };
     }
 
     // Seed default if database is freshly created and has no records

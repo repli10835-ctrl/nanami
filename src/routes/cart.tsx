@@ -2,7 +2,15 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { ChevronDown, ChevronLeft, Minus, Plus, Share2, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
-import { actions, cartTotals, deliveryFeeFor, rupiah, useStore } from "@/lib/store";
+import {
+  actions,
+  cartTotals,
+  deliveryFeeFor,
+  rupiah,
+  useStore,
+  resolveMenuImage,
+  handleImageError,
+} from "@/lib/store";
 
 export const Route = createFileRoute("/cart")({
   head: () => ({
@@ -47,7 +55,7 @@ function CartPage() {
   const [voucherOpen, setVoucherOpen] = useState(false);
   const [codeInput, setCodeInput] = useState(voucherCode);
 
-  const imageFor = (itemId: string) => menu.find((m) => m.id === itemId)?.image;
+  const imageFor = (itemId: string) => resolveMenuImage(menu.find((m) => m.id === itemId)?.image);
 
   function handleShareCart() {
     if (cart.length === 0) return;
@@ -106,6 +114,9 @@ function CartPage() {
               <img
                 src={imageFor(l.itemId)}
                 alt={l.name}
+                loading="lazy"
+                referrerPolicy="no-referrer"
+                onError={(e) => handleImageError(e)}
                 className="size-16 shrink-0 self-center rounded-lg object-cover"
               />
             )}

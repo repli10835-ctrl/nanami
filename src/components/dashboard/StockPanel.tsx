@@ -1,6 +1,14 @@
 import { useMemo, useState } from "react";
 import { CheckCheck, Search } from "lucide-react";
-import { actions, rupiah, useStore, CATEGORIES, type Category } from "@/lib/store";
+import {
+  actions,
+  rupiah,
+  useStore,
+  CATEGORIES,
+  resolveMenuImage,
+  handleImageError,
+  type Category,
+} from "@/lib/store";
 import { StatCard } from "./DashboardShell";
 
 const FILTERS = ["All", ...CATEGORIES] as const;
@@ -80,9 +88,11 @@ export function StockPanel() {
             <div key={m.id} className="glow-card flex items-center gap-3 p-3">
               {m.image ? (
                 <img
-                  src={m.image}
+                  src={resolveMenuImage(m.image)}
                   alt={m.name}
                   loading="lazy"
+                  referrerPolicy="no-referrer"
+                  onError={(e) => handleImageError(e)}
                   className="size-12 shrink-0 rounded-xl object-cover"
                 />
               ) : (

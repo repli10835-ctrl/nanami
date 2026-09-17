@@ -23,6 +23,9 @@ import {
   loginServerFn,
 } from "./server-functions";
 import { formatCurrency, setCurrencySymbol } from "./currency";
+import { resolveMenuImage, handleImageError } from "./images";
+
+export { resolveMenuImage, handleImageError };
 
 export type Category = "Meals" | "Snacks" | "Drinks" | "Combos" | "Others";
 export const CATEGORIES: Category[] = ["Meals", "Snacks", "Drinks", "Combos", "Others"];
@@ -739,7 +742,10 @@ export const actions = {
           ...s,
           settings: data.settings ? { ...s.settings, ...data.settings } : s.settings,
           cms: data.cms ? { ...s.cms, ...data.cms } : s.cms,
-          menu: data.menu && data.menu.length ? data.menu : s.menu,
+          menu:
+            data.menu && data.menu.length
+              ? data.menu.map((m) => ({ ...m, image: resolveMenuImage(m.image) }))
+              : s.menu,
           orders: data.orders && data.orders.length ? data.orders : s.orders,
           promos: data.promos && data.promos.length ? data.promos : s.promos,
           vouchers: data.vouchers && data.vouchers.length ? data.vouchers : s.vouchers,

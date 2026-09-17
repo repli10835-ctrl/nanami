@@ -16,6 +16,8 @@ import {
   uid,
   useStore,
   CATEGORIES,
+  resolveMenuImage,
+  handleImageError,
   type Category,
   type MenuItem,
   type OptionGroup,
@@ -590,7 +592,13 @@ export function MenuCrudPanel(props: MenuCrudPanelProps = {}) {
                         : "border-transparent hover:border-border"
                     }`}
                   >
-                    <img src={src} alt="" className="size-full object-cover" />
+                    <img
+                      src={resolveMenuImage(src)}
+                      alt=""
+                      referrerPolicy="no-referrer"
+                      onError={(e) => handleImageError(e)}
+                      className="size-full object-cover"
+                    />
                   </button>
                 ))}
               </div>
@@ -685,7 +693,13 @@ export function MenuCrudPanel(props: MenuCrudPanelProps = {}) {
         >
           <div className="w-44 overflow-hidden rounded-2xl border border-border bg-card">
             {draft.image ? (
-              <img src={draft.image} alt="" className="h-28 w-full object-cover" />
+              <img
+                src={resolveMenuImage(draft.image)}
+                alt=""
+                referrerPolicy="no-referrer"
+                onError={(e) => handleImageError(e)}
+                className="h-28 w-full object-cover"
+              />
             ) : (
               <div className="h-28 w-full bg-secondary" />
             )}
@@ -729,9 +743,11 @@ export function MenuCrudPanel(props: MenuCrudPanelProps = {}) {
             >
               {m.image ? (
                 <img
-                  src={m.image}
+                  src={resolveMenuImage(m.image)}
                   alt={m.name}
                   loading="lazy"
+                  referrerPolicy="no-referrer"
+                  onError={(e) => handleImageError(e)}
                   className="size-14 shrink-0 rounded-xl object-cover"
                 />
               ) : (
