@@ -1,14 +1,17 @@
 import { useState } from "react";
 import { Power, Trash2 } from "lucide-react";
-import { actions, rupiah, uid, useStore, CATEGORIES, type Category } from "@/lib/store";
+import { actions, rupiah, uid, useStore, getAvailableCategories, type Category } from "@/lib/store";
 import { SectionCard, fieldClass } from "./DashboardShell";
 
 export function MenuPanel({ canDelete = true }: { canDelete?: boolean }) {
-  const menu = useStore((s) => s.menu);
+  const { menu, cms } = useStore((s) => ({ menu: s.menu, cms: s.cms }));
+  const categories = getAvailableCategories(cms, menu);
+  const categoryNames = cms?.categoryNames || {};
+
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
-  const [category, setCategory] = useState<Category>("Meals");
+  const [category, setCategory] = useState<Category>(categories[0] || "Meals");
 
   return (
     <div className="grid gap-4 lg:grid-cols-[320px_1fr] lg:items-start">
@@ -43,11 +46,11 @@ export function MenuPanel({ canDelete = true }: { canDelete?: boolean }) {
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value as Category)}
-            className={fieldClass}
+            className={`${fieldClass} [&>option]:bg-zinc-900 [&>option]:text-zinc-100`}
           >
-            {CATEGORIES.map((c) => (
-              <option key={c} value={c}>
-                {c}
+            {categories.map((c) => (
+              <option key={c} value={c} className="bg-zinc-900 text-zinc-100">
+                {categoryNames[c] || c}
               </option>
             ))}
           </select>

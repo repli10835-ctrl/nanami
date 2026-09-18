@@ -11,7 +11,7 @@ export type MenuItem = {
   name: string;
   description: string;
   price: number;
-  category: "Meals" | "Snacks" | "Drinks" | "Combos" | "Others";
+  category: string;
   image: string;
   available: boolean;
   prepMinutes: number;

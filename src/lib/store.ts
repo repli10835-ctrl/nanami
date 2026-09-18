@@ -27,8 +27,19 @@ import { resolveMenuImage, handleImageError } from "./images";
 
 export { resolveMenuImage, handleImageError };
 
-export type Category = "Meals" | "Snacks" | "Drinks" | "Combos" | "Others";
-export const CATEGORIES: Category[] = ["Meals", "Snacks", "Drinks", "Combos", "Others"];
+export type Category = string;
+export const DEFAULT_CATEGORIES: Category[] = ["Meals", "Snacks", "Drinks", "Combos", "Others"];
+export const CATEGORIES: Category[] = DEFAULT_CATEGORIES;
+
+export function getAvailableCategories(
+  cms?: Partial<CmsContent> | null,
+  menu?: MenuItem[],
+): string[] {
+  const cmsOrder = (cms?.categoryOrder || []).filter(Boolean);
+  const menuCats = (menu || []).map((m) => m.category).filter(Boolean);
+  const list = Array.from(new Set([...cmsOrder, ...menuCats, ...DEFAULT_CATEGORIES]));
+  return list.filter(Boolean);
+}
 
 export type OptionChoice = { id: string; name: string; price: number };
 export type OptionGroup = {
@@ -1355,6 +1366,119 @@ export const actions = {
       accounts: s.accounts.filter((a) => a.id !== id),
     }));
     deleteAccountDb({ data: id }).catch(console.error);
+  },
+  addCategory(name: string, displayName?: string) {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    set((s) => {
+      const currentOrder = s.cms?.categoryOrder?.length
+        ? s.cms.categoryOrder
+        : [...DEFAULT_CATEGORIES];
+      const exists = currentOrder.some((c) => c.toLowerCase() === trimmed.toLowerCase());
+      if (exists) return s;
+
+      const newOrder = [...currentOrder, trimmed];
+      const newNames = {
+        ...(s.cms?.categoryNames || {}),
+        [trimmed]: displayName?.trim() || trimmed,
+      };
+      const updatedCms: CmsContent = {
+        ...s.cms,
+        categoryOrder: newOrder,
+        categoryNames: newNames,
+      };
+      saveCmsDb({ data: updatedCms }).catch(console.error);
+      return { ...s, cms: updatedCms };
+    });
+  },
+  updateCategory(oldName: string, newName: string, newDisplayName?: string) {
+    const trimmedNew = newName.trim();
+    if (!trimmedNew) return;
+    set((s) => {
+      const currentOrder = s.cms?.categoryOrder?.length
+        ? s.cms.categoryOrder
+        : [...DEFAULT_CATEGORIES];
+      const newOrder = currentOrder.map((c) =>
+        c.toLowerCase() === oldName.toLowerCase() ? trimmedNew : c,
+      );
+
+      const newNames: Record<string, string> = {};
+      for (const [key, val] of Object.entries(s.cms?.categoryNames || {})) {
+        if (key.toLowerCase() === oldName.toLowerCase()) {
+          newNames[trimmedNew] = newDisplayName?.trim() || val || trimmedNew;
+        } else {
+          newNames[key] = val;
+        }
+      }
+      if (!newNames[trimmedNew]) {
+        newNames[trimmedNew] = newDisplayName?.trim() || trimmedNew;
+      }
+
+      const updatedMenu = s.menu.map((m) => {
+        if (m.category.toLowerCase() === oldName.toLowerCase()) {
+          const updatedItem = { ...m, category: trimmedNew };
+          saveMenuItemDb({ data: updatedItem }).catch(console.error);
+          return updatedItem;
+        }
+        return m;
+      });
+
+      const updatedCms: CmsContent = {
+        ...s.cms,
+        categoryOrder: newOrder,
+        categoryNames: newNames,
+      };
+      saveCmsDb({ data: updatedCms }).catch(console.error);
+      return { ...s, cms: updatedCms, menu: updatedMenu };
+    });
+  },
+  deleteCategory(categoryName: string, fallbackCategory?: string) {
+    set((s) => {
+      const currentOrder = s.cms?.categoryOrder?.length
+        ? s.cms.categoryOrder
+        : [...DEFAULT_CATEGORIES];
+      const remainingOrder = currentOrder.filter(
+        (c) => c.toLowerCase() !== categoryName.toLowerCase(),
+      );
+
+      const targetFallback = fallbackCategory || remainingOrder[0] || "Meals";
+      if (remainingOrder.length === 0) {
+        remainingOrder.push(targetFallback);
+      }
+
+      const newNames = { ...(s.cms?.categoryNames || {}) };
+      delete newNames[categoryName];
+      if (!newNames[targetFallback]) {
+        newNames[targetFallback] = targetFallback;
+      }
+
+      const updatedMenu = s.menu.map((m) => {
+        if (m.category.toLowerCase() === categoryName.toLowerCase()) {
+          const updatedItem = { ...m, category: targetFallback };
+          saveMenuItemDb({ data: updatedItem }).catch(console.error);
+          return updatedItem;
+        }
+        return m;
+      });
+
+      const updatedCms: CmsContent = {
+        ...s.cms,
+        categoryOrder: remainingOrder,
+        categoryNames: newNames,
+      };
+      saveCmsDb({ data: updatedCms }).catch(console.error);
+      return { ...s, cms: updatedCms, menu: updatedMenu };
+    });
+  },
+  reorderCategories(newOrder: string[]) {
+    set((s) => {
+      const updatedCms: CmsContent = {
+        ...s.cms,
+        categoryOrder: newOrder,
+      };
+      saveCmsDb({ data: updatedCms }).catch(console.error);
+      return { ...s, cms: updatedCms };
+    });
   },
   resetCms() {
     set((s) => {

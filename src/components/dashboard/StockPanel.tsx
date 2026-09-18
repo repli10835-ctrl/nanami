@@ -4,25 +4,26 @@ import {
   actions,
   rupiah,
   useStore,
-  CATEGORIES,
+  getAvailableCategories,
   resolveMenuImage,
   handleImageError,
-  type Category,
 } from "@/lib/store";
 import { StatCard } from "./DashboardShell";
 
-const FILTERS = ["All", ...CATEGORIES] as const;
-
 export function StockPanel() {
-  const menu = useStore((s) => s.menu);
+  const { menu, cms } = useStore((s) => ({ menu: s.menu, cms: s.cms }));
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState<(typeof FILTERS)[number]>("All");
+  const [category, setCategory] = useState<string>("All");
+
+  const categories = getAvailableCategories(cms, menu);
+  const categoryNames = cms?.categoryNames || {};
+  const filters = ["All", ...categories];
 
   const list = useMemo(
     () =>
       menu.filter(
         (m) =>
-          (category === "All" || m.category === (category as Category)) &&
+          (category === "All" || m.category?.toLowerCase() === category.toLowerCase()) &&
           m.name.toLowerCase().includes(query.trim().toLowerCase()),
       ),
     [menu, category, query],
@@ -63,7 +64,7 @@ export function StockPanel() {
       </div>
 
       <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1">
-        {FILTERS.map((f) => (
+        {filters.map((f) => (
           <button
             key={f}
             onClick={() => setCategory(f)}
@@ -73,7 +74,7 @@ export function StockPanel() {
                 : "border border-border bg-secondary/40 text-muted-foreground"
             }`}
           >
-            {f}
+            {f === "All" ? "All" : categoryNames[f] || f}
           </button>
         ))}
       </div>

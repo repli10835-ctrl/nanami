@@ -20,6 +20,7 @@ import { ProductSheet } from "@/components/ProductSheet";
 import {
   actions,
   CATEGORIES,
+  getAvailableCategories,
   defaultCmsContent,
   rupiah,
   useStore,
@@ -65,14 +66,8 @@ function Home() {
   const isScrollingRef = useRef(false);
 
   const activeFaqs = (cms.faqs || []).filter((f) => f.active);
-  const categoryOrder = cms.categoryOrder || CATEGORIES;
-  const categoryNames = cms.categoryNames || {
-    Meals: "Meals",
-    Snacks: "Snacks",
-    Drinks: "Drinks",
-    Combos: "Combos",
-    Others: "Others",
-  };
+  const categoryOrder = getAvailableCategories(cms, menu);
+  const categoryNames = cms.categoryNames || {};
   const mustTryIds = cms.mustTryItemIds || ["m1", "m2", "m3", "m4"];
   const mustTryItems = menu.filter((m) => mustTryIds.includes(m.id) && m.available);
   const displayMustTry =
@@ -323,8 +318,11 @@ function Home() {
           const catLabel = categoryNames[cat] || cat;
           const catItems = menu.filter(
             (m) =>
-              m.category === cat && (q ? m.name.toLowerCase().includes(q.toLowerCase()) : true),
+              m.category?.toLowerCase() === cat.toLowerCase() &&
+              (q ? m.name.toLowerCase().includes(q.toLowerCase()) : true),
           );
+
+          if (catItems.length === 0) return null;
 
           return (
             <section

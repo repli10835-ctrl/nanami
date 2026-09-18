@@ -9,13 +9,16 @@ import {
   Upload,
   X,
   ImageIcon,
+  FolderCog,
+  Tag,
 } from "lucide-react";
 import {
-  actions,
+  actions as globalActions,
   rupiah,
   uid,
   useStore,
   CATEGORIES,
+  getAvailableCategories,
   resolveMenuImage,
   handleImageError,
   type Category,
@@ -25,6 +28,7 @@ import {
 import { getCurrencySymbol } from "@/lib/currency";
 import { SectionCard, fieldClass } from "./DashboardShell";
 import { MediaGallery } from "./MediaGallery";
+import { CategoryManagerModal } from "./CategoryManagerModal";
 import food1 from "@/assets/food-1.jpg";
 import food2 from "@/assets/food-2.jpg";
 import food3 from "@/assets/food-3.jpg";
@@ -107,21 +111,25 @@ interface MenuCrudPanelProps {
 
 export function MenuCrudPanel(props: MenuCrudPanelProps = {}) {
   const storeMenu = useStore((s) => s.menu);
+  const cms = useStore((s) => s.cms);
   const menu = props.menu || storeMenu;
+
+  const categories = getAvailableCategories(cms, menu);
+  const categoryNames = cms?.categoryNames || {};
 
   const actionsShadow = {
     saveMenuItem(item: MenuItem) {
       if (props.onSaveMenuItem) {
         props.onSaveMenuItem(item);
       } else {
-        actions.saveMenuItem(item);
+        globalActions.saveMenuItem(item);
       }
     },
     deleteMenuItem(id: string) {
       if (props.onDeleteMenuItem) {
         props.onDeleteMenuItem(id);
       } else {
-        actions.deleteMenuItem(id);
+        globalActions.deleteMenuItem(id);
       }
     },
   };
@@ -129,8 +137,11 @@ export function MenuCrudPanel(props: MenuCrudPanelProps = {}) {
   const actions = actionsShadow;
 
   const [draft, setDraft] = useState<Draft>(emptyDraft);
-  const [filter, setFilter] = useState<"All" | Category>("All");
+  const [filter, setFilter] = useState<string>("All");
   const [showGallery, setShowGallery] = useState(false);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [quickAddCatOpen, setQuickAddCatOpen] = useState(false);
+  const [quickCatInput, setQuickCatInput] = useState("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -162,7 +173,10 @@ export function MenuCrudPanel(props: MenuCrudPanelProps = {}) {
   };
 
   const patch = (p: Partial<Draft>) => setDraft((d) => ({ ...d, ...p }));
-  const list = filter === "All" ? menu : menu.filter((m) => m.category === filter);
+  const list =
+    filter === "All"
+      ? menu
+      : menu.filter((m) => m.category?.toLowerCase() === filter.toLowerCase());
 
   // Validation: item name required, price > 0, every group must have a name & choices must not be empty
   const hasInvalidGroup = draft.groups.some(
@@ -307,20 +321,86 @@ export function MenuCrudPanel(props: MenuCrudPanelProps = {}) {
             </label>
           </div>
 
-          <label className="block text-xs text-muted-foreground">
-            Category
-            <select
-              value={draft.category}
-              onChange={(e) => patch({ category: e.target.value as Category })}
-              className={fieldClass}
-            >
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </label>
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold text-foreground">Category *</label>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setQuickAddCatOpen((v) => !v)}
+                  className="flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
+                >
+                  <Plus className="size-3" /> {quickAddCatOpen ? "Cancel" : "Quick Add"}
+                </button>
+                <span className="text-muted-foreground/30">•</span>
+                <button
+                  type="button"
+                  onClick={() => setIsCategoryModalOpen(true)}
+                  className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:underline"
+                >
+                  <FolderCog className="size-3 text-primary" /> Manage All
+                </button>
+              </div>
+            </div>
+
+            {quickAddCatOpen && (
+              <div className="flex items-center gap-1.5 rounded-xl border border-primary/40 bg-primary/5 p-2 animate-in fade-in">
+                <input
+                  type="text"
+                  value={quickCatInput}
+                  onChange={(e) => setQuickCatInput(e.target.value)}
+                  placeholder="New category name (e.g. Desserts)..."
+                  className="flex-1 rounded-lg border border-input bg-background px-2.5 py-1.5 text-xs font-semibold outline-none focus:border-primary"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      const trimmed = quickCatInput.trim();
+                      if (trimmed) {
+                        globalActions.addCategory(trimmed);
+                        patch({ category: trimmed });
+                        setQuickCatInput("");
+                        setQuickAddCatOpen(false);
+                      }
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  disabled={!quickCatInput.trim()}
+                  onClick={() => {
+                    const trimmed = quickCatInput.trim();
+                    if (trimmed) {
+                      globalActions.addCategory(trimmed);
+                      patch({ category: trimmed });
+                      setQuickCatInput("");
+                      setQuickAddCatOpen(false);
+                    }
+                  }}
+                  className="flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:opacity-90 disabled:opacity-50"
+                >
+                  <Plus className="size-3" /> Add
+                </button>
+              </div>
+            )}
+
+            <div className="relative">
+              <select
+                value={draft.category}
+                onChange={(e) => patch({ category: e.target.value })}
+                className="w-full rounded-xl border border-input bg-card text-foreground px-3 py-2.5 text-xs sm:text-sm font-semibold outline-none focus:border-primary focus:ring-1 focus:ring-primary [&>option]:bg-zinc-900 [&>option]:text-zinc-100 dark:[&>option]:bg-zinc-900 dark:[&>option]:text-zinc-100 cursor-pointer shadow-xs"
+              >
+                {categories.map((c) => (
+                  <option
+                    key={c}
+                    value={c}
+                    className="bg-zinc-900 text-zinc-100 py-1.5 font-medium"
+                  >
+                    {categoryNames[c] || c}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
 
           <label className="block text-xs text-muted-foreground">
             Description
@@ -719,95 +799,130 @@ export function MenuCrudPanel(props: MenuCrudPanelProps = {}) {
       </div>
 
       <div className="space-y-3">
-        <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1">
-          {(["All", ...CATEGORIES] as const).map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`shrink-0 rounded-full px-3.5 py-2 text-xs font-semibold ${
-                filter === f
-                  ? "bg-primary text-primary-foreground"
-                  : "border border-border bg-secondary/40 text-muted-foreground"
-              }`}
-            >
-              {f}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="no-scrollbar -mx-1 flex gap-1.5 overflow-x-auto px-1 flex-1 py-0.5">
+            {["All", ...categories].map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                  filter === f
+                    ? "bg-primary text-primary-foreground shadow-xs"
+                    : "border border-border bg-secondary/40 text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {f === "All" ? "All Items" : categoryNames[f] || f}
+              </button>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsCategoryModalOpen(true)}
+            className="flex items-center gap-1.5 shrink-0 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-secondary hover:border-primary/50 transition shadow-xs"
+          >
+            <FolderCog className="size-3.5 text-primary" />
+            <span>Manage Categories</span>
+          </button>
         </div>
 
-        <div className="grid gap-2.5 sm:grid-cols-1 md:grid-cols-2">
-          {list.map((m) => (
-            <div
-              key={m.id}
-              className="glow-card flex flex-wrap sm:flex-nowrap items-start gap-3 p-3"
-            >
-              {m.image ? (
-                <img
-                  src={resolveMenuImage(m.image)}
-                  alt={m.name}
-                  loading="lazy"
-                  referrerPolicy="no-referrer"
-                  onError={(e) => handleImageError(e)}
-                  className="size-14 shrink-0 rounded-xl object-cover"
-                />
-              ) : (
-                <div className="size-14 shrink-0 rounded-xl bg-secondary" />
-              )}
-              <div className="min-w-0 flex-1 space-y-1">
-                <div className="flex items-center gap-2">
-                  <p className="truncate text-sm font-semibold">{m.name}</p>
+        {list.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border p-8 text-center bg-card/40">
+            <Tag className="size-8 text-muted-foreground/50 mb-2" />
+            <p className="text-sm font-semibold text-foreground">No menu items found</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {filter !== "All"
+                ? `There are no items in category "${categoryNames[filter] || filter}".`
+                : "Your menu is currently empty. Add your first item on the left."}
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-2.5 sm:grid-cols-1 md:grid-cols-2">
+            {list.map((m) => (
+              <div
+                key={m.id}
+                className="glow-card flex flex-wrap sm:flex-nowrap items-start gap-3 p-3"
+              >
+                {m.image ? (
+                  <img
+                    src={resolveMenuImage(m.image)}
+                    alt={m.name}
+                    loading="lazy"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => handleImageError(e)}
+                    className="size-14 shrink-0 rounded-xl object-cover"
+                  />
+                ) : (
+                  <div className="size-14 shrink-0 rounded-xl bg-secondary" />
+                )}
+                <div className="min-w-0 flex-1 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <p className="truncate text-sm font-semibold">{m.name}</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    <span className="font-medium text-foreground/80">
+                      {categoryNames[m.category] || m.category}
+                    </span>{" "}
+                    · {rupiah(m.price)}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
+                    <span
+                      className={`rounded px-1.5 py-0.5 font-medium ${
+                        m.specialRequestEnabled !== false
+                          ? "bg-primary/10 text-primary"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      Notes: {m.specialRequestEnabled !== false ? "ON" : "OFF"}
+                    </span>
+                    {m.groups && m.groups.length > 0 && (
+                      <span className="rounded bg-secondary px-1.5 py-0.5 text-muted-foreground">
+                        {m.groups.filter((g) => g.enabled !== false).length}/{m.groups.length}{" "}
+                        groups ON
+                      </span>
+                    )}
+                  </div>
+                  <p className="truncate text-[11px] text-muted-foreground">{m.description}</p>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {m.category} · {rupiah(m.price)}
-                </p>
-                <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
+                <div className="flex items-center gap-1.5 shrink-0 ml-auto sm:ml-0 self-center">
                   <span
-                    className={`rounded px-1.5 py-0.5 font-medium ${
-                      m.specialRequestEnabled !== false
-                        ? "bg-primary/10 text-primary"
-                        : "bg-muted text-muted-foreground"
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                      m.available
+                        ? "bg-success/15 text-success"
+                        : "bg-destructive/15 text-destructive"
                     }`}
                   >
-                    Notes: {m.specialRequestEnabled !== false ? "ON" : "OFF"}
+                    {m.available ? "Available" : "Sold Out"}
                   </span>
-                  {m.groups && m.groups.length > 0 && (
-                    <span className="rounded bg-secondary px-1.5 py-0.5 text-muted-foreground">
-                      {m.groups.filter((g) => g.enabled !== false).length}/{m.groups.length} groups
-                      ON
-                    </span>
-                  )}
+                  <button
+                    onClick={() => setDraft(toDraft(m))}
+                    aria-label={`Edit ${m.name}`}
+                    className="rounded-lg border border-border p-1.5 text-muted-foreground hover:text-foreground"
+                  >
+                    <Pencil className="size-3.5" />
+                  </button>
+                  <button
+                    onClick={() => actions.deleteMenuItem(m.id)}
+                    aria-label={`Delete ${m.name}`}
+                    className="rounded-lg border border-border p-1.5 text-destructive hover:bg-destructive/10"
+                  >
+                    <Trash2 className="size-3.5" />
+                  </button>
                 </div>
-                <p className="truncate text-[11px] text-muted-foreground">{m.description}</p>
               </div>
-              <div className="flex items-center gap-1.5 shrink-0 ml-auto sm:ml-0 self-center">
-                <span
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                    m.available
-                      ? "bg-success/15 text-success"
-                      : "bg-destructive/15 text-destructive"
-                  }`}
-                >
-                  {m.available ? "Available" : "Sold Out"}
-                </span>
-                <button
-                  onClick={() => setDraft(toDraft(m))}
-                  aria-label={`Edit ${m.name}`}
-                  className="rounded-lg border border-border p-1.5 text-muted-foreground hover:text-foreground"
-                >
-                  <Pencil className="size-3.5" />
-                </button>
-                <button
-                  onClick={() => actions.deleteMenuItem(m.id)}
-                  aria-label={`Delete ${m.name}`}
-                  className="rounded-lg border border-border p-1.5 text-destructive hover:bg-destructive/10"
-                >
-                  <Trash2 className="size-3.5" />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
+
+      <CategoryManagerModal
+        isOpen={isCategoryModalOpen}
+        onClose={() => setIsCategoryModalOpen(false)}
+        onCategorySelected={(cat) => {
+          setFilter(cat);
+          patch({ category: cat });
+        }}
+      />
     </div>
   );
 }

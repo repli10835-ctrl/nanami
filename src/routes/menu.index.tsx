@@ -5,6 +5,7 @@ import { AppShell } from "@/components/AppShell";
 import {
   actions,
   CATEGORIES,
+  getAvailableCategories,
   rupiah,
   useStore,
   resolveMenuImage,
@@ -17,7 +18,7 @@ type MenuSearch = { category?: Category };
 export const Route = createFileRoute("/menu/")({
   validateSearch: (search: Record<string, unknown>): MenuSearch => {
     const raw = search["category"] as Category | undefined;
-    return raw && CATEGORIES.includes(raw) ? { category: raw } : {};
+    return raw ? { category: raw } : {};
   },
   head: () => ({
     meta: [
@@ -36,13 +37,19 @@ export const Route = createFileRoute("/menu/")({
 
 function MenuPage() {
   const { category } = Route.useSearch();
-  const menu = useStore((s) => s.menu);
-  const [tab, setTab] = useState<Category>(category ?? "Meals");
+  const { menu, cms } = useStore((s) => ({ menu: s.menu, cms: s.cms }));
+  const categories = getAvailableCategories(cms, menu);
+  const categoryNames = cms?.categoryNames || {};
+
+  const [tab, setTab] = useState<string>(category ?? categories[0] ?? "Meals");
   const [q, setQ] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
 
   const list = menu.filter(
-    (m) => (q ? m.name.toLowerCase().includes(q.toLowerCase()) : m.category === tab) && true,
+    (m) =>
+      (q
+        ? m.name.toLowerCase().includes(q.toLowerCase())
+        : m.category?.toLowerCase() === tab.toLowerCase()) && true,
   );
 
   return (
@@ -79,7 +86,7 @@ function MenuPage() {
       )}
 
       <div className="no-scrollbar mt-2 flex gap-1.5 overflow-x-auto pb-0.5">
-        {CATEGORIES.map((c) => (
+        {categories.map((c) => (
           <button
             key={c}
             onClick={() => {
@@ -87,12 +94,12 @@ function MenuPage() {
               setQ("");
             }}
             className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
-              tab === c && !q
+              tab.toLowerCase() === c.toLowerCase() && !q
                 ? "bg-primary text-primary-foreground shadow-xs"
                 : "border border-border bg-secondary/40 text-muted-foreground hover:text-foreground"
             }`}
           >
-            {c}
+            {categoryNames[c] || c}
           </button>
         ))}
       </div>
