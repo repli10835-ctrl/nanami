@@ -1,4 +1,10 @@
-import { type State, type MenuItem, type Account, type CmsContent } from "./store";
+import {
+  type State,
+  type MenuItem,
+  type Account,
+  type CmsContent,
+  defaultCheckoutCms,
+} from "./store";
 import { food1, food2, food3, food4 } from "./images";
 
 const spice = {
@@ -270,6 +276,7 @@ export const seedCms = {
       active: true,
     },
   ],
+  checkout: defaultCheckoutCms,
 };
 
 export const seedState: Partial<State> = {
@@ -308,18 +315,21 @@ export const seedState: Partial<State> = {
       title: "Free delivery over N$ 250",
       subtitle: "Within 5 km radius of our kitchen",
       badge: "Delivery",
+      imageUrl: "/assets/hero.jpg",
     },
     {
       id: "p2",
       title: "20% OFF all menu",
       subtitle: "Today only — use code NANAMI20",
       badge: "Special",
+      imageUrl: "/assets/food-2.jpg",
     },
     {
       id: "p3",
       title: "Earn points on every order",
       subtitle: "1 point for every N$ 100 spent",
       badge: "Loyalty",
+      imageUrl: "/assets/food-3.jpg",
     },
   ],
   vouchers: [

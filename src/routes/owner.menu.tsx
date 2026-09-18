@@ -6,6 +6,7 @@ import { actions, useStore, type MenuItem } from "@/lib/store";
 import { useUnsavedChanges } from "@/hooks/useUnsavedChanges";
 import { StickySaveBar } from "@/components/StickySaveBar";
 import { UnsavedChangesPrompt } from "@/components/UnsavedChangesPrompt";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/owner/menu")({
   head: () => ({
@@ -29,25 +30,45 @@ function OwnerMenuPage() {
   const globalMenu = useStore((s) => s.menu);
   const [localMenu, setLocalMenu] = useState<MenuItem[]>(() => globalMenu);
   const [saving, setSaving] = useState(false);
+  const { isDirty, markSaved, resetToSnapshot, blocker } = useUnsavedChanges(localMenu);
 
   useEffect(() => {
     setLocalMenu(globalMenu);
-  }, [globalMenu]);
+    markSaved(globalMenu);
+  }, [globalMenu, markSaved]);
 
-  const { isDirty, markSaved, resetToSnapshot, blocker } = useUnsavedChanges(localMenu);
-
-  const handleSaveMenuItem = (item: MenuItem) => {
-    setLocalMenu((prev) => {
-      if (prev.some((x) => x.id === item.id)) {
-        return prev.map((x) => (x.id === item.id ? item : x));
-      } else {
-        return [...prev, item];
-      }
-    });
+  const handleSaveMenuItem = async (item: MenuItem) => {
+    setSaving(true);
+    try {
+      await actions.saveMenuItem(item);
+      const updated = localMenu.some((x) => x.id === item.id)
+        ? localMenu.map((x) => (x.id === item.id ? item : x))
+        : [...localMenu, item];
+      setLocalMenu(updated);
+      markSaved(updated);
+      toast.success(item.name ? `"${item.name}" saved to catalog!` : "Menu item saved!");
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to save menu item.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleDeleteMenuItem = (id: string) => {
-    setLocalMenu((prev) => prev.filter((x) => x.id !== id));
+  const handleDeleteMenuItem = async (id: string) => {
+    setSaving(true);
+    try {
+      await actions.deleteMenuItem(id);
+      const updated = localMenu.filter((x) => x.id !== id);
+      setLocalMenu(updated);
+      markSaved(updated);
+      toast.success("Menu item removed from catalog.");
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to delete menu item.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleSave = async () => {
@@ -68,8 +89,10 @@ function OwnerMenuPage() {
       }
 
       markSaved(localMenu);
+      toast.success("All changes saved successfully!");
     } catch (e) {
       console.error(e);
+      toast.error("Failed to save changes.");
     } finally {
       setSaving(false);
     }

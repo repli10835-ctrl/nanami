@@ -27,40 +27,51 @@ import { useStore } from "@/lib/store";
 
 export type DashboardRole = "admin" | "owner" | "staff";
 
-type NavItem = { to: string; label: string; icon: typeof LayoutDashboard };
+export type NavItem = { to: string; label: string; icon: typeof LayoutDashboard };
 
-const STAFF_NAV: NavItem[] = [
+export type NavSection = {
+  title?: string;
+  items: NavItem[];
+};
+
+const STAFF_TOOLS: NavItem[] = [
   { to: "/admin", label: "Kitchen Board", icon: LayoutDashboard },
   { to: "/admin/orders", label: "Order Management", icon: ClipboardList },
   { to: "/admin/stock", label: "Stock Availability", icon: UtensilsCrossed },
 ];
 
-const ADMIN_NAV: NavItem[] = [
+const ADMIN_TOOLS: NavItem[] = [
   { to: "/admin", label: "Kitchen Board", icon: LayoutDashboard },
   { to: "/admin/orders", label: "Order Management", icon: ClipboardList },
-  { to: "/admin/menu", label: "Menu Catalog (CRUD)", icon: UtensilsCrossed },
-  { to: "/admin/media", label: "Media Library", icon: ImageIcon },
   { to: "/admin/stock", label: "Stock Availability", icon: UtensilsCrossed },
-  { to: "/admin/customers", label: "Customers", icon: Users },
-  { to: "/admin/reports", label: "Reports & Analytics", icon: BarChart3 },
-  { to: "/admin/settings", label: "Operations & Settings", icon: Settings },
 ];
 
-const OWNER_NAV: NavItem[] = [
+const OWNER_TOOLS: NavItem[] = [
   { to: "/owner", label: "Overview", icon: LayoutDashboard },
-  { to: "/admin/orders", label: "Order Management", icon: ClipboardList },
-  { to: "/owner/finance", label: "Finance", icon: Coins },
-  { to: "/owner/menu", label: "Catalog", icon: UtensilsCrossed },
-  { to: "/admin/media", label: "Media Library", icon: ImageIcon },
+  { to: "/owner/orders", label: "Order Management", icon: ClipboardList },
+  { to: "/owner/finance", label: "Finance & Reports", icon: Coins },
+  { to: "/owner/menu", label: "Catalog (CRUD)", icon: UtensilsCrossed },
+  { to: "/owner/media", label: "Media Library", icon: ImageIcon },
   { to: "/owner/cms", label: "Content CMS", icon: LayoutTemplate },
   { to: "/owner/preview", label: "Live Preview", icon: Smartphone },
   { to: "/owner/vouchers", label: "Vouchers & Promos", icon: Ticket },
+  { to: "/owner/customers", label: "Customers", icon: Users },
   { to: "/owner/staff", label: "Accounts & Staff", icon: ShieldCheck },
   { to: "/owner/outlets", label: "Outlets", icon: Store },
   { to: "/owner/shipping", label: "Delivery Rates", icon: Truck },
   { to: "/owner/settings", label: "Store Settings", icon: Settings },
   { to: "/owner/audit", label: "Activity Logs", icon: ScrollText },
 ];
+
+function isItemActive(to: string, currentPath: string): boolean {
+  if (to === "/admin") {
+    return currentPath === "/admin" || currentPath === "/admin/";
+  }
+  if (to === "/owner") {
+    return currentPath === "/owner" || currentPath === "/owner/";
+  }
+  return currentPath === to || currentPath.startsWith(`${to}/`);
+}
 
 export function DashboardShell({
   role,
@@ -80,12 +91,25 @@ export function DashboardShell({
     settings: s.settings,
     profile: s.profile,
   }));
-  const effectiveRole = profile.role === "staff" ? "staff" : role;
-  const nav =
-    effectiveRole === "staff" ? STAFF_NAV : effectiveRole === "owner" ? OWNER_NAV : ADMIN_NAV;
-  const roleLabel =
-    effectiveRole === "staff" ? "Kitchen Staff" : effectiveRole === "owner" ? "Owner" : "Admin";
   const { pathname } = useLocation();
+
+  const isOwnerView = profile.role === "owner" || role === "owner" || pathname.startsWith("/owner");
+  const effectiveRole: DashboardRole =
+    profile.role === "staff" ? "staff" : isOwnerView ? "owner" : "admin";
+
+  const sections: NavSection[] =
+    effectiveRole === "staff"
+      ? [{ title: "Kitchen Staff", items: STAFF_TOOLS }]
+      : isOwnerView
+        ? [
+            { title: "Tools Owner", items: OWNER_TOOLS },
+            { title: "Tools Admin", items: ADMIN_TOOLS },
+          ]
+        : [{ title: "Tools Admin", items: ADMIN_TOOLS }];
+
+  const flatNav = sections.flatMap((s) => s.items);
+
+  const roleLabel = effectiveRole === "staff" ? "Kitchen Staff" : isOwnerView ? "Owner" : "Admin";
   const displayLogo = cms?.logoUrl || defaultLogo;
   const storeName = settings?.storeName || "Nanami Kitchen";
 
@@ -128,7 +152,7 @@ export function DashboardShell({
           }`}
         >
           <Link
-            to={role === "owner" ? "/owner" : "/admin"}
+            to={isOwnerView ? "/owner" : "/admin"}
             className="flex items-center gap-2.5 min-w-0"
             title={storeName}
           >
@@ -165,43 +189,56 @@ export function DashboardShell({
         {/* Scrollable Nav Container */}
         <nav
           suppressHydrationWarning
-          className="sidebar-scroll my-3 flex-1 min-h-0 overflow-y-auto overflow-x-hidden space-y-1 pr-1"
+          className="sidebar-scroll my-3 flex-1 min-h-0 overflow-y-auto overflow-x-hidden space-y-3 pr-1"
         >
-          {nav.map(({ to, label, icon: Icon }) => {
-            const isActive =
-              to === "/admin" || to === "/owner" ? pathname === to : pathname.startsWith(to);
-            return (
-              <Link
-                key={to}
-                to={to}
-                suppressHydrationWarning
-                title={collapsed ? label : undefined}
-                className={`group flex items-center rounded-xl py-2.5 text-sm font-medium transition ${
-                  collapsed ? "justify-center px-2" : "gap-2.5 px-3"
-                } ${
-                  isActive
-                    ? "bg-primary/15 text-primary font-semibold shadow-xs"
-                    : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
-                }`}
-              >
-                <Icon className={`size-4 shrink-0 ${isActive ? "text-primary" : ""}`} />
-                {!collapsed && <span className="truncate">{label}</span>}
-              </Link>
-            );
-          })}
+          {sections.map((section, idx) => (
+            <div key={section.title || idx} className="space-y-1">
+              {section.title && !collapsed && (
+                <div
+                  className={`px-3 pb-1.5 flex items-center justify-between ${
+                    idx > 0 ? "pt-3 border-t border-border/40 mt-3" : "pt-1"
+                  }`}
+                >
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground/75">
+                    {section.title}
+                  </span>
+                  <span className="text-[10px] font-medium text-muted-foreground/45">
+                    {section.items.length}
+                  </span>
+                </div>
+              )}
+              {collapsed && idx > 0 && <div className="my-2.5 border-t border-border/50" />}
+              {section.items.map(({ to, label, icon: Icon }) => {
+                const active = isItemActive(to, pathname);
+                return (
+                  <Link
+                    key={`${section.title}-${to}`}
+                    to={to}
+                    suppressHydrationWarning
+                    title={
+                      collapsed ? `${section.title ? `${section.title}: ` : ""}${label}` : undefined
+                    }
+                    className={`group flex items-center rounded-xl py-2 text-sm font-medium transition ${
+                      collapsed ? "justify-center px-2" : "gap-2.5 px-3"
+                    } ${
+                      active
+                        ? "bg-primary/15 text-primary font-semibold shadow-xs"
+                        : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
+                    }`}
+                  >
+                    <Icon className={`size-4 shrink-0 ${active ? "text-primary" : ""}`} />
+                    {!collapsed && <span className="truncate">{label}</span>}
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
         </nav>
 
         {/* Bottom Switch/Exit Links */}
         <div className="shrink-0 border-t border-border/40 pt-3 text-xs space-y-1">
           {collapsed ? (
             <div className="flex flex-col items-center gap-2">
-              <Link
-                to={role === "owner" ? "/admin" : "/owner"}
-                title={`Switch to ${role === "owner" ? "Admin" : "Owner"} panel`}
-                className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition"
-              >
-                <ShieldCheck className="size-4" />
-              </Link>
               <Link
                 to="/"
                 title="Back to customer storefront"
@@ -211,20 +248,22 @@ export function DashboardShell({
               </Link>
             </div>
           ) : (
-            <>
-              <Link
-                to={role === "owner" ? "/admin" : "/owner"}
-                className="block truncate text-muted-foreground hover:text-foreground transition"
-              >
-                &larr; Switch to {role === "owner" ? "Admin" : "Owner"} panel
-              </Link>
+            <div className="space-y-1">
+              {!isOwnerView && profile.role === "owner" && (
+                <Link
+                  to="/owner"
+                  className="block truncate text-muted-foreground hover:text-foreground transition"
+                >
+                  &larr; Switch to Owner panel
+                </Link>
+              )}
               <Link
                 to="/"
                 className="block truncate text-muted-foreground hover:text-foreground transition"
               >
                 &larr; Back to customer storefront
               </Link>
-            </>
+            </div>
           )}
         </div>
       </aside>
@@ -269,38 +308,57 @@ export function DashboardShell({
 
         <nav
           suppressHydrationWarning
-          className="sidebar-scroll my-3 flex-1 min-h-0 overflow-y-auto space-y-1 pr-1"
+          className="sidebar-scroll my-3 flex-1 min-h-0 overflow-y-auto space-y-3 pr-1"
         >
-          {nav.map(({ to, label, icon: Icon }) => {
-            const isActive =
-              to === "/admin" || to === "/owner" ? pathname === to : pathname.startsWith(to);
-            return (
-              <Link
-                key={to}
-                to={to}
-                onClick={() => setMobileOpen(false)}
-                suppressHydrationWarning
-                className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
-                  isActive
-                    ? "bg-primary/15 text-primary font-semibold shadow-xs"
-                    : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
-                }`}
-              >
-                <Icon className={`size-4 shrink-0 ${isActive ? "text-primary" : ""}`} />
-                <span className="truncate">{label}</span>
-              </Link>
-            );
-          })}
+          {sections.map((section, idx) => (
+            <div key={section.title || idx} className="space-y-1">
+              {section.title && (
+                <div
+                  className={`px-3 pb-1.5 flex items-center justify-between ${
+                    idx > 0 ? "pt-3 border-t border-border/40 mt-3" : "pt-1"
+                  }`}
+                >
+                  <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-muted-foreground/75">
+                    {section.title}
+                  </span>
+                  <span className="text-[10px] font-medium text-muted-foreground/45">
+                    {section.items.length}
+                  </span>
+                </div>
+              )}
+              {section.items.map(({ to, label, icon: Icon }) => {
+                const active = isItemActive(to, pathname);
+                return (
+                  <Link
+                    key={`${section.title}-${to}`}
+                    to={to}
+                    onClick={() => setMobileOpen(false)}
+                    suppressHydrationWarning
+                    className={`flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium transition ${
+                      active
+                        ? "bg-primary/15 text-primary font-semibold shadow-xs"
+                        : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
+                    }`}
+                  >
+                    <Icon className={`size-4 shrink-0 ${active ? "text-primary" : ""}`} />
+                    <span className="truncate">{label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
         </nav>
 
         <div className="shrink-0 border-t border-border/40 pt-3 text-xs space-y-1.5">
-          <Link
-            to={role === "owner" ? "/admin" : "/owner"}
-            onClick={() => setMobileOpen(false)}
-            className="block truncate text-muted-foreground hover:text-foreground transition"
-          >
-            &larr; Switch to {role === "owner" ? "Admin" : "Owner"} panel
-          </Link>
+          {!isOwnerView && profile.role === "owner" && (
+            <Link
+              to="/owner"
+              onClick={() => setMobileOpen(false)}
+              className="block truncate text-muted-foreground hover:text-foreground transition"
+            >
+              &larr; Switch to Owner panel
+            </Link>
+          )}
           <Link
             to="/"
             onClick={() => setMobileOpen(false)}
@@ -357,9 +415,8 @@ export function DashboardShell({
           </div>
 
           <div className="no-scrollbar -mx-3 sm:-mx-6 mt-2.5 flex gap-1.5 overflow-x-auto px-3 sm:px-6 lg:hidden">
-            {nav.map(({ to, label }) => {
-              const isActive =
-                to === "/admin" || to === "/owner" ? pathname === to : pathname.startsWith(to);
+            {flatNav.map(({ to, label }) => {
+              const isActive = isItemActive(to, pathname);
               return (
                 <Link
                   key={to}

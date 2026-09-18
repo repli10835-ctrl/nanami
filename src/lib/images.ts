@@ -1,12 +1,18 @@
-import food1 from "@/assets/food-1.jpg";
-import food2 from "@/assets/food-2.jpg";
-import food3 from "@/assets/food-3.jpg";
-import food4 from "@/assets/food-4.jpg";
-import hero from "@/assets/hero.jpg";
-import logo from "@/assets/nanami-logo.png";
 import type { SyntheticEvent } from "react";
 
-export { food1, food2, food3, food4, hero, logo };
+export const food1 = "/food-1.jpg";
+export const food2 = "/food-2.jpg";
+export const food3 = "/food-3.jpg";
+export const food4 = "/food-4.jpg";
+export const hero = "/hero.jpg";
+export const logo = "/nanami-logo.png";
+
+export {
+  food1 as defaultFood1,
+  food2 as defaultFood2,
+  food3 as defaultFood3,
+  food4 as defaultFood4,
+};
 
 export const DEFAULT_FOOD_IMAGES: Record<string, string> = {
   "/src/assets/food-1.jpg": food1,

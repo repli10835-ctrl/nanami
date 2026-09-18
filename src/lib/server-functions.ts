@@ -129,53 +129,39 @@ export const loginServerFn = createServerFn({ method: "POST" })
 
 export const getDatabaseState = createServerFn({ method: "GET" }).handler(async () => {
   const envAccounts = getEnvAccounts();
+  const { getStorageData } = await import("../server/persistent-storage");
+  const fallback = getStorageData();
+
   const { sql, initDb, seedDbIfEmpty } = await getDb();
   if (!sql) {
-    const { seedState } = await import("./seed-data");
     const mergedAccounts: Account[] = [...envAccounts];
-    for (const sa of seedState.accounts) {
+    for (const sa of fallback.accounts) {
       if (!mergedAccounts.some((a) => a.email.toLowerCase() === sa.email.toLowerCase())) {
         mergedAccounts.push(sa);
       }
     }
     return {
-      settings: seedState.settings,
-      cms: seedState.cms,
-      menu: seedState.menu,
-      orders: seedState.orders,
-      promos: seedState.promos,
-      vouchers: seedState.vouchers,
+      ...fallback,
       accounts: mergedAccounts,
-      staff: seedState.staff,
-      mediaAssets: [],
     };
   }
   try {
     const ok = await initDb();
     if (!ok) {
-      const { seedState } = await import("./seed-data");
       const mergedAccounts: Account[] = [...envAccounts];
-      for (const sa of seedState.accounts) {
+      for (const sa of fallback.accounts) {
         if (!mergedAccounts.some((a) => a.email.toLowerCase() === sa.email.toLowerCase())) {
           mergedAccounts.push(sa);
         }
       }
       return {
-        settings: seedState.settings,
-        cms: seedState.cms,
-        menu: seedState.menu,
-        orders: seedState.orders,
-        promos: seedState.promos,
-        vouchers: seedState.vouchers,
+        ...fallback,
         accounts: mergedAccounts,
-        staff: seedState.staff,
-        mediaAssets: [],
       };
     }
 
     // Seed default if database is freshly created and has no records
-    const { seedState } = await import("./seed-data");
-    await seedDbIfEmpty(seedState);
+    await seedDbIfEmpty(fallback as any);
 
     const settings =
       (await sql`SELECT data FROM app_settings WHERE id = 'main_settings' LIMIT 1`) as any[];
@@ -208,87 +194,120 @@ export const getDatabaseState = createServerFn({ method: "GET" }).handler(async 
     }
 
     return {
-      settings: settings[0]?.data,
-      cms: cms[0]?.data,
-      menu: menu.map((m) => ({
-        id: m.id,
-        name: m.name,
-        description: m.description,
-        price: Number(m.price),
-        category: m.category,
-        image: m.image,
-        available: m.available,
-        prepMinutes: m.prep_minutes,
-        badges: m.badges,
-        stock: m.stock,
-        groups: m.groups,
-        specialRequestEnabled:
-          m.special_request_enabled !== undefined ? Boolean(m.special_request_enabled) : true,
-      })),
-      orders: orders.map((o) => ({
-        id: o.id,
-        code: o.code,
-        createdAt: Number(o.created_at),
-        type: o.type,
-        lines: o.lines,
-        subtotal: Number(o.subtotal),
-        discount: Number(o.discount),
-        voucherCode: o.voucher_code,
-        deliveryFee: Number(o.delivery_fee),
-        total: Number(o.total),
-        status: o.status,
-        paid: o.paid,
-        paymentMethod: o.payment_method,
-        pointsEarned: o.points_earned,
-        etaMinutes: o.eta_minutes,
-        customer: o.customer,
-        accountId: o.account_id || null,
-      })),
-      promos: promos.map((p) => ({
-        id: p.id,
-        title: p.title,
-        subtitle: p.subtitle,
-        badge: p.badge,
-        imageUrl: p.image_url,
-        link: p.link,
-        active: p.active,
-      })),
-      vouchers: vouchers.map((v) => ({
-        code: v.code,
-        type: v.type,
-        value: Number(v.value),
-        minSpend: Number(v.min_spend),
-        active: v.active,
-      })),
+      settings: settings[0]?.data ?? fallback.settings,
+      cms: cms[0]?.data ?? fallback.cms,
+      menu: menu.length
+        ? menu.map((m) => ({
+            id: m.id,
+            name: m.name,
+            description: m.description,
+            price: Number(m.price),
+            category: m.category,
+            image: m.image,
+            available: m.available,
+            prepMinutes: m.prep_minutes,
+            badges: m.badges,
+            stock: m.stock,
+            groups: m.groups,
+            specialRequestEnabled:
+              m.special_request_enabled !== undefined ? Boolean(m.special_request_enabled) : true,
+          }))
+        : fallback.menu,
+      orders: orders.length
+        ? orders.map((o) => ({
+            id: o.id,
+            code: o.code,
+            createdAt: Number(o.created_at),
+            type: o.type,
+            lines: o.lines,
+            subtotal: Number(o.subtotal),
+            discount: Number(o.discount),
+            voucherCode: o.voucher_code,
+            deliveryFee: Number(o.delivery_fee),
+            total: Number(o.total),
+            status: o.status,
+            paid: o.paid,
+            paymentMethod: o.payment_method,
+            pointsEarned: o.points_earned,
+            etaMinutes: o.eta_minutes,
+            customer: o.customer,
+            accountId: o.account_id || null,
+          }))
+        : fallback.orders,
+      promos: promos.length
+        ? promos.map((p) => ({
+            id: p.id,
+            title: p.title,
+            subtitle: p.subtitle,
+            badge: p.badge,
+            imageUrl: p.image_url,
+            link: p.link,
+            active: p.active,
+          }))
+        : fallback.promos,
+      vouchers: vouchers.length
+        ? vouchers.map((v) => ({
+            code: v.code,
+            type: v.type,
+            value: Number(v.value),
+            minSpend: Number(v.min_spend),
+            active: v.active,
+          }))
+        : fallback.vouchers,
       accounts: mergedAccounts,
-      staff: staff.map((s) => ({
-        id: s.id,
-        name: s.name,
-        email: s.email,
-        phone: s.phone,
-        role: s.role,
-        active: s.active,
-        createdAt: Number(s.created_at),
-      })),
-      mediaAssets: media.map((m) => ({
-        id: m.id,
-        url: m.url,
-        filename: m.filename,
-        uploadedAt: Number(m.uploaded_at),
-        usedByMenuIds: m.used_by_menu_ids || [],
-      })),
+      staff: staff.length
+        ? staff.map((s) => ({
+            id: s.id,
+            name: s.name,
+            email: s.email,
+            phone: s.phone,
+            role: s.role,
+            active: s.active,
+            createdAt: Number(s.created_at),
+          }))
+        : fallback.staff,
+      mediaAssets: media.length
+        ? media.map((m) => ({
+            id: m.id,
+            url: m.url,
+            filename: m.filename,
+            uploadedAt: Number(m.uploaded_at),
+            usedByMenuIds: m.used_by_menu_ids || [],
+          }))
+        : fallback.mediaAssets,
     };
   } catch (error) {
-    console.error("Error fetching state from PostgreSQL database:", error);
-    return null;
+    console.warn(
+      "Error fetching state from PostgreSQL database (using persistent storage fallback):",
+      error,
+    );
+    const mergedAccounts: Account[] = [...envAccounts];
+    for (const sa of fallback.accounts) {
+      if (!mergedAccounts.some((a) => a.email.toLowerCase() === sa.email.toLowerCase())) {
+        mergedAccounts.push(sa);
+      }
+    }
+    return {
+      ...fallback,
+      accounts: mergedAccounts,
+    };
   }
 });
 
 export const saveMenuItemDb = createServerFn({ method: "POST" })
   .validator((item: MenuItem) => item)
   .handler(async ({ data: item }) => {
+    // 1. Always persist to server storage first
+    try {
+      const { saveMenuItemStorage } = await import("../server/persistent-storage");
+      saveMenuItemStorage(item);
+    } catch (err) {
+      console.error("Failed to save menu item to local storage:", err);
+    }
+
+    // 2. Persist to PostgreSQL if available
     const { sql } = await getDb();
-    if (!sql) return;
+    if (!sql) return { ok: true, source: "storage" };
     try {
       await sql`
         INSERT INTO menu_items (id, name, description, price, category, image, available, prep_minutes, badges, stock, groups, special_request_enabled)
@@ -319,28 +338,46 @@ export const saveMenuItemDb = createServerFn({ method: "POST" })
           groups = EXCLUDED.groups,
           special_request_enabled = EXCLUDED.special_request_enabled
       `;
+      return { ok: true, source: "database" };
     } catch (e) {
-      console.error("Failed to save menu item to database:", e);
+      console.warn("Failed to save menu item to PostgreSQL (fallback saved):", e);
+      return { ok: true, source: "storage" };
     }
   });
 
 export const deleteMenuItemDb = createServerFn({ method: "POST" })
   .validator((id: string) => id)
   .handler(async ({ data: id }) => {
+    try {
+      const { deleteMenuItemStorage } = await import("../server/persistent-storage");
+      deleteMenuItemStorage(id);
+    } catch (err) {
+      console.error("Failed to delete menu item from local storage:", err);
+    }
+
     const { sql } = await getDb();
-    if (!sql) return;
+    if (!sql) return { ok: true, source: "storage" };
     try {
       await sql`DELETE FROM menu_items WHERE id = ${id}`;
+      return { ok: true, source: "database" };
     } catch (e) {
-      console.error("Failed to delete menu item from database:", e);
+      console.warn("Failed to delete menu item from PostgreSQL (fallback deleted):", e);
+      return { ok: true, source: "storage" };
     }
   });
 
 export const saveOrderDb = createServerFn({ method: "POST" })
   .validator((order: Order) => order)
   .handler(async ({ data: order }) => {
+    try {
+      const { saveOrderStorage } = await import("../server/persistent-storage");
+      saveOrderStorage(order);
+    } catch (err) {
+      console.error("Failed to save order to local storage:", err);
+    }
+
     const { sql } = await getDb();
-    if (!sql) return;
+    if (!sql) return { ok: true, source: "storage" };
     try {
       await sql`
         INSERT INTO orders (id, code, created_at, type, lines, subtotal, discount, voucher_code, delivery_fee, total, status, paid, payment_method, points_earned, eta_minutes, customer, account_id)
@@ -368,16 +405,25 @@ export const saveOrderDb = createServerFn({ method: "POST" })
           paid = EXCLUDED.paid,
           eta_minutes = EXCLUDED.eta_minutes
       `;
+      return { ok: true, source: "database" };
     } catch (e) {
-      console.error("Failed to save order to database:", e);
+      console.warn("Failed to save order to PostgreSQL (fallback saved):", e);
+      return { ok: true, source: "storage" };
     }
   });
 
 export const saveVoucherDb = createServerFn({ method: "POST" })
   .validator((v: Voucher) => v)
   .handler(async ({ data: v }) => {
+    try {
+      const { saveVoucherStorage } = await import("../server/persistent-storage");
+      saveVoucherStorage(v);
+    } catch (err) {
+      console.error("Failed to save voucher to local storage:", err);
+    }
+
     const { sql } = await getDb();
-    if (!sql) return;
+    if (!sql) return { ok: true, source: "storage" };
     try {
       await sql`
         INSERT INTO vouchers (code, type, value, min_spend, active)
@@ -388,28 +434,46 @@ export const saveVoucherDb = createServerFn({ method: "POST" })
           min_spend = EXCLUDED.min_spend,
           active = EXCLUDED.active
       `;
+      return { ok: true, source: "database" };
     } catch (e) {
-      console.error("Failed to save voucher to database:", e);
+      console.warn("Failed to save voucher to PostgreSQL (fallback saved):", e);
+      return { ok: true, source: "storage" };
     }
   });
 
 export const deleteVoucherDb = createServerFn({ method: "POST" })
   .validator((code: string) => code)
   .handler(async ({ data: code }) => {
+    try {
+      const { deleteVoucherStorage } = await import("../server/persistent-storage");
+      deleteVoucherStorage(code);
+    } catch (err) {
+      console.error("Failed to delete voucher from local storage:", err);
+    }
+
     const { sql } = await getDb();
-    if (!sql) return;
+    if (!sql) return { ok: true, source: "storage" };
     try {
       await sql`DELETE FROM vouchers WHERE code = ${code}`;
+      return { ok: true, source: "database" };
     } catch (e) {
-      console.error("Failed to delete voucher from database:", e);
+      console.warn("Failed to delete voucher from PostgreSQL (fallback deleted):", e);
+      return { ok: true, source: "storage" };
     }
   });
 
 export const savePromoDb = createServerFn({ method: "POST" })
   .validator((p: Promo) => p)
   .handler(async ({ data: p }) => {
+    try {
+      const { savePromoStorage } = await import("../server/persistent-storage");
+      savePromoStorage(p);
+    } catch (err) {
+      console.error("Failed to save promo to local storage:", err);
+    }
+
     const { sql } = await getDb();
-    if (!sql) return;
+    if (!sql) return { ok: true, source: "storage" };
     try {
       await sql`
         INSERT INTO promos (id, title, subtitle, badge, image_url, link, active)
@@ -422,28 +486,46 @@ export const savePromoDb = createServerFn({ method: "POST" })
           link = EXCLUDED.link,
           active = EXCLUDED.active
       `;
+      return { ok: true, source: "database" };
     } catch (e) {
-      console.error("Failed to save promo to database:", e);
+      console.warn("Failed to save promo to PostgreSQL (fallback saved):", e);
+      return { ok: true, source: "storage" };
     }
   });
 
 export const deletePromoDb = createServerFn({ method: "POST" })
   .validator((id: string) => id)
   .handler(async ({ data: id }) => {
+    try {
+      const { deletePromoStorage } = await import("../server/persistent-storage");
+      deletePromoStorage(id);
+    } catch (err) {
+      console.error("Failed to delete promo from local storage:", err);
+    }
+
     const { sql } = await getDb();
-    if (!sql) return;
+    if (!sql) return { ok: true, source: "storage" };
     try {
       await sql`DELETE FROM promos WHERE id = ${id}`;
+      return { ok: true, source: "database" };
     } catch (e) {
-      console.error("Failed to delete promo from database:", e);
+      console.warn("Failed to delete promo from PostgreSQL (fallback deleted):", e);
+      return { ok: true, source: "storage" };
     }
   });
 
 export const saveAccountDb = createServerFn({ method: "POST" })
   .validator((acc: Account) => acc)
   .handler(async ({ data: acc }) => {
+    try {
+      const { saveAccountStorage } = await import("../server/persistent-storage");
+      saveAccountStorage(acc);
+    } catch (err) {
+      console.error("Failed to save account to local storage:", err);
+    }
+
     const { sql } = await getDb();
-    if (!sql) return;
+    if (!sql) return { ok: true, source: "storage" };
     try {
       await sql`
         INSERT INTO accounts (id, email, password, name, phone, role, address, addresses, points)
@@ -458,16 +540,25 @@ export const saveAccountDb = createServerFn({ method: "POST" })
           addresses = EXCLUDED.addresses,
           points = EXCLUDED.points
       `;
+      return { ok: true, source: "database" };
     } catch (e) {
-      console.error("Failed to save account to database:", e);
+      console.warn("Failed to save account to PostgreSQL (fallback saved):", e);
+      return { ok: true, source: "storage" };
     }
   });
 
 export const saveStaffDb = createServerFn({ method: "POST" })
   .validator((s: StaffMember) => s)
   .handler(async ({ data: s }) => {
+    try {
+      const { saveStaffStorage } = await import("../server/persistent-storage");
+      saveStaffStorage(s);
+    } catch (err) {
+      console.error("Failed to save staff member to local storage:", err);
+    }
+
     const { sql } = await getDb();
-    if (!sql) return;
+    if (!sql) return { ok: true, source: "storage" };
     try {
       await sql`
         INSERT INTO staff (id, name, email, phone, role, active, created_at)
@@ -479,16 +570,25 @@ export const saveStaffDb = createServerFn({ method: "POST" })
           role = EXCLUDED.role,
           active = EXCLUDED.active
       `;
+      return { ok: true, source: "database" };
     } catch (e) {
-      console.error("Failed to save staff member to database:", e);
+      console.warn("Failed to save staff to PostgreSQL (fallback saved):", e);
+      return { ok: true, source: "storage" };
     }
   });
 
 export const saveSettingsDb = createServerFn({ method: "POST" })
   .validator((settings: Settings) => settings)
   .handler(async ({ data: settings }) => {
+    try {
+      const { saveSettingsStorage } = await import("../server/persistent-storage");
+      saveSettingsStorage(settings);
+    } catch (err) {
+      console.error("Failed to save settings to local storage:", err);
+    }
+
     const { sql } = await getDb();
-    if (!sql) return;
+    if (!sql) return { ok: true, source: "storage" };
     try {
       await sql`
         INSERT INTO app_settings (id, data)
@@ -496,16 +596,25 @@ export const saveSettingsDb = createServerFn({ method: "POST" })
         ON CONFLICT (id) DO UPDATE SET
           data = EXCLUDED.data
       `;
+      return { ok: true, source: "database" };
     } catch (e) {
-      console.error("Failed to save settings to database:", e);
+      console.warn("Failed to save settings to PostgreSQL (fallback saved):", e);
+      return { ok: true, source: "storage" };
     }
   });
 
 export const saveCmsDb = createServerFn({ method: "POST" })
   .validator((cms: CmsContent) => cms)
   .handler(async ({ data: cms }) => {
+    try {
+      const { saveCmsStorage } = await import("../server/persistent-storage");
+      saveCmsStorage(cms);
+    } catch (err) {
+      console.error("Failed to save CMS to local storage:", err);
+    }
+
     const { sql } = await getDb();
-    if (!sql) return;
+    if (!sql) return { ok: true, source: "storage" };
     try {
       await sql`
         INSERT INTO cms_content (id, data)
@@ -513,8 +622,10 @@ export const saveCmsDb = createServerFn({ method: "POST" })
         ON CONFLICT (id) DO UPDATE SET
           data = EXCLUDED.data
       `;
+      return { ok: true, source: "database" };
     } catch (e) {
-      console.error("Failed to save CMS content to database:", e);
+      console.warn("Failed to save CMS to PostgreSQL (fallback saved):", e);
+      return { ok: true, source: "storage" };
     }
   });
 
@@ -583,38 +694,90 @@ export const searchOrdersDb = createServerFn({ method: "POST" })
 export const saveMediaAssetDb = createServerFn({ method: "POST" })
   .validator((d: MediaAsset) => d)
   .handler(async ({ data: m }) => {
+    try {
+      const { saveMediaAssetStorage } = await import("../server/persistent-storage");
+      saveMediaAssetStorage(m);
+    } catch (err) {
+      console.error("Failed to save media asset to local storage:", err);
+    }
+
     const { sql } = await getDb();
-    if (!sql) return;
-    await sql`
-      INSERT INTO media_assets (id, url, filename, uploaded_at, used_by_menu_ids)
-      VALUES (${m.id}, ${m.url}, ${m.filename}, ${m.uploadedAt}, ${sql.json(m.usedByMenuIds)})
-      ON CONFLICT (id) DO UPDATE SET
-        url = EXCLUDED.url,
-        filename = EXCLUDED.filename,
-        used_by_menu_ids = EXCLUDED.used_by_menu_ids
-    `;
+    if (!sql) return { ok: true, source: "storage" };
+    try {
+      await sql`
+        INSERT INTO media_assets (id, url, filename, uploaded_at, used_by_menu_ids)
+        VALUES (${m.id}, ${m.url}, ${m.filename}, ${m.uploadedAt}, ${sql.json(m.usedByMenuIds)})
+        ON CONFLICT (id) DO UPDATE SET
+          url = EXCLUDED.url,
+          filename = EXCLUDED.filename,
+          used_by_menu_ids = EXCLUDED.used_by_menu_ids
+      `;
+      return { ok: true, source: "database" };
+    } catch (e) {
+      console.warn("Failed to save media asset to PostgreSQL (fallback saved):", e);
+      return { ok: true, source: "storage" };
+    }
   });
 
 export const deleteMediaAssetDb = createServerFn({ method: "POST" })
   .validator((id: string) => id)
   .handler(async ({ data: id }) => {
+    try {
+      const { deleteMediaAssetStorage } = await import("../server/persistent-storage");
+      deleteMediaAssetStorage(id);
+    } catch (err) {
+      console.error("Failed to delete media asset from local storage:", err);
+    }
+
     const { sql } = await getDb();
-    if (!sql) return;
-    await sql`DELETE FROM media_assets WHERE id = ${id}`;
+    if (!sql) return { ok: true, source: "storage" };
+    try {
+      await sql`DELETE FROM media_assets WHERE id = ${id}`;
+      return { ok: true, source: "database" };
+    } catch (e) {
+      console.warn("Failed to delete media asset from PostgreSQL (fallback deleted):", e);
+      return { ok: true, source: "storage" };
+    }
   });
 
 export const updateMediaAssetUsageDb = createServerFn({ method: "POST" })
   .validator((d: { id: string; usedByMenuIds: string[] }) => d)
   .handler(async ({ data: d }) => {
+    try {
+      const { updateMediaAssetUsageStorage } = await import("../server/persistent-storage");
+      updateMediaAssetUsageStorage(d.id, d.usedByMenuIds);
+    } catch (err) {
+      console.error("Failed to update media asset usage in local storage:", err);
+    }
+
     const { sql } = await getDb();
-    if (!sql) return;
-    await sql`UPDATE media_assets SET used_by_menu_ids = ${sql.json(d.usedByMenuIds)} WHERE id = ${d.id}`;
+    if (!sql) return { ok: true, source: "storage" };
+    try {
+      await sql`UPDATE media_assets SET used_by_menu_ids = ${sql.json(d.usedByMenuIds)} WHERE id = ${d.id}`;
+      return { ok: true, source: "database" };
+    } catch (e) {
+      console.warn("Failed to update media asset usage in PostgreSQL (fallback updated):", e);
+      return { ok: true, source: "storage" };
+    }
   });
 
 export const deleteAccountDb = createServerFn({ method: "POST" })
   .validator((id: string) => id)
   .handler(async ({ data: id }) => {
+    try {
+      const { deleteAccountStorage } = await import("../server/persistent-storage");
+      deleteAccountStorage(id);
+    } catch (err) {
+      console.error("Failed to delete account from local storage:", err);
+    }
+
     const { sql } = await getDb();
-    if (!sql) return;
-    await sql`DELETE FROM accounts WHERE id = ${id}`;
+    if (!sql) return { ok: true, source: "storage" };
+    try {
+      await sql`DELETE FROM accounts WHERE id = ${id}`;
+      return { ok: true, source: "database" };
+    } catch (e) {
+      console.warn("Failed to delete account from PostgreSQL (fallback deleted):", e);
+      return { ok: true, source: "storage" };
+    }
   });

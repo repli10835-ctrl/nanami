@@ -12,11 +12,11 @@ expressApp.use(express.urlencoded({ extended: true }));
 
 // Health Check with Full Technology Stack Identification
 expressApp.get("/api/health", async (_req: Request, res: Response): Promise<void> => {
-  let dbStatus = "offline";
+  let dbStatus = "offline (using robust local fallback state)";
   if (sql) {
     try {
-      await sql`SELECT 1`;
-      dbStatus = "connected";
+      const isConnected = await initDb();
+      dbStatus = isConnected ? "connected" : "offline (using robust local fallback state)";
     } catch {
       dbStatus = "error";
     }
@@ -41,13 +41,13 @@ expressApp.get("/api/health", async (_req: Request, res: Response): Promise<void
 
 // Full state sync from PostgreSQL
 expressApp.get("/api/state", async (_req: Request, res: Response): Promise<void> => {
-  if (!sql) {
+  const dbReady = await initDb();
+  if (!sql || !dbReady) {
     res.json({ state: seedState, source: "in-memory-seed" });
     return;
   }
 
   try {
-    await initDb();
     await seedDbIfEmpty(seedState);
 
     const [settings, cms, menu, orders, promos, vouchers, accounts, staff, media] =
@@ -83,12 +83,12 @@ expressApp.get("/api/state", async (_req: Request, res: Response): Promise<void>
 
 // Menu Endpoints
 expressApp.get("/api/menu", async (_req: Request, res: Response): Promise<void> => {
-  if (!sql) {
+  const dbReady = await initDb();
+  if (!sql || !dbReady) {
     res.json({ menu: seedState.menu || [] });
     return;
   }
   try {
-    await initDb();
     const rows = await sql`SELECT * FROM menu_items ORDER BY category, name`;
     if (rows.length === 0 && seedState.menu) {
       res.json({ menu: seedState.menu });
@@ -106,7 +106,8 @@ expressApp.get("/api/menu/:id", async (req: Request, res: Response): Promise<voi
     res.status(400).json({ error: "Item ID required" });
     return;
   }
-  if (!sql) {
+  const dbReady = await initDb();
+  if (!sql || !dbReady) {
     const item = seedState.menu?.find((m) => m.id === id);
     if (item) {
       res.json({ item });
@@ -129,12 +130,12 @@ expressApp.get("/api/menu/:id", async (req: Request, res: Response): Promise<voi
 
 // Orders Endpoints
 expressApp.get("/api/orders", async (_req: Request, res: Response): Promise<void> => {
-  if (!sql) {
+  const dbReady = await initDb();
+  if (!sql || !dbReady) {
     res.json({ orders: seedState.orders || [] });
     return;
   }
   try {
-    await initDb();
     const orders = await sql`SELECT * FROM orders ORDER BY created_at DESC LIMIT 100`;
     res.json({ orders });
   } catch (err) {
@@ -149,13 +150,13 @@ expressApp.post("/api/orders", async (req: Request, res: Response): Promise<void
     return;
   }
 
-  if (!sql) {
+  const dbReady = await initDb();
+  if (!sql || !dbReady) {
     res.status(201).json({ success: true, order, storage: "in-memory" });
     return;
   }
 
   try {
-    await initDb();
     const orderId = String(order["id"]);
     const orderCode = String(order["code"]);
     const createdAt = Number(order["createdAt"]) || Date.now();
@@ -201,12 +202,12 @@ expressApp.post("/api/orders", async (req: Request, res: Response): Promise<void
 
 // Vouchers Endpoints
 expressApp.get("/api/vouchers", async (_req: Request, res: Response): Promise<void> => {
-  if (!sql) {
+  const dbReady = await initDb();
+  if (!sql || !dbReady) {
     res.json({ vouchers: seedState.vouchers || [] });
     return;
   }
   try {
-    await initDb();
     const vouchers = await sql`SELECT * FROM vouchers WHERE active = true`;
     res.json({ vouchers });
   } catch (err) {
@@ -216,12 +217,12 @@ expressApp.get("/api/vouchers", async (_req: Request, res: Response): Promise<vo
 
 // CMS Endpoints
 expressApp.get("/api/cms", async (_req: Request, res: Response): Promise<void> => {
-  if (!sql) {
+  const dbReady = await initDb();
+  if (!sql || !dbReady) {
     res.json({ cms: seedState.cms });
     return;
   }
   try {
-    await initDb();
     const rows = await sql`SELECT data FROM cms_content WHERE id = 'main_cms' LIMIT 1`;
     res.json({ cms: rows[0]?.["data"] ?? seedState.cms });
   } catch (err) {
@@ -231,12 +232,12 @@ expressApp.get("/api/cms", async (_req: Request, res: Response): Promise<void> =
 
 // Settings Endpoints
 expressApp.get("/api/settings", async (_req: Request, res: Response): Promise<void> => {
-  if (!sql) {
+  const dbReady = await initDb();
+  if (!sql || !dbReady) {
     res.json({ settings: seedState.settings });
     return;
   }
   try {
-    await initDb();
     const rows = await sql`SELECT data FROM app_settings WHERE id = 'main_settings' LIMIT 1`;
     res.json({ settings: rows[0]?.["data"] ?? seedState.settings });
   } catch (err) {

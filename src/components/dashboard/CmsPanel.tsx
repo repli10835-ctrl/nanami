@@ -24,17 +24,20 @@ import {
   Volume2,
   X,
   Pencil,
+  CreditCard,
 } from "lucide-react";
 import {
   actions,
   CATEGORIES,
   defaultCmsContent,
+  defaultCheckoutCms,
   rupiah,
   uid,
   useStore,
   type CmsFaq,
   type Promo,
   type CmsContent,
+  type CheckoutCms,
   type Settings,
 } from "@/lib/store";
 import defaultLogo from "@/assets/nanami-logo.png";
@@ -45,6 +48,7 @@ import food3 from "@/assets/food-3.jpg";
 import food4 from "@/assets/food-4.jpg";
 import { SectionCard, fieldClass } from "./DashboardShell";
 import { MediaGallery } from "./MediaGallery";
+import { CheckoutCmsSection } from "./CheckoutCmsSection";
 
 const LOGO_PRESETS = [
   { id: "default", name: "Default Nanami Logo", url: defaultLogo },
@@ -143,6 +147,19 @@ export function CmsPanel(props: CmsPanelProps = {}) {
         actions.updateCmsSocials(patch);
       }
     },
+    updateCmsCheckout(patch: Partial<CheckoutCms>) {
+      const current = cms.checkout || defaultCheckoutCms;
+      const updatedCheckout = { ...current, ...patch };
+      const updated = {
+        ...cms,
+        checkout: updatedCheckout,
+      };
+      if (props.onChangeCms) {
+        props.onChangeCms(updated);
+      } else {
+        actions.updateCmsCheckout(patch);
+      }
+    },
     updateCmsFaq(id: string, patch: Partial<CmsFaq>) {
       const updated = {
         ...cms,
@@ -215,7 +232,15 @@ export function CmsPanel(props: CmsPanelProps = {}) {
   const actions = actionsShadow;
 
   const [activeTab, setActiveTab] = useState<
-    "branding" | "hero" | "announcement" | "promos" | "welcome" | "socials" | "faqs" | "catalog"
+    | "branding"
+    | "hero"
+    | "announcement"
+    | "promos"
+    | "welcome"
+    | "socials"
+    | "faqs"
+    | "catalog"
+    | "checkout"
   >("branding");
 
   const [saveToast, setSaveToast] = useState(false);
@@ -320,6 +345,7 @@ export function CmsPanel(props: CmsPanelProps = {}) {
           { key: "socials", label: "Contact & Socials", icon: Share2 },
           { key: "faqs", label: "FAQ & Help", icon: HelpCircle },
           { key: "catalog", label: "Catalog & Must Try", icon: UtensilsCrossed },
+          { key: "checkout", label: "Checkout Page", icon: CreditCard },
         ].map(({ key, label, icon: Icon }) => (
           <button
             key={key}
@@ -1590,6 +1616,22 @@ export function CmsPanel(props: CmsPanelProps = {}) {
             </SectionCard>
           </div>
         </div>
+      )}
+
+      {/* TAB: CHECKOUT PAGE CMS & CRUD */}
+      {activeTab === "checkout" && (
+        <CheckoutCmsSection
+          checkout={cms.checkout || defaultCheckoutCms}
+          onChange={(patch) => {
+            actionsShadow.updateCmsCheckout(patch);
+            triggerToast();
+          }}
+          onSaveToast={triggerToast}
+          settings={settings}
+          onUpdateSettings={(patch) => {
+            actionsShadow.updateSettings(patch);
+          }}
+        />
       )}
     </div>
   );

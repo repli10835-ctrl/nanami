@@ -25,7 +25,7 @@ function isCustomerRestrictedPath(pathname: string): boolean {
   );
 }
 
-function isStaffAllowedAdminPath(pathname: string): boolean {
+function isOperationalAdminPath(pathname: string): boolean {
   return (
     pathname === "/admin" ||
     pathname === "/admin/" ||
@@ -33,6 +33,21 @@ function isStaffAllowedAdminPath(pathname: string): boolean {
     pathname.startsWith("/admin/orders/") ||
     pathname === "/admin/stock" ||
     pathname.startsWith("/admin/stock/")
+  );
+}
+
+function isOwnerOnlyAdminPath(pathname: string): boolean {
+  return (
+    pathname === "/admin/menu" ||
+    pathname.startsWith("/admin/menu/") ||
+    pathname === "/admin/media" ||
+    pathname.startsWith("/admin/media/") ||
+    pathname === "/admin/customers" ||
+    pathname.startsWith("/admin/customers/") ||
+    pathname === "/admin/reports" ||
+    pathname.startsWith("/admin/reports/") ||
+    pathname === "/admin/settings" ||
+    pathname.startsWith("/admin/settings/")
   );
 }
 
@@ -83,8 +98,43 @@ export function AuthGuard({ children }: { children: ReactNode }) {
         navigate({ to: "/", replace: true });
         return;
       }
-      // Granular protection: staff only gets Kitchen (/admin), Orders (/admin/orders), and Stock (/admin/stock)
-      if (profile.role === "staff" && !isStaffAllowedAdminPath(pathname)) {
+
+      // Check owner-only modules (Menu CRUD, Media Library, Customers, Reports, Settings)
+      if (isOwnerOnlyAdminPath(pathname)) {
+        if (profile.role !== "owner") {
+          // Strictly forbid role admin & staff from accessing owner-only tools
+          navigate({ to: "/admin", replace: true });
+          return;
+        } else {
+          // If owner accesses legacy admin paths, route them seamlessly to owner counterparts
+          if (pathname === "/admin/menu" || pathname.startsWith("/admin/menu/")) {
+            navigate({ to: "/owner/menu", replace: true });
+            return;
+          }
+          if (pathname === "/admin/media" || pathname.startsWith("/admin/media/")) {
+            navigate({ to: "/owner/media", replace: true });
+            return;
+          }
+          if (pathname === "/admin/customers" || pathname.startsWith("/admin/customers/")) {
+            navigate({ to: "/owner/customers", replace: true });
+            return;
+          }
+          if (pathname === "/admin/reports" || pathname.startsWith("/admin/reports/")) {
+            navigate({ to: "/owner/finance", replace: true });
+            return;
+          }
+          if (pathname === "/admin/settings" || pathname.startsWith("/admin/settings/")) {
+            navigate({ to: "/owner/settings", replace: true });
+            return;
+          }
+        }
+      }
+
+      // Granular protection: role staff & admin are restricted strictly to operational tools
+      if (
+        (profile.role === "staff" || profile.role === "admin") &&
+        !isOperationalAdminPath(pathname)
+      ) {
         navigate({ to: "/admin", replace: true });
         return;
       }
@@ -142,13 +192,28 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     if (profile.role === "user") {
       return <RoleUnauthorizedGate requiredRole="admin" currentRole="user" />;
     }
-    // Granular protection for staff role
-    if (profile.role === "staff" && !isStaffAllowedAdminPath(pathname)) {
+
+    // Granular protection: owner-only tools inside admin
+    if (isOwnerOnlyAdminPath(pathname) && profile.role !== "owner") {
       return (
         <RoleUnauthorizedGate
-          requiredRole="admin"
-          currentRole="staff"
-          message="Kitchen staff have access to the Kitchen Board, Orders, and Stock. Catalog CRUD, Customers, and Store Settings require Admin or Owner access."
+          requiredRole="owner"
+          currentRole={profile.role ?? "admin"}
+          message="Catalog CRUD, Media Library, Customers, Financial Reports, and Store Settings are restricted to Owner role only. Operational Admin & Staff have access to Kitchen Board, Order Management, and Stock Availability."
+        />
+      );
+    }
+
+    // Protection for staff and admin roles:
+    if (
+      (profile.role === "staff" || profile.role === "admin") &&
+      !isOperationalAdminPath(pathname)
+    ) {
+      return (
+        <RoleUnauthorizedGate
+          requiredRole="owner"
+          currentRole={profile.role ?? "admin"}
+          message="This page requires Owner privileges. Kitchen Admin and Staff have access to the Kitchen Board, Order Management, and Stock Availability."
         />
       );
     }
@@ -297,14 +362,14 @@ function RoleUnauthorizedGate({
         </p>
 
         <div className="mt-6 flex flex-col gap-2">
-          {currentRole === "staff" && (
+          {(currentRole === "staff" || currentRole === "admin") && (
             <button
               onClick={() => {
                 navigate({ to: "/admin" });
               }}
               className="flex w-full items-center justify-center gap-2 rounded-full bg-primary py-3 text-sm font-bold text-primary-foreground shadow-sm hover:opacity-95"
             >
-              <UtensilsCrossed className="size-4" /> Go to Kitchen Board
+              <UtensilsCrossed className="size-4" /> Go to Kitchen & Orders
             </button>
           )}
 

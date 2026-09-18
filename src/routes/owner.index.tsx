@@ -140,7 +140,10 @@ function OwnerHome() {
 
       <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {[
+          { to: "/owner/orders", label: "Order Management" },
           { to: "/owner/menu", label: "Catalog CRUD" },
+          { to: "/owner/media", label: "Media Library" },
+          { to: "/owner/customers", label: "Customers Directory" },
           { to: "/owner/staff", label: "Accounts & Staff" },
           { to: "/owner/settings", label: "Store Settings" },
           { to: "/owner/shipping", label: "Delivery Rates" },

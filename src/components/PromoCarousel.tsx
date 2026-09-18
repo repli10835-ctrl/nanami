@@ -1,130 +1,107 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ChevronRight, Truck } from "lucide-react";
 import defaultHeroImg from "@/assets/hero.jpg";
+import food1 from "@/assets/food-1.jpg";
+import food2 from "@/assets/food-2.jpg";
+import food3 from "@/assets/food-3.jpg";
 import { useStore, resolveMenuImage, handleImageError } from "@/lib/store";
 
 export function PromoCarousel() {
-  const { promos, cms, settings } = useStore((s) => ({
+  const { promos, cms } = useStore((s) => ({
     promos: s.promos.filter((p) => p.active !== false),
     cms: s.cms,
-    settings: s.settings,
   }));
   const [index, setIndex] = useState(0);
 
+  const fallbackBanners = [defaultHeroImg, food2, food1, food3];
+
+  const bannerList =
+    promos.length > 0
+      ? promos.map((p, idx) => ({
+          id: p.id,
+          imageUrl: p.imageUrl
+            ? resolveMenuImage(p.imageUrl, defaultHeroImg)
+            : fallbackBanners[idx % fallbackBanners.length],
+          link: p.link || null,
+          alt: p.title || `Nanami Kitchen banner ${idx + 1}`,
+        }))
+      : cms?.heroActive !== false
+        ? [
+            {
+              id: "hero",
+              imageUrl: cms?.heroImage
+                ? resolveMenuImage(cms.heroImage, defaultHeroImg)
+                : defaultHeroImg,
+              link: null,
+              alt: "Nanami Kitchen banner",
+            },
+          ]
+        : [];
+
   useEffect(() => {
-    if (promos.length < 2) return;
-    const timer = setInterval(() => setIndex((i) => (i + 1) % promos.length), 4500);
+    if (bannerList.length < 2) return;
+    const timer = setInterval(() => {
+      setIndex((i) => (i + 1) % bannerList.length);
+    }, 4000);
     return () => clearInterval(timer);
-  }, [promos.length]);
+  }, [bannerList.length]);
 
-  if (cms?.heroActive === false) return null;
-  if (promos.length === 0) {
-    // Show fallback hero if no promos but hero is active
-    const bgImage = cms?.heroImage || defaultHeroImg;
-    const ctaText = cms?.heroCtaText || "Order Now";
-    const symbol = settings?.currencySymbol || "N$";
-    return (
-      <section className="relative">
-        <div className="relative overflow-hidden rounded-b-2xl border-b border-border/60 shadow-xs">
-          <img
-            src={bgImage}
-            alt="Nanami Kitchen signature dish"
-            width={1024}
-            height={640}
-            className="h-44 sm:h-48 w-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/85 to-transparent" />
-          <div className="absolute inset-y-0 left-0 flex w-3/4 sm:w-2/3 flex-col justify-center gap-1 pl-4 pr-2">
-            <span className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground tracking-tight">
-              Nanami Kitchen signature dish
-            </span>
-            <div className="flex items-center gap-1.5">
-              <span className="inline-flex items-center gap-1 rounded-md bg-primary/20 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-primary border border-primary/30">
-                <Truck className="size-3" />
-                Delivery
-              </span>
-            </div>
-            <p className="text-base sm:text-lg font-black leading-tight text-foreground">
-              Free delivery over {symbol} 250
-            </p>
-            <p className="text-[11px] sm:text-xs text-muted-foreground leading-snug line-clamp-2">
-              Within 5 km radius of our kitchen
-            </p>
-            <Link
-              to="/menu"
-              className="mt-1 inline-flex w-fit items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground shadow-xs transition hover:brightness-105 active:scale-95"
-            >
-              {ctaText} <ChevronRight className="size-3.5" />
-            </Link>
-          </div>
-        </div>
-      </section>
-    );
-  }
-  const promo = promos[Math.min(index, promos.length - 1)];
-  if (!promo) return null;
-
-  const bgImage = resolveMenuImage(
-    promo.imageUrl || cms?.heroImage || defaultHeroImg,
-    defaultHeroImg,
-  );
-  const ctaText = cms?.heroCtaText || "Order Now";
-  const symbol = settings?.currencySymbol || "N$";
-  const title = promo.title.replace(/\b(R|N\$)\s*(\d+)/g, `${symbol} $2`);
-  const subtitle = promo.subtitle.replace(/\b(R|N\$)\s*(\d+)/g, `${symbol} $2`);
+  if (cms?.heroActive === false || bannerList.length === 0) return null;
 
   return (
-    <section className="relative">
-      <div className="relative overflow-hidden rounded-b-2xl border-b border-border/60 shadow-xs">
-        <img
-          src={bgImage}
-          alt="Nanami Kitchen signature dish"
-          width={1024}
-          height={640}
-          referrerPolicy="no-referrer"
-          onError={(e) => handleImageError(e, defaultHeroImg)}
-          className="h-44 sm:h-48 w-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/85 to-transparent" />
-        <div className="absolute inset-y-0 left-0 flex w-3/4 sm:w-2/3 flex-col justify-center gap-1 pl-4 pr-2">
-          <span className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground tracking-tight">
-            Nanami Kitchen signature dish
-          </span>
-          <div className="flex items-center gap-1.5">
-            <span className="inline-flex items-center gap-1 rounded-md bg-primary/20 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-primary border border-primary/30">
-              <Truck className="size-3" />
-              {promo.badge}
-            </span>
-          </div>
-          <p className="text-base sm:text-lg font-black leading-tight text-foreground">{title}</p>
-          <p className="text-[11px] sm:text-xs text-muted-foreground leading-snug line-clamp-2">
-            {subtitle}
-          </p>
-          <Link
-            to="/menu"
-            className="mt-1 inline-flex w-fit items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground shadow-xs transition hover:brightness-105 active:scale-95"
-          >
-            {ctaText} <ChevronRight className="size-3.5" />
-          </Link>
-        </div>
-      </div>
-      {promos.length > 1 && (
-        <div className="mt-2 flex justify-center gap-1.5">
-          {promos.map((p, i) => (
-            <button
-              key={p.id}
-              onClick={() => setIndex(i)}
-              aria-label={`Show promo ${i + 1}`}
-              className={`h-1.5 rounded-full transition-all ${
-                i === index
-                  ? "w-5 bg-primary"
-                  : "w-1.5 bg-muted-foreground/30 hover:bg-muted-foreground/50"
-              }`}
+    <section className="relative w-full">
+      <div className="relative h-64 sm:h-72 md:h-80 w-full overflow-hidden rounded-b-2xl border-b border-border/60 shadow-xs bg-muted">
+        {bannerList.map((banner, i) => {
+          const isActive = i === index;
+          const content = (
+            <img
+              src={banner.imageUrl}
+              alt={banner.alt}
+              width={1024}
+              height={640}
+              referrerPolicy="no-referrer"
+              onError={(e) => handleImageError(e, defaultHeroImg)}
+              className="h-full w-full object-cover transition-transform duration-700 ease-out"
             />
-          ))}
-        </div>
-      )}
+          );
+
+          return (
+            <div
+              key={banner.id}
+              className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+                isActive ? "opacity-100 z-10" : "opacity-0 pointer-events-none z-0"
+              }`}
+            >
+              {banner.link ? (
+                <Link to={banner.link} className="block h-full w-full">
+                  {content}
+                </Link>
+              ) : (
+                content
+              )}
+            </div>
+          );
+        })}
+
+        {/* Carousel indicators */}
+        {bannerList.length > 1 && (
+          <div className="absolute bottom-3 left-0 right-0 z-20 flex justify-center gap-1.5">
+            <div className="flex items-center gap-1.5 rounded-full bg-black/40 backdrop-blur-xs px-2.5 py-1">
+              {bannerList.map((b, i) => (
+                <button
+                  key={b.id}
+                  type="button"
+                  onClick={() => setIndex(i)}
+                  aria-label={`Go to slide ${i + 1}`}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                    i === index ? "w-5 bg-white" : "w-1.5 bg-white/50 hover:bg-white/80"
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </section>
   );
 }

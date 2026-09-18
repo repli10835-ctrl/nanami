@@ -1,8 +1,5 @@
 import { useRef, useSyncExternalStore } from "react";
-import food1 from "@/assets/food-1.jpg";
-import food2 from "@/assets/food-2.jpg";
-import food3 from "@/assets/food-3.jpg";
-import food4 from "@/assets/food-4.jpg";
+import { food1, food2, food3, food4 } from "./images";
 import {
   getDatabaseState,
   saveMenuItemDb,
@@ -168,6 +165,39 @@ export type CmsContent = {
   mustTryItemIds: string[];
   categoryOrder: Category[];
   categoryNames: Record<Category, string>;
+  checkout: CheckoutCms;
+};
+
+export type CheckoutCms = {
+  // Your Details
+  detailsTitle: string;
+  fullNameLabel: string;
+  defaultFullName: string;
+  phoneLabel: string;
+  defaultPhone: string;
+  // Payment methods
+  ewalletEnabled: boolean;
+  ewalletLabel: string;
+  ewalletSub: string;
+  bankEnabled: boolean;
+  bankLabel: string;
+  bankSub: string;
+  codEnabled: boolean;
+  codLabel: string;
+  codSub: string;
+  // Payment instructions
+  instructionsTitle: string;
+  step1Text: string;
+  ewalletTitle: string;
+  ewalletAccountName: string;
+  ewalletNumber: string;
+  copyButtonText: string;
+  bankTitle: string;
+  bankName: string;
+  bankAccountName: string;
+  bankAccountNumber: string;
+  codInstructions: string;
+  step2Text: string;
 };
 
 export type Voucher = {
@@ -549,7 +579,38 @@ export const defaultCmsContent: CmsContent = {
     Combos: "Combos",
     Others: "Others",
   },
+  checkout: {
+    detailsTitle: "Your Details",
+    fullNameLabel: "Full Name",
+    defaultFullName: "Nanami Owner",
+    phoneLabel: "WhatsApp Number",
+    defaultPhone: "0834567890",
+    ewalletEnabled: true,
+    ewalletLabel: "eWallet / Pay2Cell",
+    ewalletSub: "(Scan QR or Mobile Transfer)",
+    bankEnabled: true,
+    bankLabel: "Bank Transfer / Instant EFT",
+    bankSub: "(ATM/MBANK/IBANK)",
+    codEnabled: true,
+    codLabel: "Cash on Delivery",
+    codSub: "(For Pickup & Delivery)",
+    instructionsTitle: "Payment Instructions",
+    step1Text: "1. Transfer to the following account:",
+    ewalletTitle: "E-Wallet",
+    ewalletAccountName: "Nanami Kitchen",
+    ewalletNumber: "0812345678 (Capitec Pay / SnapScan)",
+    copyButtonText: "Copy",
+    bankTitle: "EFT",
+    bankName: "First National Bank (FNB)",
+    bankAccountName: "Nanami Kitchen CC",
+    bankAccountNumber: "62123456789",
+    codInstructions:
+      "Pay in cash when your order arrives or when you pick it up. Please prepare the exact amount if possible.",
+    step2Text: "2. Upload proof of payment (Screenshot) in the WhatsApp chat after ordering.",
+  },
 };
+
+export const defaultCheckoutCms: CheckoutCms = defaultCmsContent.checkout;
 
 const defaultState: State = {
   orderType: "delivery",
@@ -679,6 +740,16 @@ if (typeof window !== "undefined") {
           parsed.role === "admin" || parsed.role === "owner" || parsed.role === "staff";
       }
     }
+    const savedMenu = localStorage.getItem("nanami_catalog_menu");
+    if (savedMenu) {
+      const parsedMenu = JSON.parse(savedMenu);
+      if (Array.isArray(parsedMenu) && parsedMenu.length > 0) {
+        defaultState.menu = parsedMenu.map((m: any) => ({
+          ...m,
+          image: resolveMenuImage(m.image),
+        }));
+      }
+    }
   } catch (e) {
     console.debug(e);
   }
@@ -693,6 +764,7 @@ function set(updater: (s: State) => State) {
     try {
       localStorage.setItem("nanami_auth_profile", JSON.stringify(state.profile));
       localStorage.setItem("nanami_admin_unlocked", JSON.stringify(state.adminUnlocked));
+      localStorage.setItem("nanami_catalog_menu", JSON.stringify(state.menu));
     } catch (e) {
       console.debug(e);
     }
@@ -752,7 +824,16 @@ export const actions = {
         set((s) => ({
           ...s,
           settings: data.settings ? { ...s.settings, ...data.settings } : s.settings,
-          cms: data.cms ? { ...s.cms, ...data.cms } : s.cms,
+          cms: data.cms
+            ? {
+                ...s.cms,
+                ...data.cms,
+                checkout: {
+                  ...defaultCheckoutCms,
+                  ...(data.cms.checkout || {}),
+                },
+              }
+            : s.cms,
           menu:
             data.menu && data.menu.length
               ? data.menu.map((m) => ({ ...m, image: resolveMenuImage(m.image) }))
@@ -1102,16 +1183,22 @@ export const actions = {
       return { ...s, orders: updatedOrders };
     });
   },
-  saveMenuItem(item: MenuItem) {
+  async saveMenuItem(item: MenuItem) {
+    const cleanItem: MenuItem = {
+      ...item,
+      specialRequestEnabled:
+        item.specialRequestEnabled !== undefined ? Boolean(item.specialRequestEnabled) : true,
+    };
+
     set((s) => {
-      const oldItem = s.menu.find((m) => m.id === item.id);
+      const oldItem = s.menu.find((m) => m.id === cleanItem.id);
       let updatedMediaAssets = [...s.mediaAssets];
 
-      if (!oldItem || oldItem.image !== item.image) {
+      if (!oldItem || oldItem.image !== cleanItem.image) {
         if (oldItem && oldItem.image) {
           updatedMediaAssets = updatedMediaAssets.map((asset) => {
             if (asset.url === oldItem.image) {
-              const newUsage = asset.usedByMenuIds.filter((id) => id !== item.id);
+              const newUsage = asset.usedByMenuIds.filter((id) => id !== cleanItem.id);
               updateMediaAssetUsageDb({ data: { id: asset.id, usedByMenuIds: newUsage } }).catch(
                 console.error,
               );
@@ -1120,10 +1207,10 @@ export const actions = {
             return asset;
           });
         }
-        if (item.image) {
+        if (cleanItem.image) {
           updatedMediaAssets = updatedMediaAssets.map((asset) => {
-            if (asset.url === item.image) {
-              const newUsage = Array.from(new Set([...asset.usedByMenuIds, item.id]));
+            if (asset.url === cleanItem.image) {
+              const newUsage = Array.from(new Set([...asset.usedByMenuIds, cleanItem.id]));
               updateMediaAssetUsageDb({ data: { id: asset.id, usedByMenuIds: newUsage } }).catch(
                 console.error,
               );
@@ -1134,17 +1221,22 @@ export const actions = {
         }
       }
 
-      saveMenuItemDb({ data: item }).catch(console.error);
       return {
         ...s,
-        menu: s.menu.some((m) => m.id === item.id)
-          ? s.menu.map((m) => (m.id === item.id ? item : m))
-          : [...s.menu, item],
+        menu: s.menu.some((m) => m.id === cleanItem.id)
+          ? s.menu.map((m) => (m.id === cleanItem.id ? cleanItem : m))
+          : [...s.menu, cleanItem],
         mediaAssets: updatedMediaAssets,
       };
     });
+
+    try {
+      await saveMenuItemDb({ data: cleanItem });
+    } catch (err) {
+      console.error("Failed to save menu item to database/server:", err);
+    }
   },
-  deleteMenuItem(id: string) {
+  async deleteMenuItem(id: string) {
     set((s) => {
       const item = s.menu.find((m) => m.id === id);
       let updatedMediaAssets = [...s.mediaAssets];
@@ -1160,13 +1252,18 @@ export const actions = {
           return asset;
         });
       }
-      deleteMenuItemDb({ data: id }).catch(console.error);
       return {
         ...s,
         menu: s.menu.filter((m) => m.id !== id),
         mediaAssets: updatedMediaAssets,
       };
     });
+
+    try {
+      await deleteMenuItemDb({ data: id });
+    } catch (err) {
+      console.error("Failed to delete menu item from database/server:", err);
+    }
   },
   toggleAvailability(id: string) {
     set((s) => {
@@ -1294,6 +1391,18 @@ export const actions = {
       const updated = {
         ...s.cms,
         socials: { ...s.cms.socials, ...patch },
+      };
+      saveCmsDb({ data: updated }).catch(console.error);
+      return { ...s, cms: updated };
+    });
+  },
+  updateCmsCheckout(patch: Partial<CheckoutCms>) {
+    set((s) => {
+      const current = s.cms?.checkout || defaultCheckoutCms;
+      const updatedCheckout = { ...current, ...patch };
+      const updated = {
+        ...s.cms,
+        checkout: updatedCheckout,
       };
       saveCmsDb({ data: updated }).catch(console.error);
       return { ...s, cms: updated };

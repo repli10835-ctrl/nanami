@@ -1,18 +1,22 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useBlocker } from "@tanstack/react-router";
 
 export function useUnsavedChanges<T>(current: T) {
   const [snapshot, setSnapshot] = useState<T>(() => JSON.parse(JSON.stringify(current)));
+  const currentRef = useRef(current);
+  currentRef.current = current;
 
   const isDirty = JSON.stringify(current) !== JSON.stringify(snapshot);
 
-  const markSaved = (newSnapshot?: T) => {
-    setSnapshot(JSON.parse(JSON.stringify(newSnapshot !== undefined ? newSnapshot : current)));
-  };
+  const markSaved = useCallback((newSnapshot?: T) => {
+    setSnapshot(
+      JSON.parse(JSON.stringify(newSnapshot !== undefined ? newSnapshot : currentRef.current)),
+    );
+  }, []);
 
-  const resetToSnapshot = () => {
+  const resetToSnapshot = useCallback(() => {
     return JSON.parse(JSON.stringify(snapshot));
-  };
+  }, [snapshot]);
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {

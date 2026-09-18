@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   Banknote,
@@ -24,6 +24,7 @@ import {
   useStore,
   resolveMenuImage,
   handleImageError,
+  defaultCheckoutCms,
 } from "@/lib/store";
 import { haversineKm } from "@/lib/geo";
 import mapImg from "@/assets/checkout-map.jpg";
@@ -82,8 +83,8 @@ export const Route = createFileRoute("/checkout")({
 
 function Checkout() {
   const navigate = useNavigate();
-  const { cart, orderType, settings, profile, menu, vouchers, voucherCode, distance } = useStore(
-    (s) => ({
+  const { cart, orderType, settings, profile, menu, vouchers, voucherCode, distance, cms } =
+    useStore((s) => ({
       cart: s.cart,
       orderType: s.orderType,
       settings: s.settings,
@@ -92,13 +93,15 @@ function Checkout() {
       vouchers: s.vouchers,
       voucherCode: s.voucherCode,
       distance: s.distanceKm,
-    }),
-  );
+      cms: s.cms,
+    }));
   const { subtotal } = cartTotals(cart);
 
+  const checkoutCms = cms?.checkout || defaultCheckoutCms;
+
   const [step, setStep] = useState(0);
-  const [name, setName] = useState(profile.name);
-  const [phone, setPhone] = useState(profile.phone);
+  const [name, setName] = useState(profile.name || checkoutCms.defaultFullName || "");
+  const [phone, setPhone] = useState(profile.phone || checkoutCms.defaultPhone || "");
   const [address, setAddress] = useState(profile.address || DEFAULT_ADDRESS);
   const [editingAddress, setEditingAddress] = useState(false);
   const [locating, setLocating] = useState(false);
@@ -166,17 +169,60 @@ function Checkout() {
     );
   }
 
-  const availablePaymentOptions = PAYMENT_OPTIONS.filter(
-    (opt) => opt.id !== "cod" || settings.codEnabled !== false,
+  const availablePaymentOptions: PaymentOption[] = useMemo(
+    () => [
+      ...(checkoutCms.ewalletEnabled !== false
+        ? [
+            {
+              id: "ewallet" as const,
+              label: checkoutCms.ewalletLabel || "eWallet / Pay2Cell",
+              sub: checkoutCms.ewalletSub || "(Scan QR or Mobile Transfer)",
+              icon: Wallet,
+            },
+          ]
+        : []),
+      ...(checkoutCms.bankEnabled !== false
+        ? [
+            {
+              id: "bank" as const,
+              label: checkoutCms.bankLabel || "Bank Transfer / Instant EFT",
+              sub: checkoutCms.bankSub || "(ATM/MBANK/IBANK)",
+              icon: Landmark,
+            },
+          ]
+        : []),
+      ...(checkoutCms.codEnabled !== false && settings.codEnabled !== false
+        ? [
+            {
+              id: "cod" as const,
+              label: checkoutCms.codLabel || "Cash on Delivery",
+              sub: checkoutCms.codSub || "(For Pickup & Delivery)",
+              icon: Banknote,
+            },
+          ]
+        : []),
+    ],
+    [
+      checkoutCms.ewalletEnabled,
+      checkoutCms.ewalletLabel,
+      checkoutCms.ewalletSub,
+      checkoutCms.bankEnabled,
+      checkoutCms.bankLabel,
+      checkoutCms.bankSub,
+      checkoutCms.codEnabled,
+      checkoutCms.codLabel,
+      checkoutCms.codSub,
+      settings.codEnabled,
+    ],
   );
   useEffect(() => {
-    const validOptions = PAYMENT_OPTIONS.filter(
-      (opt) => opt.id !== "cod" || settings.codEnabled !== false,
-    );
-    if (!validOptions.some((o) => o.id === payment)) {
-      setPayment(validOptions[0]?.id || "ewallet");
+    if (
+      availablePaymentOptions.length > 0 &&
+      !availablePaymentOptions.some((o) => o.id === payment)
+    ) {
+      setPayment(availablePaymentOptions[0]?.id || "ewallet");
     }
-  }, [settings.codEnabled, payment]);
+  }, [availablePaymentOptions, payment]);
 
   // Send the customer back to the cart if it empties (but not right after ordering).
   const submittedRef = useRef(false);
@@ -227,7 +273,12 @@ function Checkout() {
       deliveryFee,
       total,
       etaMinutes: orderType === "delivery" ? 35 : 25,
-      paymentMethod: PAYMENT_LABELS[payment] ?? "eWallet / Pay2Cell",
+      paymentMethod:
+        payment === "bank"
+          ? checkoutCms.bankLabel || "Bank Transfer / Instant EFT"
+          : payment === "cod"
+            ? checkoutCms.codLabel || "Cash on Delivery"
+            : checkoutCms.ewalletLabel || "eWallet / Pay2Cell",
       customer: { name, phone, address, deliveryNote },
     });
     actions.updateProfile({ name, phone, address });
@@ -431,14 +482,14 @@ function Checkout() {
       {step === 1 && (
         <>
           <section className="mt-3 rounded-xl border border-border bg-card p-3">
-            <h2 className="text-xs font-bold">Your Details</h2>
+            <h2 className="text-xs font-bold">{checkoutCms.detailsTitle || "Your Details"}</h2>
             <div className="mt-2 space-y-2">
               <label className="block text-[11px] text-muted-foreground">
-                Full Name
+                {checkoutCms.fullNameLabel || "Full Name"}
                 <input value={name} onChange={(e) => setName(e.target.value)} className={field} />
               </label>
               <label className="block text-[11px] text-muted-foreground">
-                WhatsApp Number
+                {checkoutCms.phoneLabel || "WhatsApp Number"}
                 <input value={phone} onChange={(e) => setPhone(e.target.value)} className={field} />
               </label>
             </div>
@@ -490,17 +541,19 @@ function Checkout() {
           </section>
 
           {/* Payment instructions */}
-          <h2 className="mt-8 text-xl font-bold">Payment Instructions</h2>
+          <h2 className="mt-8 text-xl font-bold">
+            {checkoutCms.instructionsTitle || "Payment Instructions"}
+          </h2>
           {payment === "cod" ? (
             <p className="mt-3 text-sm text-muted-foreground">
-              Pay in cash when your order arrives or when you pick it up. Please prepare the exact
-              amount if possible.
+              {checkoutCms.codInstructions ||
+                "Pay in cash when your order arrives or when you pick it up. Please prepare the exact amount if possible."}
             </p>
           ) : (
             <>
               <p className="mt-3 text-sm text-muted-foreground">
                 <span className="mr-2 font-semibold text-foreground">1.</span>
-                Transfer to the following account:
+                {checkoutCms.step1Text || "Transfer to the following account:"}
               </p>
               <div className="mt-3 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4 sm:p-5">
                 <div className="min-w-0 flex-1">
@@ -508,10 +561,10 @@ function Checkout() {
                     <>
                       <p className="flex items-center gap-2">
                         <span className="flex size-8 sm:size-9 items-center justify-center rounded-full bg-primary/15 text-xs font-black text-primary shrink-0">
-                          EFT
+                          {checkoutCms.bankTitle || "EFT"}
                         </span>
                         <span className="text-base sm:text-lg font-black italic tracking-wide text-foreground truncate">
-                          {settings.bankName}
+                          {checkoutCms.bankName || settings.bankName}
                         </span>
                       </p>
                       <p className="mt-2 text-xs sm:text-sm text-muted-foreground">
@@ -519,26 +572,32 @@ function Checkout() {
                       </p>
                       <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
                         Account Name:{" "}
-                        <span className="text-foreground font-medium">{settings.bankHolder}</span>
+                        <span className="text-foreground font-medium">
+                          {checkoutCms.bankAccountName || settings.bankHolder}
+                        </span>
                       </p>
                       <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
                         Account No:{" "}
                         <span className="font-bold text-foreground font-mono">
-                          {settings.bankAccount}
+                          {checkoutCms.bankAccountNumber || settings.bankAccount}
                         </span>
                       </p>
                     </>
                   ) : (
                     <>
-                      <p className="text-base sm:text-lg font-bold text-foreground">E-Wallet</p>
+                      <p className="text-base sm:text-lg font-bold text-foreground">
+                        {checkoutCms.ewalletTitle || "E-Wallet"}
+                      </p>
                       <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
                         Account Name:{" "}
-                        <span className="text-foreground font-medium">Nanami Kitchen</span>
+                        <span className="text-foreground font-medium">
+                          {checkoutCms.ewalletAccountName || "Nanami Kitchen"}
+                        </span>
                       </p>
                       <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
                         Number:{" "}
                         <span className="font-bold text-foreground font-mono">
-                          {settings.ewallet}
+                          {checkoutCms.ewalletNumber || settings.ewallet}
                         </span>
                       </p>
                     </>
@@ -546,17 +605,23 @@ function Checkout() {
                 </div>
                 <button
                   onClick={() =>
-                    copy(payment === "bank" ? settings.bankAccount : settings.ewallet, "account")
+                    copy(
+                      payment === "bank"
+                        ? checkoutCms.bankAccountNumber || settings.bankAccount
+                        : checkoutCms.ewalletNumber || settings.ewallet,
+                      "account",
+                    )
                   }
                   className="flex shrink-0 items-center gap-1.5 rounded-xl bg-secondary px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-foreground hover:bg-secondary/80 transition"
                 >
                   <Copy className="size-3.5 sm:size-4" />
-                  {copied === "account" ? "Copied" : "Copy"}
+                  {copied === "account" ? "Copied" : checkoutCms.copyButtonText || "Copy"}
                 </button>
               </div>
               <p className="mt-4 text-sm text-muted-foreground">
                 <span className="mr-2 font-semibold text-foreground">2.</span>
-                Upload proof of payment (Screenshot) in the WhatsApp chat after ordering.
+                {checkoutCms.step2Text ||
+                  "Upload proof of payment (Screenshot) in the WhatsApp chat after ordering."}
               </p>
             </>
           )}

@@ -81,7 +81,7 @@ Sistem menerapkan kontrol akses berbasis peran (_Role-Based Access Control_) yan
 
 | Role                    | Kode    | Hak Akses & Wewenang                                                                                                                                                                                                               | Status Login                              | Akses Rute                                                                                   |
 | :---------------------- | :------ | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------- | :------------------------------------------------------------------------------------------- |
-| **Guest (Tamu)**        | _-_     | Melihat menu, filter kategori, kustomisasi varian, keranjang, kalkulasi ongkir, GPS otomatis, checkout WhatsApp, dan pelacakan order via kode transaksi (`?code=NK-xxxx`).                                                      | **Tidak Wajib**                           | `/`, `/menu/*`, `/cart`, `/checkout`, `/order-success`, `/tracking`, `/address`, `/vouchers` |
+| **Guest (Tamu)**        | _-_     | Melihat menu, filter kategori, kustomisasi varian, keranjang, kalkulasi ongkir, GPS otomatis, checkout WhatsApp, dan pelacakan order via kode transaksi (`?code=NK-xxxx`).                                                         | **Tidak Wajib**                           | `/`, `/menu/*`, `/cart`, `/checkout`, `/order-success`, `/tracking`, `/address`, `/vouchers` |
 | **Customer (User)**     | `user`  | Seluruh fitur Guest + akumulasi Poin Loyalitas Nanami, riwayat pesanan akun terdaftar, dan buku alamat tersimpan.                                                                                                                  | Opsional (Wajib jika buka profil/riwayat) | Semua rute publik + `/profile`, `/orders`, `/saved-address`                                  |
 | **Kitchen Staff**       | `staff` | Memantau antrean pesanan dapur (Kitchen Board), mengubah status masak (_Incoming &rarr; Cooking &rarr; Ready &rarr; Completed_), mencetak struk kasir, dan sakelar ketersediaan stok menu harian.                                  | **Wajib**                                 | `/admin` (Kitchen View), `/admin/orders`, `/admin/stock`                                     |
 | **Admin**               | `admin` | Seluruh akses Staff + CRUD Menu Makanan & Minuman lengkap, Media Gallery, manajemen data pelanggan, laporan penjualan operasional, dan pengaturan operasional toko.                                                                | **Wajib**                                 | Seluruh rute `/admin/*` + hak akses Customer                                                 |
@@ -109,14 +109,14 @@ Sistem menerapkan kontrol akses berbasis peran (_Role-Based Access Control_) yan
 - **`/login` (`src/routes/login.tsx`)**: Halaman masuk akun menggunakan email dan kata sandi native, dilengkapi tombol "Continue to Storefront as Guest" untuk melanjutkan belanja tanpa akun. Kredensial untuk role Owner, Admin, dan Staff tersimpan aman di `.env`.
 - **`/register` (`src/routes/register.tsx`)**: Halaman pendaftaran akun pelanggan baru (Nama, Email, Nomor Telepon/WhatsApp, dan Kata Sandi).
 - **`/auth` (`src/routes/auth.tsx`)**: Halaman gerbang universal yang mengarahkan pengguna ke alur masuk atau daftar.
-- **Status Social Sign-In (Google OAuth):** Berdasarkan arsitektur *Zero-Friction Cloud Kitchen*, sistem memprioritaskan alur **Guest Checkout** instan tanpa hambatan registrasi. Autentikasi akun internal dan pelanggan ditangani melalui formulir kredensial native (email/password). Widget *Quick Demo Account* sengaja ditiadakan untuk menjaga tampilan antarmuka yang bersih dan profesional bagi produksi.
+- **Status Social Sign-In (Google OAuth):** Berdasarkan arsitektur _Zero-Friction Cloud Kitchen_, sistem memprioritaskan alur **Guest Checkout** instan tanpa hambatan registrasi. Autentikasi akun internal dan pelanggan ditangani melalui formulir kredensial native (email/password). Widget _Quick Demo Account_ sengaja ditiadakan untuk menjaga tampilan antarmuka yang bersih dan profesional bagi produksi.
 
 ### 4.2 Rute Storefront Pelanggan, Top Bar Minimalis, & 4-Tab Bottom Nav
 
-- **Top Bar Header Minimalis (Tanpa Logo Brand):** Header beranda storefront dirancang bersih tanpa logo gambar/teks besar. Logo brand sengaja dialokasikan secara eksklusif pada *Welcome Splash Screen*, layar muat (*loading*), dan panel manajemen admin/owner. Header beranda hanya memuat nama toko teks ringkas, lencana status operasional (`Open Now` berwarna hijau atau `Closed` berwarna merah), serta pintasan keranjang belanja pesanan.
+- **Top Bar Header Minimalis (Tanpa Logo Brand):** Header beranda storefront dirancang bersih tanpa logo gambar/teks besar. Logo brand sengaja dialokasikan secara eksklusif pada _Welcome Splash Screen_, layar muat (_loading_), dan panel manajemen admin/owner. Header beranda hanya memuat nama toko teks ringkas, lencana status operasional (`Open Now` berwarna hijau atau `Closed` berwarna merah), serta pintasan keranjang belanja pesanan.
 - **Struktur 4-Tab Bottom Navigation Bar:** Batang navigasi bawah (`src/components/BottomNav.tsx`) khusus menampilkan **4 tab utama**:
   1. **Home (`/`)**: Ikon rumah — akses langsung ke etalase utama dan katalog ScrollSpy.
-  2. **Cart (`/cart`)**: Ikon tas belanja — dilengkapi lencana angka (*badge count*) jumlah item aktif di keranjang.
+  2. **Cart (`/cart`)**: Ikon tas belanja — dilengkapi lencana angka (_badge count_) jumlah item aktif di keranjang.
   3. **Orders (`/orders`)**: Ikon struk — daftar riwayat transaksi pesanan dan status aktif.
   4. **Profile (`/profile`)**: Ikon pengguna — akun pelanggan, saldo Poin Loyalitas Nanami, dan buku alamat tersimpan.
   - _Catatan Desain:_ Tab **"Menu"** secara sengaja **ditiadakan** dari batang navigasi bawah karena seluruh katalog hidangan telah menyatu secara alami di halaman beranda melalui bilah pil kategori dan ScrollSpy otomatis. Rute `/menu` tetap dipertahankan sebagai rute katalog penuh mandiri.
@@ -194,14 +194,14 @@ Susunan menu sidebar Owner (`OWNER_NAV`) menempatkan manajemen pesanan di posisi
 
 ### 5.1 Storefront Pelanggan: Format Mobile Terkunci di Seluruh Perangkat & Navigasi ScrollSpy
 
-- **Tata Letak Mobile Terkunci di Seluruh Perangkat (Mobile-First Canvas):** Seluruh antarmuka storefront publik (`/`, `/menu`, `/cart`, `/checkout`, `/order-success`, `/tracking`, `/address`, `/saved-address`, `/vouchers`, `/profile`) dikunci secara ketat dalam format layar smartphone (`max-w-md` / 448px) yang diposisikan di tengah viewport desktop dengan latar gelap elegan dan bayangan halus. Hal ini memastikan pengalaman visual, proporsi kartu, tombol aksi bawah (*sticky bottom nav & action bar*), dan interaksi sentuh tetap 100% konsisten dan identik di layar ponsel, tablet, maupun monitor desktop lebar tanpa ekspansi kolom yang merusak proporsi desain.
-- **Hero Banner:** Gambar promosi horizontal di bagian atas layar dengan ketinggian yang lebih lapang (`h-44 sm:h-48`), sudut membulat bawah (`rounded-b-2xl`), dan gradasi pelindung teks kontras tinggi. Menampilkan label kurasi *"Nanami Kitchen signature dish"*, lencana kategori *"Delivery"* dengan ikon armada pengiriman, judul penawaran utama (*"Free delivery over N$ 250"*), dan subjudul keterangan cakupan (*"Within 5 km radius of our kitchen"*) serta tombol aksi *"Order Now"*.
+- **Tata Letak Mobile Terkunci di Seluruh Perangkat (Mobile-First Canvas):** Seluruh antarmuka storefront publik (`/`, `/menu`, `/cart`, `/checkout`, `/order-success`, `/tracking`, `/address`, `/saved-address`, `/vouchers`, `/profile`) dikunci secara ketat dalam format layar smartphone (`max-w-md` / 448px) yang diposisikan di tengah viewport desktop dengan latar gelap elegan dan bayangan halus. Hal ini memastikan pengalaman visual, proporsi kartu, tombol aksi bawah (_sticky bottom nav & action bar_), dan interaksi sentuh tetap 100% konsisten dan identik di layar ponsel, tablet, maupun monitor desktop lebar tanpa ekspansi kolom yang merusak proporsi desain.
+- **Hero Banner:** Gambar promosi horizontal di bagian atas layar dengan ketinggian yang lebih lapang (`h-44 sm:h-48`), sudut membulat bawah (`rounded-b-2xl`), dan gradasi pelindung teks kontras tinggi. Menampilkan label kurasi _"Nanami Kitchen signature dish"_, lencana kategori _"Delivery"_ dengan ikon armada pengiriman, judul penawaran utama (_"Free delivery over N$ 250"_), dan subjudul keterangan cakupan (_"Within 5 km radius of our kitchen"_) serta tombol aksi _"Order Now"_.
 - **Order Mode Selector:** Tombol sakelar mode _Pickup_ (Ambil Sendiri) atau _Delivery_ (Pesan Antar) yang diletakkan tepat di bawah hero banner dan di atas bilah pencarian.
 - **Top Bar Minimalis:** Header utama hanya menampilkan teks nama toko dan lencana status operasional (`Open Now` / `Closed`), membebaskan area pandang atas dari keberadaan logo ganda yang redundan.
 - **Category Pills & Inline Search:** Tombol kategori berbentuk kapsul teks tanpa ikon yang ringkas, dilengkapi tombol pemicu pencarian di ujung kanan bilah.
 - **Must Try! Grid (4–6 Item):** Menampilkan 4 hingga 6 produk unggulan hasil kurasi CMS (`mustTryItemIds`) dalam format grid 2x2 responsif dengan gambar rasio 1:1 (_square aspect-ratio_).
 - **ScrollSpy Real-Time:** Menggunakan `IntersectionObserver` pada kontainer katalog vertikal; pill kategori di bagian atas akan otomatis aktif dan tersorot sesuai dengan bagian hidangan yang sedang terlihat di viewport pengguna.
-- **Sidebar Dashboard Collapsible & Scrollable:** Bilah navigasi samping dasbor (`DashboardShell`) dilengkapi tombol penciut/pelebar (*collapse toggle*) dengan penyimpanan status di `localStorage`, penyesuaian otomatis lebar (dari `w-64` menjadi `w-16` dalam kondisi menciut beserta tooltip label menu), bilah gulir halus (*custom scrollbar* `sidebar-scroll`) agar menu tidak pernah terpotong pada monitor dengan ketinggian terbatas, serta drawer mobile geser dengan tombol menu hamburger.
+- **Sidebar Dashboard Collapsible & Scrollable:** Bilah navigasi samping dasbor (`DashboardShell`) dilengkapi tombol penciut/pelebar (_collapse toggle_) dengan penyimpanan status di `localStorage`, penyesuaian otomatis lebar (dari `w-64` menjadi `w-16` dalam kondisi menciut beserta tooltip label menu), bilah gulir halus (_custom scrollbar_ `sidebar-scroll`) agar menu tidak pernah terpotong pada monitor dengan ketinggian terbatas, serta drawer mobile geser dengan tombol menu hamburger.
 
 ### 5.2 Kustomisasi Produk, Badges, Estimasi Masak, & Standar 5 Kategori CMS
 
@@ -224,7 +224,7 @@ Susunan menu sidebar Owner (`OWNER_NAV`) menempatkan manajemen pesanan di posisi
 
 ### 5.5 Kontrol Status Operasional Toko & Validasi Layanan Checkout
 
-- **Sakelar Buka/Tutup Toko (`storeOpen`):** Jika toko ditutup oleh manajemen, pelanggan tetap dapat melihat menu, namun tombol checkout dinonaktifkan dengan peringatan jelas: *"The store is currently closed. Checkout is disabled."*
+- **Sakelar Buka/Tutup Toko (`storeOpen`):** Jika toko ditutup oleh manajemen, pelanggan tetap dapat melihat menu, namun tombol checkout dinonaktifkan dengan peringatan jelas: _"The store is currently closed. Checkout is disabled."_
 - **Sakelar Layanan Antar (`deliveryOn`) & Ambil Sendiri (`pickupOn`):** Admin dapat mematikan salah satu layanan secara terpisah saat cuaca buruk atau kurir penuh. Alur checkout akan memvalidasi pilihan layanan pelanggan dan memberikan pesan peringatan jika layanan yang dipilih sedang tidak aktif.
 
 ### 5.6 Perpajakan (VAT 15%) & Metode Pembayaran Lokal (Pay2Cell, Bank, COD)
@@ -236,7 +236,7 @@ Susunan menu sidebar Owner (`OWNER_NAV`) menempatkan manajemen pesanan di posisi
 
 ### 5.7 Checkout WhatsApp Otomatis & Standarisasi Bahasa Inggris
 
-- Seluruh mikro-antarmuka (*microcopy*) storefront dan panel operasi telah distandardisasi dalam format bahasa Inggris bisnis formal yang konsisten (antara lain: `"Open Now"`, `"Closed"`, `"Add to Cart"`, `"Must Try!"`, `"Order via WhatsApp"`, `"Use Current Location"`, `"Prep ~15 mins"`, `"7-Day Sales Recap"`).
+- Seluruh mikro-antarmuka (_microcopy_) storefront dan panel operasi telah distandardisasi dalam format bahasa Inggris bisnis formal yang konsisten (antara lain: `"Open Now"`, `"Closed"`, `"Add to Cart"`, `"Must Try!"`, `"Order via WhatsApp"`, `"Use Current Location"`, `"Prep ~15 mins"`, `"7-Day Sales Recap"`).
 - Menyusun pesan pesanan WhatsApp terformat rapi yang memuat:
   - Kode struk unik (e.g. `#NK-7892`).
   - Rincian penerima, nomor kontak, dan alamat pengantaran.
@@ -256,7 +256,7 @@ Susunan menu sidebar Owner (`OWNER_NAV`) menempatkan manajemen pesanan di posisi
 
 ### 5.9 Manajemen Pesanan Admin, Posisi Sidebar Orders, & Rekap Penjualan 7 Hari
 
-- **Posisi Prioritas Sidebar:** Rute `/admin/orders` ditempatkan langsung di bawah *Overview* pada panel Owner dan tepat di bawah *Kitchen Board* pada panel Admin untuk kecepatan navigasi pemrosesan pesanan.
+- **Posisi Prioritas Sidebar:** Rute `/admin/orders` ditempatkan langsung di bawah _Overview_ pada panel Owner dan tepat di bawah _Kitchen Board_ pada panel Admin untuk kecepatan navigasi pemrosesan pesanan.
 - Tabel pesanan komprehensif di rute `/admin/orders` yang dilengkapi:
   - Kotak pencarian instan berdasarkan nomor kode order atau nama pelanggan.
   - Tab penyaring status (_All, Pending Payment, Paid/Cooking, Ready/Out for Delivery, Completed/Cancelled_).

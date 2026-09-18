@@ -9,16 +9,6 @@ const ROLES: { value: StaffRole; label: string; desc: string }[] = [
   { value: "staff", label: "Staff", desc: "Order assistance and processing only" },
 ];
 
-const PERMISSIONS: { label: string; owner: boolean; admin: boolean; staff: boolean }[] = [
-  { label: "View & process orders", owner: true, admin: true, staff: true },
-  { label: "Toggle menu availability", owner: true, admin: true, staff: false },
-  { label: "Add / edit / delete menu items", owner: true, admin: false, staff: false },
-  { label: "Manage promos & vouchers", owner: true, admin: false, staff: false },
-  { label: "View financial reports", owner: true, admin: true, staff: false },
-  { label: "Manage team accounts & permissions", owner: true, admin: false, staff: false },
-  { label: "Edit restaurant settings", owner: true, admin: false, staff: false },
-];
-
 export function StaffPanel() {
   const staff = useStore((s) => s.staff);
   const [name, setName] = useState("");
@@ -137,38 +127,6 @@ export function StaffPanel() {
               </li>
             ))}
           </ul>
-        </SectionCard>
-
-        <SectionCard title="Permission matrix" description="Capabilities granted to each role.">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="text-xs text-muted-foreground">
-                <tr>
-                  <th className="py-2">Capability</th>
-                  <th className="py-2 text-center">Owner</th>
-                  <th className="py-2 text-center">Admin</th>
-                  <th className="py-2 text-center">Staff</th>
-                </tr>
-              </thead>
-              <tbody>
-                {PERMISSIONS.map((p) => (
-                  <tr key={p.label} className="border-t border-border">
-                    <td className="py-2.5">{p.label}</td>
-                    {[p.owner, p.admin, p.staff].map((ok, i) => (
-                      <td
-                        key={i}
-                        className={`py-2.5 text-center ${
-                          ok ? "text-success" : "text-muted-foreground"
-                        }`}
-                      >
-                        {ok ? "Yes" : "—"}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         </SectionCard>
       </div>
     </div>

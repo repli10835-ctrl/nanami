@@ -26,8 +26,8 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
       let dbStatus = "offline (using robust local fallback state)";
       if (sql) {
         try {
-          await sql`SELECT 1`;
-          dbStatus = "connected";
+          const isConnected = await initDb();
+          dbStatus = isConnected ? "connected" : "offline (using robust local fallback state)";
         } catch {
           dbStatus = "connection_failed";
         }
@@ -59,13 +59,13 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
 
     // 2. Full State Sync
     if (pathname === "/api/state") {
-      if (!sql) {
+      const dbReady = await initDb();
+      if (!sql || !dbReady) {
         return new Response(JSON.stringify({ state: seedState, source: "in-memory-seed" }), {
           status: 200,
           headers: corsHeaders,
         });
       }
-      await initDb();
       await seedDbIfEmpty(seedState);
 
       const [settings, cms, menu, orders, promos, vouchers, accounts, staff, media] =
@@ -100,24 +100,76 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
 
     // 3. Menu Items
     if (pathname === "/api/menu") {
-      if (!sql) {
-        return new Response(JSON.stringify({ menu: seedState.menu || [] }), {
+      const dbReady = await initDb();
+      if (request.method === "GET") {
+        if (!sql || !dbReady) {
+          return new Response(JSON.stringify({ menu: seedState.menu || [] }), {
+            status: 200,
+            headers: corsHeaders,
+          });
+        }
+        const rows = await sql`SELECT * FROM menu_items ORDER BY category, name`;
+        return new Response(JSON.stringify({ menu: rows.length ? rows : seedState.menu }), {
           status: 200,
           headers: corsHeaders,
         });
       }
-      await initDb();
-      const rows = await sql`SELECT * FROM menu_items ORDER BY category, name`;
-      return new Response(JSON.stringify({ menu: rows.length ? rows : seedState.menu }), {
-        status: 200,
-        headers: corsHeaders,
-      });
+
+      if (request.method === "POST" || request.method === "PUT") {
+        const item = (await request.json()) as Record<string, any>;
+        if (!item || !item.id || !item.name) {
+          return new Response(JSON.stringify({ error: "Invalid menu item data" }), {
+            status: 400,
+            headers: corsHeaders,
+          });
+        }
+        if (sql && dbReady) {
+          await sql`
+            INSERT INTO menu_items (
+              id, name, description, price, category, image, available, prep_minutes, badges, stock, groups, special_request_enabled
+            ) VALUES (
+              ${item.id}, ${item.name}, ${item.description || ""}, ${item.price || 0}, ${item.category || "Meals"},
+              ${item.image || ""}, ${item.available !== false}, ${item.prepMinutes || 15},
+              ${sql.json(item.badges || [])}, ${item.stock ?? null}, ${sql.json(item.groups || [])},
+              ${item.specialRequestEnabled !== false}
+            )
+            ON CONFLICT (id) DO UPDATE SET
+              name = EXCLUDED.name,
+              description = EXCLUDED.description,
+              price = EXCLUDED.price,
+              category = EXCLUDED.category,
+              image = EXCLUDED.image,
+              available = EXCLUDED.available,
+              prep_minutes = EXCLUDED.prep_minutes,
+              badges = EXCLUDED.badges,
+              stock = EXCLUDED.stock,
+              groups = EXCLUDED.groups,
+              special_request_enabled = EXCLUDED.special_request_enabled
+          `;
+        }
+        return new Response(JSON.stringify({ success: true, item }), {
+          status: 200,
+          headers: corsHeaders,
+        });
+      }
     }
 
     // 4. Single Menu Item
     if (pathname.startsWith("/api/menu/")) {
       const id = pathname.replace("/api/menu/", "");
-      if (!sql) {
+      const dbReady = await initDb();
+
+      if (request.method === "DELETE") {
+        if (sql && dbReady) {
+          await sql`DELETE FROM menu_items WHERE id = ${id}`;
+        }
+        return new Response(JSON.stringify({ success: true, id }), {
+          status: 200,
+          headers: corsHeaders,
+        });
+      }
+
+      if (!sql || !dbReady) {
         const item = seedState.menu?.find((m) => m.id === id);
         return item
           ? new Response(JSON.stringify({ item }), { status: 200, headers: corsHeaders })
@@ -126,7 +178,6 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
               headers: corsHeaders,
             });
       }
-      await initDb();
       const rows = await sql`SELECT * FROM menu_items WHERE id = ${id} LIMIT 1`;
       return rows.length
         ? new Response(JSON.stringify({ item: rows[0] }), { status: 200, headers: corsHeaders })
@@ -138,14 +189,14 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
 
     // 5. Orders List & Creation
     if (pathname === "/api/orders") {
+      const dbReady = await initDb();
       if (request.method === "GET") {
-        if (!sql) {
+        if (!sql || !dbReady) {
           return new Response(JSON.stringify({ orders: seedState.orders || [] }), {
             status: 200,
             headers: corsHeaders,
           });
         }
-        await initDb();
         const rows = await sql`SELECT * FROM orders ORDER BY created_at DESC LIMIT 100`;
         return new Response(JSON.stringify({ orders: rows }), {
           status: 200,
@@ -161,13 +212,12 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
             headers: corsHeaders,
           });
         }
-        if (!sql) {
+        if (!sql || !dbReady) {
           return new Response(JSON.stringify({ success: true, order, storage: "in-memory" }), {
             status: 201,
             headers: corsHeaders,
           });
         }
-        await initDb();
         const orderId = String(order["id"]);
         const orderCode = String(order["code"]);
         const createdAt = Number(order["createdAt"]) || Date.now();
@@ -213,17 +263,135 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
       }
     }
 
-    // 6. Vouchers
-    if (pathname === "/api/vouchers") {
-      if (!sql) {
-        return new Response(JSON.stringify({ vouchers: seedState.vouchers || [] }), {
+    // 5b. Update Order by ID
+    if (pathname.startsWith("/api/orders/")) {
+      const orderId = pathname.replace("/api/orders/", "");
+      const dbReady = await initDb();
+      if (request.method === "PATCH" || request.method === "PUT") {
+        const body = (await request.json()) as Record<string, any>;
+        if (sql && dbReady) {
+          if (body.status !== undefined && body.paid !== undefined) {
+            await sql`
+              UPDATE orders 
+              SET status = ${body.status}, paid = ${body.paid} 
+              WHERE id = ${orderId} OR code = ${orderId}
+            `;
+          } else if (body.status !== undefined) {
+            await sql`
+              UPDATE orders 
+              SET status = ${body.status} 
+              WHERE id = ${orderId} OR code = ${orderId}
+            `;
+          } else if (body.paid !== undefined) {
+            await sql`
+              UPDATE orders 
+              SET paid = ${body.paid} 
+              WHERE id = ${orderId} OR code = ${orderId}
+            `;
+          }
+        }
+        return new Response(JSON.stringify({ success: true, orderId }), {
           status: 200,
           headers: corsHeaders,
         });
       }
-      await initDb();
-      const rows = await sql`SELECT * FROM vouchers WHERE active = true`;
-      return new Response(JSON.stringify({ vouchers: rows }), {
+    }
+
+    // 6. Vouchers
+    if (pathname === "/api/vouchers") {
+      const dbReady = await initDb();
+      if (request.method === "GET") {
+        if (!sql || !dbReady) {
+          return new Response(JSON.stringify({ vouchers: seedState.vouchers || [] }), {
+            status: 200,
+            headers: corsHeaders,
+          });
+        }
+        const rows = await sql`SELECT * FROM vouchers WHERE active = true`;
+        return new Response(JSON.stringify({ vouchers: rows }), {
+          status: 200,
+          headers: corsHeaders,
+        });
+      }
+
+      if (request.method === "POST" || request.method === "PUT") {
+        const voucher = (await request.json()) as Record<string, any>;
+        if (sql && dbReady && voucher.code) {
+          await sql`
+            INSERT INTO vouchers (code, type, value, min_spend, active)
+            VALUES (${voucher.code.toUpperCase()}, ${voucher.type || "percent"}, ${voucher.value || 0}, ${voucher.minSpend || 0}, ${voucher.active !== false})
+            ON CONFLICT (code) DO UPDATE SET
+              type = EXCLUDED.type,
+              value = EXCLUDED.value,
+              min_spend = EXCLUDED.min_spend,
+              active = EXCLUDED.active
+          `;
+        }
+        return new Response(JSON.stringify({ success: true, voucher }), {
+          status: 200,
+          headers: corsHeaders,
+        });
+      }
+    }
+
+    if (pathname.startsWith("/api/vouchers/")) {
+      const code = pathname.replace("/api/vouchers/", "");
+      const dbReady = await initDb();
+      if (request.method === "DELETE" && sql && dbReady) {
+        await sql`DELETE FROM vouchers WHERE UPPER(code) = UPPER(${code})`;
+      }
+      return new Response(JSON.stringify({ success: true, code }), {
+        status: 200,
+        headers: corsHeaders,
+      });
+    }
+
+    // 6b. Promos
+    if (pathname === "/api/promos") {
+      const dbReady = await initDb();
+      if (request.method === "GET") {
+        if (!sql || !dbReady) {
+          return new Response(JSON.stringify({ promos: seedState.promos || [] }), {
+            status: 200,
+            headers: corsHeaders,
+          });
+        }
+        const rows = await sql`SELECT * FROM promos ORDER BY id`;
+        return new Response(JSON.stringify({ promos: rows }), {
+          status: 200,
+          headers: corsHeaders,
+        });
+      }
+
+      if (request.method === "POST" || request.method === "PUT") {
+        const promo = (await request.json()) as Record<string, any>;
+        if (sql && dbReady && promo.id) {
+          await sql`
+            INSERT INTO promos (id, title, subtitle, badge, image_url, link, active)
+            VALUES (${promo.id}, ${promo.title || ""}, ${promo.subtitle || ""}, ${promo.badge || "Special"}, ${promo.imageUrl || null}, ${promo.link || null}, ${promo.active !== false})
+            ON CONFLICT (id) DO UPDATE SET
+              title = EXCLUDED.title,
+              subtitle = EXCLUDED.subtitle,
+              badge = EXCLUDED.badge,
+              image_url = EXCLUDED.image_url,
+              link = EXCLUDED.link,
+              active = EXCLUDED.active
+          `;
+        }
+        return new Response(JSON.stringify({ success: true, promo }), {
+          status: 200,
+          headers: corsHeaders,
+        });
+      }
+    }
+
+    if (pathname.startsWith("/api/promos/")) {
+      const promoId = pathname.replace("/api/promos/", "");
+      const dbReady = await initDb();
+      if (request.method === "DELETE" && sql && dbReady) {
+        await sql`DELETE FROM promos WHERE id = ${promoId}`;
+      }
+      return new Response(JSON.stringify({ success: true, promoId }), {
         status: 200,
         headers: corsHeaders,
       });
@@ -231,13 +399,28 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
 
     // 7. CMS
     if (pathname === "/api/cms") {
-      if (!sql) {
+      const dbReady = await initDb();
+      if (request.method === "POST" || request.method === "PUT") {
+        const cmsData = await request.json();
+        if (sql && dbReady) {
+          await sql`
+            INSERT INTO cms_content (id, data)
+            VALUES ('main_cms', ${sql.json(cmsData)})
+            ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data
+          `;
+        }
+        return new Response(JSON.stringify({ success: true, cms: cmsData }), {
+          status: 200,
+          headers: corsHeaders,
+        });
+      }
+
+      if (!sql || !dbReady) {
         return new Response(JSON.stringify({ cms: seedState.cms }), {
           status: 200,
           headers: corsHeaders,
         });
       }
-      await initDb();
       const rows = await sql`SELECT data FROM cms_content WHERE id = 'main_cms' LIMIT 1`;
       return new Response(JSON.stringify({ cms: rows[0]?.["data"] ?? seedState.cms }), {
         status: 200,
@@ -247,13 +430,28 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
 
     // 8. Settings
     if (pathname === "/api/settings") {
-      if (!sql) {
+      const dbReady = await initDb();
+      if (request.method === "POST" || request.method === "PUT") {
+        const settingsData = await request.json();
+        if (sql && dbReady) {
+          await sql`
+            INSERT INTO app_settings (id, data)
+            VALUES ('main_settings', ${sql.json(settingsData)})
+            ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data
+          `;
+        }
+        return new Response(JSON.stringify({ success: true, settings: settingsData }), {
+          status: 200,
+          headers: corsHeaders,
+        });
+      }
+
+      if (!sql || !dbReady) {
         return new Response(JSON.stringify({ settings: seedState.settings }), {
           status: 200,
           headers: corsHeaders,
         });
       }
-      await initDb();
       const rows = await sql`SELECT data FROM app_settings WHERE id = 'main_settings' LIMIT 1`;
       return new Response(JSON.stringify({ settings: rows[0]?.["data"] ?? seedState.settings }), {
         status: 200,
@@ -261,17 +459,72 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
       });
     }
 
-    // 9. Auth Check
+    // 9. Staff
+    if (pathname === "/api/staff") {
+      const dbReady = await initDb();
+      if (request.method === "GET") {
+        if (!sql || !dbReady) {
+          return new Response(JSON.stringify({ staff: seedState.staff || [] }), {
+            status: 200,
+            headers: corsHeaders,
+          });
+        }
+        const rows = await sql`SELECT * FROM staff ORDER BY created_at DESC`;
+        return new Response(JSON.stringify({ staff: rows }), {
+          status: 200,
+          headers: corsHeaders,
+        });
+      }
+
+      if (request.method === "POST" || request.method === "PUT") {
+        const member = (await request.json()) as Record<string, any>;
+        if (sql && dbReady && member.id && member.email) {
+          await sql`
+            INSERT INTO staff (id, name, email, phone, role, active, created_at)
+            VALUES (${member.id}, ${member.name || ""}, ${member.email}, ${member.phone || ""}, ${member.role || "staff"}, ${member.active !== false}, ${member.createdAt || Date.now()})
+            ON CONFLICT (email) DO UPDATE SET
+              name = EXCLUDED.name,
+              phone = EXCLUDED.phone,
+              role = EXCLUDED.role,
+              active = EXCLUDED.active
+          `;
+        }
+        return new Response(JSON.stringify({ success: true, member }), {
+          status: 200,
+          headers: corsHeaders,
+        });
+      }
+    }
+
+    // 10. Auth Check
     if (pathname === "/api/auth/login" && request.method === "POST") {
       const body = (await request.json()) as { email?: string; password?: string };
-      const email = body["email"];
+      const email = body["email"]?.trim().toLowerCase();
       const password = body["password"];
-      const accounts = seedState.accounts || [];
-      const found = accounts.find(
-        (a) =>
-          a.email.trim().toLowerCase() === String(email).trim().toLowerCase() &&
-          a.password === password,
-      );
+      const dbReady = await initDb();
+
+      let found: any = null;
+
+      // Check PostgreSQL
+      if (sql && dbReady && email) {
+        const rows = (await sql`
+          SELECT * FROM accounts 
+          WHERE LOWER(email) = ${email} AND password = ${password} 
+          LIMIT 1
+        `) as any[];
+        if (rows.length > 0) {
+          found = rows[0];
+        }
+      }
+
+      // Fallback check against seed & env accounts
+      if (!found && email) {
+        const accounts = seedState.accounts || [];
+        found = accounts.find(
+          (a) => a.email.trim().toLowerCase() === email && a.password === password,
+        );
+      }
+
       if (!found) {
         return new Response(JSON.stringify({ error: "Invalid email or password" }), {
           status: 401,
