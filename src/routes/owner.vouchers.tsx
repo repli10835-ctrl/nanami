@@ -52,6 +52,8 @@ function VouchersPage() {
   const [subtitle, setSubtitle] = useState("");
   const [badge, setBadge] = useState("");
 
+  const { isDirty, markSaved, resetToSnapshot, blocker } = useUnsavedChanges(localState);
+
   useEffect(() => {
     const nextState = {
       vouchers: globalVouchers,
@@ -60,8 +62,6 @@ function VouchersPage() {
     setLocalState(nextState);
     markSaved(nextState);
   }, [globalVouchers, globalPromos, markSaved]);
-
-  const { isDirty, markSaved, resetToSnapshot, blocker } = useUnsavedChanges(localState);
 
   const handleSave = async () => {
     setSaving(true);

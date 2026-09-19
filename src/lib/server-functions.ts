@@ -1,15 +1,15 @@
 import { createServerFn } from "@tanstack/react-start";
-import {
-  type MenuItem,
-  type Order,
-  type Voucher,
-  type Promo,
-  type Account,
-  type StaffMember,
-  type Settings,
-  type CmsContent,
-  type MediaAsset,
-} from "./store";
+import type {
+  MenuItem,
+  Order,
+  Voucher,
+  Promo,
+  Account,
+  StaffMember,
+  Settings,
+  CmsContent,
+  MediaAsset,
+} from "../types";
 
 async function getDb() {
   const { sql, initDb, seedDbIfEmpty } = await import("./db");

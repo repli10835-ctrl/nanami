@@ -33,12 +33,12 @@ function OwnerSettings() {
   const [localSettings, setLocalSettings] = useState(() => globalSettings);
   const [saving, setSaving] = useState(false);
 
+  const { isDirty, markSaved, resetToSnapshot, blocker } = useUnsavedChanges(localSettings);
+
   useEffect(() => {
     setLocalSettings(globalSettings);
     markSaved(globalSettings);
   }, [globalSettings, markSaved]);
-
-  const { isDirty, markSaved, resetToSnapshot, blocker } = useUnsavedChanges(localSettings);
 
   const handleFieldChange = (patch: Partial<Settings>) => {
     setLocalSettings((prev) => ({ ...prev, ...patch }));

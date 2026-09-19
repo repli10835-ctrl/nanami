@@ -51,6 +51,8 @@ function OwnerCmsPage() {
 
   const [saving, setSaving] = useState(false);
 
+  const { isDirty, markSaved, resetToSnapshot, blocker } = useUnsavedChanges(localState);
+
   useEffect(() => {
     const nextState = {
       cms: globalCms,
@@ -60,8 +62,6 @@ function OwnerCmsPage() {
     setLocalState(nextState);
     markSaved(nextState);
   }, [globalCms, globalPromos, globalSettings, markSaved]);
-
-  const { isDirty, markSaved, resetToSnapshot, blocker } = useUnsavedChanges(localState);
 
   const handleSave = async () => {
     setSaving(true);

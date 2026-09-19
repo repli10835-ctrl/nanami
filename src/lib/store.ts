@@ -1,4 +1,27 @@
 import { useRef, useSyncExternalStore } from "react";
+import type {
+  Category,
+  OptionChoice,
+  OptionGroup,
+  MenuItem,
+  CartLine,
+  OrderStatus,
+  Order,
+  Promo,
+  CmsFaq,
+  MediaAsset,
+  CheckoutCms,
+  CmsContent,
+  Voucher,
+  Settings,
+  Profile,
+  Account,
+  StaffRole,
+  StaffMember,
+  State,
+} from "../types";
+import { DEFAULT_CATEGORIES, CATEGORIES } from "../types";
+import { defaultCmsContent, defaultCheckoutCms } from "./default-cms";
 import { food1, food2, food3, food4 } from "./images";
 import {
   getDatabaseState,
@@ -21,12 +44,31 @@ import {
 } from "./server-functions";
 import { formatCurrency, setCurrencySymbol } from "./currency";
 import { resolveMenuImage, handleImageError } from "./images";
+import { cleanWhatsappNumber, buildWhatsappMessage } from "./whatsapp";
 
-export { resolveMenuImage, handleImageError };
-
-export type Category = string;
-export const DEFAULT_CATEGORIES: Category[] = ["Meals", "Snacks", "Drinks", "Combos", "Others"];
-export const CATEGORIES: Category[] = DEFAULT_CATEGORIES;
+export { resolveMenuImage, handleImageError, cleanWhatsappNumber, buildWhatsappMessage };
+export { DEFAULT_CATEGORIES, CATEGORIES, defaultCmsContent, defaultCheckoutCms };
+export type {
+  Category,
+  OptionChoice,
+  OptionGroup,
+  MenuItem,
+  CartLine,
+  OrderStatus,
+  Order,
+  Promo,
+  CmsFaq,
+  MediaAsset,
+  CheckoutCms,
+  CmsContent,
+  Voucher,
+  Settings,
+  Profile,
+  Account,
+  StaffRole,
+  StaffMember,
+  State,
+};
 
 export function getAvailableCategories(
   cms?: Partial<CmsContent> | null,
@@ -37,267 +79,6 @@ export function getAvailableCategories(
   const list = Array.from(new Set([...cmsOrder, ...menuCats, ...DEFAULT_CATEGORIES]));
   return list.filter(Boolean);
 }
-
-export type OptionChoice = { id: string; name: string; price: number };
-export type OptionGroup = {
-  id: string;
-  name: string;
-  type: "single" | "multi";
-  enabled?: boolean;
-  choices: OptionChoice[];
-};
-
-export type MenuItem = {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  category: Category;
-  image: string;
-  available: boolean;
-  prepMinutes: number;
-  badges: string[];
-  stock?: number | null;
-  groups: OptionGroup[];
-  specialRequestEnabled?: boolean;
-};
-
-export type CartLine = {
-  id: string;
-  itemId: string;
-  name: string;
-  unitPrice: number;
-  qty: number;
-  optionLabels: string[];
-  note: string;
-};
-
-export type OrderStatus =
-  | "Pending Payment"
-  | "Cooking"
-  | "Out for Delivery"
-  | "Ready for Pickup"
-  | "Completed"
-  | "Cancelled";
-
-export type Order = {
-  id: string;
-  code: string;
-  createdAt: number;
-  type: "pickup" | "delivery";
-  lines: CartLine[];
-  subtotal: number;
-  vatAmount?: number | undefined;
-  vatPercent?: number | undefined;
-  discount: number;
-  voucherCode: string;
-  deliveryFee: number;
-  total: number;
-  status: OrderStatus;
-  paid: boolean;
-  paymentMethod: string;
-  pointsEarned: number;
-  etaMinutes: number;
-  customer: { name: string; phone: string; address: string; deliveryNote: string };
-  accountId?: string | null;
-};
-
-export type Promo = {
-  id: string;
-  title: string;
-  subtitle: string;
-  badge: string;
-  imageUrl?: string;
-  link?: string;
-  active?: boolean;
-};
-
-export type CmsFaq = {
-  id: string;
-  question: string;
-  answer: string;
-  active: boolean;
-};
-
-export type MediaAsset = {
-  id: string;
-  url: string;
-  filename: string;
-  uploadedAt: number;
-  usedByMenuIds: string[];
-};
-
-export type CmsContent = {
-  logoUrl: string;
-  brandName: string;
-  brandSuffix: string;
-  tagline: string;
-  description: string;
-  heroImage: string;
-  heroTitleLine1: string;
-  heroTitleLine2: string;
-  heroSlogan: string;
-  heroCtaText: string;
-  heroActive: boolean;
-  announcement: {
-    enabled: boolean;
-    text: string;
-    type: "info" | "promo" | "warning";
-    link?: string;
-  };
-  welcomeScreen: {
-    enabled: boolean;
-    durationSec: number;
-    title: string;
-    subtitle: string;
-    slogan: string;
-    imageUrl: string;
-  };
-  socials: {
-    instagram: string;
-    tiktok: string;
-    whatsapp: string;
-    mapsUrl: string;
-    active: boolean;
-  };
-  aboutStory: string;
-  faqs: CmsFaq[];
-  mustTryItemIds: string[];
-  categoryOrder: Category[];
-  categoryNames: Record<Category, string>;
-  checkout: CheckoutCms;
-};
-
-export type CheckoutCms = {
-  // Your Details
-  detailsTitle: string;
-  fullNameLabel: string;
-  defaultFullName: string;
-  phoneLabel: string;
-  defaultPhone: string;
-  // Payment methods
-  ewalletEnabled: boolean;
-  ewalletLabel: string;
-  ewalletSub: string;
-  bankEnabled: boolean;
-  bankLabel: string;
-  bankSub: string;
-  codEnabled: boolean;
-  codLabel: string;
-  codSub: string;
-  // Payment instructions
-  instructionsTitle: string;
-  step1Text: string;
-  ewalletTitle: string;
-  ewalletAccountName: string;
-  ewalletNumber: string;
-  copyButtonText: string;
-  bankTitle: string;
-  bankName: string;
-  bankAccountName: string;
-  bankAccountNumber: string;
-  codInstructions: string;
-  step2Text: string;
-};
-
-export type Voucher = {
-  code: string;
-  type: "percent" | "fixed";
-  value: number;
-  minSpend: number;
-  active: boolean;
-};
-
-export type Settings = {
-  currencySymbol?: string;
-  storeName: string;
-  storeTagline: string;
-  storeAddress: string;
-  storeOpen: boolean;
-  deliveryOn: boolean;
-  pickupOn: boolean;
-  codEnabled: boolean;
-  vatEnabled: boolean;
-  vatPercent: number;
-  whatsapp: string;
-  baseFee: number;
-  feePerKm: number;
-  maxRadiusKm: number;
-  /** Store's Google Maps location point (link or "lat,lng"). */
-  storeMapsUrl: string;
-  storeLat: number;
-  storeLng: number;
-  /** Minimum delivery fee charged to customer. */
-  minFee: number;
-  /** Free delivery if subtotal >= this value (0 = disabled). */
-  freeDeliveryAbove: number;
-  /** Route factor: straight distance multiplied by this (e.g. 1.3). */
-  routeFactor: number;
-  bankName: string;
-  bankAccount: string;
-  bankHolder: string;
-  ewallet: string;
-  openHours: string;
-  pointsPer10k: number;
-  adminPassword: string;
-};
-
-export type Profile = {
-  name: string;
-  phone: string;
-  email: string;
-  address: string;
-  addresses: string[];
-  points: number;
-  signedIn: boolean;
-  method: string;
-  role?: "user" | "admin" | "owner" | "staff" | undefined;
-};
-
-export type Account = {
-  id: string;
-  email: string;
-  password: string;
-  name: string;
-  phone: string;
-  role?: "user" | "admin" | "owner" | "staff" | undefined;
-  address?: string | undefined;
-  addresses?: string[] | undefined;
-  points?: number | undefined;
-};
-
-export type StaffRole = "owner" | "admin" | "staff";
-
-export type StaffMember = {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  role: StaffRole;
-  active: boolean;
-  createdAt: number;
-};
-
-export type State = {
-  orderType: "pickup" | "delivery";
-  orderTypeChosen: boolean;
-  distanceKm: number;
-  /** Customer's Google Maps point (link or "lat,lng"). */
-  customerMapsUrl: string;
-  menu: MenuItem[];
-  cart: CartLine[];
-  orders: Order[];
-  settings: Settings;
-  profile: Profile;
-  promos: Promo[];
-  vouchers: Voucher[];
-  voucherCode: string;
-  accounts: Account[];
-  staff: StaffMember[];
-  mediaAssets: MediaAsset[];
-  adminUnlocked: boolean;
-  cms: CmsContent;
-};
 
 const spice: OptionGroup = {
   id: "spice",
@@ -505,112 +286,6 @@ export const DEMO_ACCOUNTS: Account[] = [
     points: 1500,
   },
 ];
-
-export const defaultCmsContent: CmsContent = {
-  logoUrl: "",
-  brandName: "nanami",
-  brandSuffix: "kitchen",
-  tagline: "Good food, made with love.",
-  description:
-    "Delicious bento boxes, crispy chicken, snacks, and refreshing handcrafted drinks made fresh for families and co-workers.",
-  heroImage: "",
-  heroTitleLine1: "Good Food.",
-  heroTitleLine2: "Made with Love",
-  heroSlogan: "Good Food. Made with Love",
-  heroCtaText: "Order Now",
-  heroActive: true,
-  announcement: {
-    enabled: true,
-    text: "🎉 Special Promo: Get 20% OFF all menu items with voucher code NANAMI20!",
-    type: "promo",
-    link: "/vouchers",
-  },
-  welcomeScreen: {
-    enabled: true,
-    durationSec: 2.6,
-    title: "nanami",
-    subtitle: "kitchen",
-    slogan: "Good Food.\nMade with Love",
-    imageUrl: "",
-  },
-  socials: {
-    instagram: "@nanami.kitchen",
-    tiktok: "@nanami.kitchen",
-    whatsapp: "27812345678",
-    mapsUrl: "https://maps.google.com/?q=Nanami+Kitchen",
-    active: true,
-  },
-  aboutStory:
-    "Nanami Kitchen serves authentic Japanese bento boxes, fiery crispy smashed chicken, and refreshing handcrafted beverages prepared fresh daily using high-quality ingredients.",
-  faqs: [
-    {
-      id: "faq-1",
-      question: "What is the estimated preparation and delivery time?",
-      answer:
-        "Orders are freshly cooked in 15–20 minutes. Delivery time depends on your distance (approx. 15–30 minutes).",
-      active: true,
-    },
-    {
-      id: "faq-2",
-      question: "Does Nanami Kitchen offer a Pick-up (Takeaway) option?",
-      answer: "Yes, you can choose Pick-up at checkout with zero delivery fee.",
-      active: true,
-    },
-    {
-      id: "faq-3",
-      question: "How do I redeem a discount voucher?",
-      answer: "Go to Vouchers, tap 'Apply' on your voucher or enter the code during Checkout.",
-      active: true,
-    },
-    {
-      id: "faq-4",
-      question: "Which payment methods are accepted?",
-      answer:
-        "We accept Bank Transfer (EFT), E-Wallets / Capitec Pay, and Cash on Delivery / Pickup.",
-      active: true,
-    },
-  ],
-  mustTryItemIds: ["m1", "m2", "m3", "m4"],
-  categoryOrder: ["Meals", "Snacks", "Drinks", "Combos", "Others"],
-  categoryNames: {
-    Meals: "Meals",
-    Snacks: "Snacks",
-    Drinks: "Drinks",
-    Combos: "Combos",
-    Others: "Others",
-  },
-  checkout: {
-    detailsTitle: "Your Details",
-    fullNameLabel: "Full Name",
-    defaultFullName: "Nanami Owner",
-    phoneLabel: "WhatsApp Number",
-    defaultPhone: "0834567890",
-    ewalletEnabled: true,
-    ewalletLabel: "eWallet / Pay2Cell",
-    ewalletSub: "(Scan QR or Mobile Transfer)",
-    bankEnabled: true,
-    bankLabel: "Bank Transfer / Instant EFT",
-    bankSub: "(ATM/MBANK/IBANK)",
-    codEnabled: true,
-    codLabel: "Cash on Delivery",
-    codSub: "(For Pickup & Delivery)",
-    instructionsTitle: "Payment Instructions",
-    step1Text: "1. Transfer to the following account:",
-    ewalletTitle: "E-Wallet",
-    ewalletAccountName: "Nanami Kitchen",
-    ewalletNumber: "0812345678 (Capitec Pay / SnapScan)",
-    copyButtonText: "Copy",
-    bankTitle: "EFT",
-    bankName: "First National Bank (FNB)",
-    bankAccountName: "Nanami Kitchen CC",
-    bankAccountNumber: "62123456789",
-    codInstructions:
-      "Pay in cash when your order arrives or when you pick it up. Please prepare the exact amount if possible.",
-    step2Text: "2. Upload proof of payment (Screenshot) in the WhatsApp chat after ordering.",
-  },
-};
-
-export const defaultCheckoutCms: CheckoutCms = defaultCmsContent.checkout;
 
 const defaultState: State = {
   orderType: "delivery",
@@ -1739,8 +1414,6 @@ export function deliveryFeeFor(
   const fee = settings.baseFee + km * settings.feePerKm;
   return Math.max(settings.minFee ?? 0, Math.round(fee));
 }
-
-export { buildWhatsappMessage, cleanWhatsappNumber } from "./whatsapp";
 
 export function findVoucher(vouchers: Voucher[], code: string) {
   const clean = code.trim().toUpperCase();

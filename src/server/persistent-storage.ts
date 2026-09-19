@@ -1,17 +1,17 @@
 import fs from "node:fs";
 import path from "node:path";
 import { seedState } from "../lib/seed-data";
-import {
-  type MenuItem,
-  type Order,
-  type Voucher,
-  type Promo,
-  type Account,
-  type StaffMember,
-  type Settings,
-  type CmsContent,
-  type MediaAsset,
-} from "../lib/store";
+import type {
+  MenuItem,
+  Order,
+  Voucher,
+  Promo,
+  Account,
+  StaffMember,
+  Settings,
+  CmsContent,
+  MediaAsset,
+} from "../types";
 
 export interface StorageData {
   settings: Settings;

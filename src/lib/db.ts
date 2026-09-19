@@ -1,5 +1,5 @@
 import postgres from "postgres";
-import { type State } from "./store";
+import type { State } from "../types";
 
 const connectionString = process.env["DATABASE_URL"];
 

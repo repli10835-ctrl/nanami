@@ -1,10 +1,5 @@
-import {
-  type State,
-  type MenuItem,
-  type Account,
-  type CmsContent,
-  defaultCheckoutCms,
-} from "./store";
+import type { State, MenuItem, Account, CmsContent } from "../types";
+import { defaultCheckoutCms } from "./default-cms";
 import { food1, food2, food3, food4 } from "./images";
 
 const spice = {

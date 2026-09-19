@@ -61,13 +61,13 @@ function ShippingPage() {
   const [testUrl, setTestUrl] = useState("");
   const [testSubtotal, setTestSubtotal] = useState(150);
 
+  const { isDirty, markSaved, resetToSnapshot, blocker } = useUnsavedChanges(localSettings);
+
   useEffect(() => {
     setLocalSettings(globalSettings);
     setMapsUrl(globalSettings.storeMapsUrl);
     markSaved(globalSettings);
   }, [globalSettings, markSaved]);
-
-  const { isDirty, markSaved, resetToSnapshot, blocker } = useUnsavedChanges(localSettings);
 
   const handleFieldChange = (patch: Partial<Settings>) => {
     setLocalSettings((prev) => ({ ...prev, ...patch }));

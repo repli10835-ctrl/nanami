@@ -1,5 +1,5 @@
 import { formatCurrency } from "./currency";
-import type { Order } from "./store";
+import type { Order } from "../types";
 
 export function cleanWhatsappNumber(raw?: string) {
   if (!raw) return "27812345678";
