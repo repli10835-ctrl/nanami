@@ -1,40 +1,36 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useBlocker } from "@tanstack/react-router";
 
+function deepEqual<T>(a: T, b: T): boolean {
+  try {
+    return JSON.stringify(a) === JSON.stringify(b);
+  } catch {
+    return a === b;
+  }
+}
+
 export function useUnsavedChanges<T>(current: T) {
-  const [snapshot, setSnapshot] = useState<T>(() => JSON.parse(JSON.stringify(current)));
+  const [snapshot, setSnapshot] = useState<T>(() =>
+    current !== undefined ? JSON.parse(JSON.stringify(current)) : current,
+  );
   const currentRef = useRef(current);
   currentRef.current = current;
 
-  const isDirty = JSON.stringify(current) !== JSON.stringify(snapshot);
+  const isDirty = !deepEqual(current, snapshot);
 
   const markSaved = useCallback((newSnapshot?: T) => {
-    setSnapshot(
-      JSON.parse(JSON.stringify(newSnapshot !== undefined ? newSnapshot : currentRef.current)),
-    );
+    const val = newSnapshot !== undefined ? newSnapshot : currentRef.current;
+    setSnapshot(val !== undefined ? JSON.parse(JSON.stringify(val)) : val);
   }, []);
 
   const resetToSnapshot = useCallback(() => {
-    return JSON.parse(JSON.stringify(snapshot));
+    return snapshot !== undefined ? JSON.parse(JSON.stringify(snapshot)) : snapshot;
   }, [snapshot]);
 
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (isDirty) {
-        e.preventDefault();
-        e.returnValue = "You have unsaved changes. Are you sure you want to leave?";
-        return e.returnValue;
-      }
-    };
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, [isDirty]);
-
+  // Only TanStack router blocker for in-app navigation
   const blocker = useBlocker({
     shouldBlockFn: () => isDirty,
-    enableBeforeUnload: true,
+    enableBeforeUnload: false,
   });
 
   return {

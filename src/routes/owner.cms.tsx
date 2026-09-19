@@ -52,12 +52,14 @@ function OwnerCmsPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    setLocalState({
+    const nextState = {
       cms: globalCms,
       promos: globalPromos,
       settings: globalSettings,
-    });
-  }, [globalCms, globalPromos, globalSettings]);
+    };
+    setLocalState(nextState);
+    markSaved(nextState);
+  }, [globalCms, globalPromos, globalSettings, markSaved]);
 
   const { isDirty, markSaved, resetToSnapshot, blocker } = useUnsavedChanges(localState);
 

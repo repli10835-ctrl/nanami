@@ -64,7 +64,8 @@ function ShippingPage() {
   useEffect(() => {
     setLocalSettings(globalSettings);
     setMapsUrl(globalSettings.storeMapsUrl);
-  }, [globalSettings]);
+    markSaved(globalSettings);
+  }, [globalSettings, markSaved]);
 
   const { isDirty, markSaved, resetToSnapshot, blocker } = useUnsavedChanges(localSettings);
 

@@ -13,6 +13,7 @@ export const sql = connectionString
   : null;
 
 let isInitialized: boolean | null = null;
+let lastInitAttempt = 0;
 let initPromise: Promise<boolean> | null = null;
 
 export function isDbReady(): boolean {
@@ -24,13 +25,20 @@ export async function initDb(): Promise<boolean> {
     return false;
   }
 
-  if (isInitialized !== null) {
-    return isInitialized;
+  if (isInitialized === true) {
+    return true;
+  }
+
+  // If previous attempt failed recently (< 4 seconds ago), return false quickly to prevent blocking
+  if (isInitialized === false && Date.now() - lastInitAttempt < 4000) {
+    return false;
   }
 
   if (initPromise) {
     return initPromise;
   }
+
+  lastInitAttempt = Date.now();
 
   initPromise = (async () => {
     try {

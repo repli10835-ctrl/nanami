@@ -52,14 +52,14 @@ export function getStorageData(): StorageData {
       const raw = fs.readFileSync(STORAGE_FILE, "utf-8");
       const parsed = JSON.parse(raw) as Partial<StorageData>;
       memoryState = {
-        settings: parsed.settings ?? seedState.settings,
-        cms: parsed.cms ?? seedState.cms,
-        menu: Array.isArray(parsed.menu) ? parsed.menu : seedState.menu,
-        orders: Array.isArray(parsed.orders) ? parsed.orders : seedState.orders,
-        promos: Array.isArray(parsed.promos) ? parsed.promos : seedState.promos,
-        vouchers: Array.isArray(parsed.vouchers) ? parsed.vouchers : seedState.vouchers,
-        accounts: Array.isArray(parsed.accounts) ? parsed.accounts : seedState.accounts,
-        staff: Array.isArray(parsed.staff) ? parsed.staff : seedState.staff,
+        settings: parsed.settings ?? (seedState.settings as AppSettings),
+        cms: parsed.cms ?? (seedState.cms as CmsContent),
+        menu: Array.isArray(parsed.menu) ? parsed.menu : (seedState.menu ?? []),
+        orders: Array.isArray(parsed.orders) ? parsed.orders : (seedState.orders ?? []),
+        promos: Array.isArray(parsed.promos) ? parsed.promos : (seedState.promos ?? []),
+        vouchers: Array.isArray(parsed.vouchers) ? parsed.vouchers : (seedState.vouchers ?? []),
+        accounts: Array.isArray(parsed.accounts) ? parsed.accounts : (seedState.accounts ?? []),
+        staff: Array.isArray(parsed.staff) ? parsed.staff : (seedState.staff ?? []),
         mediaAssets: Array.isArray(parsed.mediaAssets) ? parsed.mediaAssets : [],
       };
       return memoryState;
@@ -69,15 +69,24 @@ export function getStorageData(): StorageData {
   }
 
   // Initialize from seedState
+  const safeClone = <T>(val: T, fallback: T): T => {
+    if (val === undefined || val === null) return fallback;
+    try {
+      return JSON.parse(JSON.stringify(val));
+    } catch {
+      return fallback;
+    }
+  };
+
   memoryState = {
-    settings: JSON.parse(JSON.stringify(seedState.settings)),
-    cms: JSON.parse(JSON.stringify(seedState.cms)),
-    menu: JSON.parse(JSON.stringify(seedState.menu)),
-    orders: JSON.parse(JSON.stringify(seedState.orders)),
-    promos: JSON.parse(JSON.stringify(seedState.promos)),
-    vouchers: JSON.parse(JSON.stringify(seedState.vouchers)),
-    accounts: JSON.parse(JSON.stringify(seedState.accounts)),
-    staff: JSON.parse(JSON.stringify(seedState.staff)),
+    settings: safeClone(seedState.settings, {} as AppSettings),
+    cms: safeClone(seedState.cms, {} as CmsContent),
+    menu: safeClone(seedState.menu, []),
+    orders: safeClone(seedState.orders, []),
+    promos: safeClone(seedState.promos, []),
+    vouchers: safeClone(seedState.vouchers, []),
+    accounts: safeClone(seedState.accounts, []),
+    staff: safeClone(seedState.staff, []),
     mediaAssets: [],
   };
 

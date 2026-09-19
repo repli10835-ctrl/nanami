@@ -35,7 +35,8 @@ function OwnerSettings() {
 
   useEffect(() => {
     setLocalSettings(globalSettings);
-  }, [globalSettings]);
+    markSaved(globalSettings);
+  }, [globalSettings, markSaved]);
 
   const { isDirty, markSaved, resetToSnapshot, blocker } = useUnsavedChanges(localSettings);
 

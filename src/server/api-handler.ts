@@ -1,5 +1,18 @@
 import { sql, initDb, seedDbIfEmpty } from "../lib/db";
 import { seedState } from "../lib/seed-data";
+import {
+  getStorageData,
+  saveMenuItemStorage,
+  deleteMenuItemStorage,
+  saveOrderStorage,
+  saveVoucherStorage,
+  deleteVoucherStorage,
+  savePromoStorage,
+  deletePromoStorage,
+  saveCmsStorage,
+  saveSettingsStorage,
+  saveStaffStorage,
+} from "./persistent-storage";
 
 export async function handleApiRequest(request: Request): Promise<Response | null> {
   const url = new URL(request.url);
@@ -21,6 +34,8 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
   }
 
   try {
+    const fallback = getStorageData();
+
     // 1. Health Check
     if (pathname === "/api/health") {
       let dbStatus = "offline (using robust local fallback state)";
@@ -61,12 +76,27 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
     if (pathname === "/api/state") {
       const dbReady = await initDb();
       if (!sql || !dbReady) {
-        return new Response(JSON.stringify({ state: seedState, source: "in-memory-seed" }), {
-          status: 200,
-          headers: corsHeaders,
-        });
+        return new Response(
+          JSON.stringify({
+            source: "persistent-storage",
+            state: fallback,
+            settings: fallback.settings,
+            cms: fallback.cms,
+            menu: fallback.menu,
+            orders: fallback.orders,
+            promos: fallback.promos,
+            vouchers: fallback.vouchers,
+            accounts: fallback.accounts,
+            staff: fallback.staff,
+            mediaAssets: fallback.mediaAssets,
+          }),
+          {
+            status: 200,
+            headers: corsHeaders,
+          },
+        );
       }
-      await seedDbIfEmpty(seedState);
+      await seedDbIfEmpty(fallback as any);
 
       const [settings, cms, menu, orders, promos, vouchers, accounts, staff, media] =
         await Promise.all([
@@ -84,15 +114,15 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
       return new Response(
         JSON.stringify({
           source: "postgresql",
-          settings: settings[0]?.["data"] ?? seedState.settings,
-          cms: cms[0]?.["data"] ?? seedState.cms,
-          menu: menu.length ? menu : seedState.menu,
-          orders: orders.length ? orders : seedState.orders,
-          promos: promos.length ? promos : seedState.promos,
-          vouchers: vouchers.length ? vouchers : seedState.vouchers,
-          accounts: accounts.length ? accounts : seedState.accounts,
-          staff: staff.length ? staff : seedState.staff,
-          mediaAssets: media,
+          settings: settings[0]?.["data"] ?? fallback.settings,
+          cms: cms[0]?.["data"] ?? fallback.cms,
+          menu: menu.length ? menu : fallback.menu,
+          orders: orders.length ? orders : fallback.orders,
+          promos: promos.length ? promos : fallback.promos,
+          vouchers: vouchers.length ? vouchers : fallback.vouchers,
+          accounts: accounts.length ? accounts : fallback.accounts,
+          staff: staff.length ? staff : fallback.staff,
+          mediaAssets: media.length ? media : fallback.mediaAssets,
         }),
         { status: 200, headers: corsHeaders },
       );
@@ -103,13 +133,13 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
       const dbReady = await initDb();
       if (request.method === "GET") {
         if (!sql || !dbReady) {
-          return new Response(JSON.stringify({ menu: seedState.menu || [] }), {
+          return new Response(JSON.stringify({ menu: fallback.menu || [] }), {
             status: 200,
             headers: corsHeaders,
           });
         }
         const rows = await sql`SELECT * FROM menu_items ORDER BY category, name`;
-        return new Response(JSON.stringify({ menu: rows.length ? rows : seedState.menu }), {
+        return new Response(JSON.stringify({ menu: rows.length ? rows : fallback.menu }), {
           status: 200,
           headers: corsHeaders,
         });
@@ -123,29 +153,37 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
             headers: corsHeaders,
           });
         }
+
+        // Always save to persistent storage
+        saveMenuItemStorage(item as any);
+
         if (sql && dbReady) {
-          await sql`
-            INSERT INTO menu_items (
-              id, name, description, price, category, image, available, prep_minutes, badges, stock, groups, special_request_enabled
-            ) VALUES (
-              ${item.id}, ${item.name}, ${item.description || ""}, ${item.price || 0}, ${item.category || "Meals"},
-              ${item.image || ""}, ${item.available !== false}, ${item.prepMinutes || 15},
-              ${sql.json(item.badges || [])}, ${item.stock ?? null}, ${sql.json(item.groups || [])},
-              ${item.specialRequestEnabled !== false}
-            )
-            ON CONFLICT (id) DO UPDATE SET
-              name = EXCLUDED.name,
-              description = EXCLUDED.description,
-              price = EXCLUDED.price,
-              category = EXCLUDED.category,
-              image = EXCLUDED.image,
-              available = EXCLUDED.available,
-              prep_minutes = EXCLUDED.prep_minutes,
-              badges = EXCLUDED.badges,
-              stock = EXCLUDED.stock,
-              groups = EXCLUDED.groups,
-              special_request_enabled = EXCLUDED.special_request_enabled
-          `;
+          try {
+            await sql`
+              INSERT INTO menu_items (
+                id, name, description, price, category, image, available, prep_minutes, badges, stock, groups, special_request_enabled
+              ) VALUES (
+                ${item.id}, ${item.name}, ${item.description || ""}, ${item.price || 0}, ${item.category || "Meals"},
+                ${item.image || ""}, ${item.available !== false}, ${item.prepMinutes || 15},
+                ${sql.json(item.badges || [])}, ${item.stock ?? null}, ${sql.json(item.groups || [])},
+                ${item.specialRequestEnabled !== false}
+              )
+              ON CONFLICT (id) DO UPDATE SET
+                name = EXCLUDED.name,
+                description = EXCLUDED.description,
+                price = EXCLUDED.price,
+                category = EXCLUDED.category,
+                image = EXCLUDED.image,
+                available = EXCLUDED.available,
+                prep_minutes = EXCLUDED.prep_minutes,
+                badges = EXCLUDED.badges,
+                stock = EXCLUDED.stock,
+                groups = EXCLUDED.groups,
+                special_request_enabled = EXCLUDED.special_request_enabled
+            `;
+          } catch (e) {
+            console.warn("Could not write menu item to PostgreSQL:", e);
+          }
         }
         return new Response(JSON.stringify({ success: true, item }), {
           status: 200,
@@ -160,8 +198,13 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
       const dbReady = await initDb();
 
       if (request.method === "DELETE") {
+        deleteMenuItemStorage(id);
         if (sql && dbReady) {
-          await sql`DELETE FROM menu_items WHERE id = ${id}`;
+          try {
+            await sql`DELETE FROM menu_items WHERE id = ${id}`;
+          } catch (e) {
+            console.warn("Could not delete menu item from PostgreSQL:", e);
+          }
         }
         return new Response(JSON.stringify({ success: true, id }), {
           status: 200,
@@ -170,7 +213,7 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
       }
 
       if (!sql || !dbReady) {
-        const item = seedState.menu?.find((m) => m.id === id);
+        const item = fallback.menu?.find((m) => m.id === id);
         return item
           ? new Response(JSON.stringify({ item }), { status: 200, headers: corsHeaders })
           : new Response(JSON.stringify({ error: "Item not found" }), {
@@ -192,13 +235,13 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
       const dbReady = await initDb();
       if (request.method === "GET") {
         if (!sql || !dbReady) {
-          return new Response(JSON.stringify({ orders: seedState.orders || [] }), {
+          return new Response(JSON.stringify({ orders: fallback.orders || [] }), {
             status: 200,
             headers: corsHeaders,
           });
         }
         const rows = await sql`SELECT * FROM orders ORDER BY created_at DESC LIMIT 100`;
-        return new Response(JSON.stringify({ orders: rows }), {
+        return new Response(JSON.stringify({ orders: rows.length ? rows : fallback.orders }), {
           status: 200,
           headers: corsHeaders,
         });
@@ -212,11 +255,17 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
             headers: corsHeaders,
           });
         }
+
+        saveOrderStorage(order as any);
+
         if (!sql || !dbReady) {
-          return new Response(JSON.stringify({ success: true, order, storage: "in-memory" }), {
-            status: 201,
-            headers: corsHeaders,
-          });
+          return new Response(
+            JSON.stringify({ success: true, order, storage: "persistent-storage" }),
+            {
+              status: 201,
+              headers: corsHeaders,
+            },
+          );
         }
         const orderId = String(order["id"]);
         const orderCode = String(order["code"]);
@@ -238,24 +287,28 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
         const customer = JSON.stringify(order["customer"] || {});
         const accountId = order["accountId"] ? String(order["accountId"]) : null;
 
-        await sql`
-          INSERT INTO orders (
-            id, code, created_at, type, lines, subtotal, discount, voucher_code,
-            delivery_fee, total, status, paid, payment_method, points_earned,
-            eta_minutes, customer, account_id
-          ) VALUES (
-            ${orderId}, ${orderCode}, ${createdAt}, ${orderType},
-            ${lines}::jsonb, ${subtotal}, ${discount},
-            ${voucherCode}, ${deliveryFee}, ${total},
-            ${status}, ${paid},
-            ${paymentMethod}, ${pointsEarned},
-            ${etaMinutes}, ${customer}::jsonb, ${accountId}
-          )
-          ON CONFLICT (id) DO UPDATE SET
-            status = EXCLUDED.status,
-            paid = EXCLUDED.paid,
-            eta_minutes = EXCLUDED.eta_minutes
-        `;
+        try {
+          await sql`
+            INSERT INTO orders (
+              id, code, created_at, type, lines, subtotal, discount, voucher_code,
+              delivery_fee, total, status, paid, payment_method, points_earned,
+              eta_minutes, customer, account_id
+            ) VALUES (
+              ${orderId}, ${orderCode}, ${createdAt}, ${orderType},
+              ${lines}::jsonb, ${subtotal}, ${discount},
+              ${voucherCode}, ${deliveryFee}, ${total},
+              ${status}, ${paid},
+              ${paymentMethod}, ${pointsEarned},
+              ${etaMinutes}, ${customer}::jsonb, ${accountId}
+            )
+            ON CONFLICT (id) DO UPDATE SET
+              status = EXCLUDED.status,
+              paid = EXCLUDED.paid,
+              eta_minutes = EXCLUDED.eta_minutes
+          `;
+        } catch (e) {
+          console.warn("Could not write order to PostgreSQL:", e);
+        }
         return new Response(JSON.stringify({ success: true, order, storage: "postgresql" }), {
           status: 201,
           headers: corsHeaders,
@@ -269,25 +322,38 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
       const dbReady = await initDb();
       if (request.method === "PATCH" || request.method === "PUT") {
         const body = (await request.json()) as Record<string, any>;
+        const existingOrder = fallback.orders.find((o) => o.id === orderId || o.code === orderId);
+        if (existingOrder) {
+          saveOrderStorage({
+            ...existingOrder,
+            ...(body.status !== undefined ? { status: body.status } : {}),
+            ...(body.paid !== undefined ? { paid: body.paid } : {}),
+            ...(body.etaMinutes !== undefined ? { etaMinutes: body.etaMinutes } : {}),
+          });
+        }
         if (sql && dbReady) {
-          if (body.status !== undefined && body.paid !== undefined) {
-            await sql`
-              UPDATE orders 
-              SET status = ${body.status}, paid = ${body.paid} 
-              WHERE id = ${orderId} OR code = ${orderId}
-            `;
-          } else if (body.status !== undefined) {
-            await sql`
-              UPDATE orders 
-              SET status = ${body.status} 
-              WHERE id = ${orderId} OR code = ${orderId}
-            `;
-          } else if (body.paid !== undefined) {
-            await sql`
-              UPDATE orders 
-              SET paid = ${body.paid} 
-              WHERE id = ${orderId} OR code = ${orderId}
-            `;
+          try {
+            if (body.status !== undefined && body.paid !== undefined) {
+              await sql`
+                UPDATE orders 
+                SET status = ${body.status}, paid = ${body.paid} 
+                WHERE id = ${orderId} OR code = ${orderId}
+              `;
+            } else if (body.status !== undefined) {
+              await sql`
+                UPDATE orders 
+                SET status = ${body.status} 
+                WHERE id = ${orderId} OR code = ${orderId}
+              `;
+            } else if (body.paid !== undefined) {
+              await sql`
+                UPDATE orders 
+                SET paid = ${body.paid} 
+                WHERE id = ${orderId} OR code = ${orderId}
+              `;
+            }
+          } catch (e) {
+            console.warn("Could not update order in PostgreSQL:", e);
           }
         }
         return new Response(JSON.stringify({ success: true, orderId }), {
@@ -302,13 +368,13 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
       const dbReady = await initDb();
       if (request.method === "GET") {
         if (!sql || !dbReady) {
-          return new Response(JSON.stringify({ vouchers: seedState.vouchers || [] }), {
+          return new Response(JSON.stringify({ vouchers: fallback.vouchers || [] }), {
             status: 200,
             headers: corsHeaders,
           });
         }
         const rows = await sql`SELECT * FROM vouchers WHERE active = true`;
-        return new Response(JSON.stringify({ vouchers: rows }), {
+        return new Response(JSON.stringify({ vouchers: rows.length ? rows : fallback.vouchers }), {
           status: 200,
           headers: corsHeaders,
         });
@@ -316,16 +382,23 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
 
       if (request.method === "POST" || request.method === "PUT") {
         const voucher = (await request.json()) as Record<string, any>;
+        if (voucher && voucher.code) {
+          saveVoucherStorage(voucher as any);
+        }
         if (sql && dbReady && voucher.code) {
-          await sql`
-            INSERT INTO vouchers (code, type, value, min_spend, active)
-            VALUES (${voucher.code.toUpperCase()}, ${voucher.type || "percent"}, ${voucher.value || 0}, ${voucher.minSpend || 0}, ${voucher.active !== false})
-            ON CONFLICT (code) DO UPDATE SET
-              type = EXCLUDED.type,
-              value = EXCLUDED.value,
-              min_spend = EXCLUDED.min_spend,
-              active = EXCLUDED.active
-          `;
+          try {
+            await sql`
+              INSERT INTO vouchers (code, type, value, min_spend, active)
+              VALUES (${voucher.code.toUpperCase()}, ${voucher.type || "percent"}, ${voucher.value || 0}, ${voucher.minSpend || 0}, ${voucher.active !== false})
+              ON CONFLICT (code) DO UPDATE SET
+                type = EXCLUDED.type,
+                value = EXCLUDED.value,
+                min_spend = EXCLUDED.min_spend,
+                active = EXCLUDED.active
+            `;
+          } catch (e) {
+            console.warn("Could not write voucher to PostgreSQL:", e);
+          }
         }
         return new Response(JSON.stringify({ success: true, voucher }), {
           status: 200,
@@ -336,9 +409,14 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
 
     if (pathname.startsWith("/api/vouchers/")) {
       const code = pathname.replace("/api/vouchers/", "");
+      deleteVoucherStorage(code);
       const dbReady = await initDb();
       if (request.method === "DELETE" && sql && dbReady) {
-        await sql`DELETE FROM vouchers WHERE UPPER(code) = UPPER(${code})`;
+        try {
+          await sql`DELETE FROM vouchers WHERE UPPER(code) = UPPER(${code})`;
+        } catch (e) {
+          console.warn("Could not delete voucher from PostgreSQL:", e);
+        }
       }
       return new Response(JSON.stringify({ success: true, code }), {
         status: 200,
@@ -351,13 +429,13 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
       const dbReady = await initDb();
       if (request.method === "GET") {
         if (!sql || !dbReady) {
-          return new Response(JSON.stringify({ promos: seedState.promos || [] }), {
+          return new Response(JSON.stringify({ promos: fallback.promos || [] }), {
             status: 200,
             headers: corsHeaders,
           });
         }
         const rows = await sql`SELECT * FROM promos ORDER BY id`;
-        return new Response(JSON.stringify({ promos: rows }), {
+        return new Response(JSON.stringify({ promos: rows.length ? rows : fallback.promos }), {
           status: 200,
           headers: corsHeaders,
         });
@@ -365,18 +443,25 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
 
       if (request.method === "POST" || request.method === "PUT") {
         const promo = (await request.json()) as Record<string, any>;
+        if (promo && promo.id) {
+          savePromoStorage(promo as any);
+        }
         if (sql && dbReady && promo.id) {
-          await sql`
-            INSERT INTO promos (id, title, subtitle, badge, image_url, link, active)
-            VALUES (${promo.id}, ${promo.title || ""}, ${promo.subtitle || ""}, ${promo.badge || "Special"}, ${promo.imageUrl || null}, ${promo.link || null}, ${promo.active !== false})
-            ON CONFLICT (id) DO UPDATE SET
-              title = EXCLUDED.title,
-              subtitle = EXCLUDED.subtitle,
-              badge = EXCLUDED.badge,
-              image_url = EXCLUDED.image_url,
-              link = EXCLUDED.link,
-              active = EXCLUDED.active
-          `;
+          try {
+            await sql`
+              INSERT INTO promos (id, title, subtitle, badge, image_url, link, active)
+              VALUES (${promo.id}, ${promo.title || ""}, ${promo.subtitle || ""}, ${promo.badge || "Special"}, ${promo.imageUrl || null}, ${promo.link || null}, ${promo.active !== false})
+              ON CONFLICT (id) DO UPDATE SET
+                title = EXCLUDED.title,
+                subtitle = EXCLUDED.subtitle,
+                badge = EXCLUDED.badge,
+                image_url = EXCLUDED.image_url,
+                link = EXCLUDED.link,
+                active = EXCLUDED.active
+            `;
+          } catch (e) {
+            console.warn("Could not write promo to PostgreSQL:", e);
+          }
         }
         return new Response(JSON.stringify({ success: true, promo }), {
           status: 200,
@@ -387,9 +472,14 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
 
     if (pathname.startsWith("/api/promos/")) {
       const promoId = pathname.replace("/api/promos/", "");
+      deletePromoStorage(promoId);
       const dbReady = await initDb();
       if (request.method === "DELETE" && sql && dbReady) {
-        await sql`DELETE FROM promos WHERE id = ${promoId}`;
+        try {
+          await sql`DELETE FROM promos WHERE id = ${promoId}`;
+        } catch (e) {
+          console.warn("Could not delete promo from PostgreSQL:", e);
+        }
       }
       return new Response(JSON.stringify({ success: true, promoId }), {
         status: 200,
@@ -402,12 +492,17 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
       const dbReady = await initDb();
       if (request.method === "POST" || request.method === "PUT") {
         const cmsData = await request.json();
+        saveCmsStorage(cmsData);
         if (sql && dbReady) {
-          await sql`
-            INSERT INTO cms_content (id, data)
-            VALUES ('main_cms', ${sql.json(cmsData)})
-            ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data
-          `;
+          try {
+            await sql`
+              INSERT INTO cms_content (id, data)
+              VALUES ('main_cms', ${sql.json(cmsData)})
+              ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data
+            `;
+          } catch (e) {
+            console.warn("Could not write CMS to PostgreSQL:", e);
+          }
         }
         return new Response(JSON.stringify({ success: true, cms: cmsData }), {
           status: 200,
@@ -416,13 +511,13 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
       }
 
       if (!sql || !dbReady) {
-        return new Response(JSON.stringify({ cms: seedState.cms }), {
+        return new Response(JSON.stringify({ cms: fallback.cms }), {
           status: 200,
           headers: corsHeaders,
         });
       }
       const rows = await sql`SELECT data FROM cms_content WHERE id = 'main_cms' LIMIT 1`;
-      return new Response(JSON.stringify({ cms: rows[0]?.["data"] ?? seedState.cms }), {
+      return new Response(JSON.stringify({ cms: rows[0]?.["data"] ?? fallback.cms }), {
         status: 200,
         headers: corsHeaders,
       });
@@ -433,12 +528,17 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
       const dbReady = await initDb();
       if (request.method === "POST" || request.method === "PUT") {
         const settingsData = await request.json();
+        saveSettingsStorage(settingsData);
         if (sql && dbReady) {
-          await sql`
-            INSERT INTO app_settings (id, data)
-            VALUES ('main_settings', ${sql.json(settingsData)})
-            ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data
-          `;
+          try {
+            await sql`
+              INSERT INTO app_settings (id, data)
+              VALUES ('main_settings', ${sql.json(settingsData)})
+              ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data
+            `;
+          } catch (e) {
+            console.warn("Could not write settings to PostgreSQL:", e);
+          }
         }
         return new Response(JSON.stringify({ success: true, settings: settingsData }), {
           status: 200,
@@ -447,13 +547,13 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
       }
 
       if (!sql || !dbReady) {
-        return new Response(JSON.stringify({ settings: seedState.settings }), {
+        return new Response(JSON.stringify({ settings: fallback.settings }), {
           status: 200,
           headers: corsHeaders,
         });
       }
       const rows = await sql`SELECT data FROM app_settings WHERE id = 'main_settings' LIMIT 1`;
-      return new Response(JSON.stringify({ settings: rows[0]?.["data"] ?? seedState.settings }), {
+      return new Response(JSON.stringify({ settings: rows[0]?.["data"] ?? fallback.settings }), {
         status: 200,
         headers: corsHeaders,
       });
@@ -464,13 +564,13 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
       const dbReady = await initDb();
       if (request.method === "GET") {
         if (!sql || !dbReady) {
-          return new Response(JSON.stringify({ staff: seedState.staff || [] }), {
+          return new Response(JSON.stringify({ staff: fallback.staff || [] }), {
             status: 200,
             headers: corsHeaders,
           });
         }
         const rows = await sql`SELECT * FROM staff ORDER BY created_at DESC`;
-        return new Response(JSON.stringify({ staff: rows }), {
+        return new Response(JSON.stringify({ staff: rows.length ? rows : fallback.staff }), {
           status: 200,
           headers: corsHeaders,
         });
@@ -478,16 +578,23 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
 
       if (request.method === "POST" || request.method === "PUT") {
         const member = (await request.json()) as Record<string, any>;
+        if (member && member.id && member.email) {
+          saveStaffStorage(member as any);
+        }
         if (sql && dbReady && member.id && member.email) {
-          await sql`
-            INSERT INTO staff (id, name, email, phone, role, active, created_at)
-            VALUES (${member.id}, ${member.name || ""}, ${member.email}, ${member.phone || ""}, ${member.role || "staff"}, ${member.active !== false}, ${member.createdAt || Date.now()})
-            ON CONFLICT (email) DO UPDATE SET
-              name = EXCLUDED.name,
-              phone = EXCLUDED.phone,
-              role = EXCLUDED.role,
-              active = EXCLUDED.active
-          `;
+          try {
+            await sql`
+              INSERT INTO staff (id, name, email, phone, role, active, created_at)
+              VALUES (${member.id}, ${member.name || ""}, ${member.email}, ${member.phone || ""}, ${member.role || "staff"}, ${member.active !== false}, ${member.createdAt || Date.now()})
+              ON CONFLICT (email) DO UPDATE SET
+                name = EXCLUDED.name,
+                phone = EXCLUDED.phone,
+                role = EXCLUDED.role,
+                active = EXCLUDED.active
+            `;
+          } catch (e) {
+            console.warn("Could not write staff to PostgreSQL:", e);
+          }
         }
         return new Response(JSON.stringify({ success: true, member }), {
           status: 200,
@@ -517,25 +624,28 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
         }
       }
 
-      // Fallback check against seed & env accounts
+      // Fallback check against storage & seed accounts
       if (!found && email) {
-        const accounts = seedState.accounts || [];
+        const accounts = fallback.accounts || seedState.accounts || [];
         found = accounts.find(
           (a) => a.email.trim().toLowerCase() === email && a.password === password,
         );
       }
 
       if (!found) {
-        return new Response(JSON.stringify({ error: "Invalid email or password" }), {
+        return new Response(JSON.stringify({ error: "Invalid email or password", ok: false }), {
           status: 401,
           headers: corsHeaders,
         });
       }
       const { password: _, ...safeUser } = found;
-      return new Response(JSON.stringify({ success: true, user: safeUser }), {
-        status: 200,
-        headers: corsHeaders,
-      });
+      return new Response(
+        JSON.stringify({ success: true, ok: true, user: safeUser, account: safeUser }),
+        {
+          status: 200,
+          headers: corsHeaders,
+        },
+      );
     }
 
     return new Response(JSON.stringify({ error: "API route not found", path: pathname }), {
