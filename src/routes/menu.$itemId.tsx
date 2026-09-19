@@ -46,12 +46,15 @@ function MenuDetailPage() {
 
 function MenuDetailContent({ item }: { item: MenuItem }) {
   const navigate = useNavigate();
-  const activeGroups = useMemo(() => item.groups.filter((g) => g.enabled !== false), [item.groups]);
+  const activeGroups = useMemo(
+    () => (item.groups || []).filter((g) => g.enabled !== false),
+    [item.groups],
+  );
 
   const [selected, setSelected] = useState<Record<string, string[]>>(() => {
     const init: Record<string, string[]> = {};
     activeGroups.forEach((g) => {
-      init[g.id] = g.type === "single" ? [g.choices[0]?.id ?? ""] : [];
+      init[g.id] = g.type === "single" ? [(g.choices || [])[0]?.id ?? ""] : [];
     });
     return init;
   });
@@ -60,13 +63,13 @@ function MenuDetailContent({ item }: { item: MenuItem }) {
   const [liked, setLiked] = useState(false);
 
   const { unitPrice, labels } = useMemo(() => {
-    let price = item.price;
+    let price = item.price || 0;
     const lbls: string[] = [];
     activeGroups.forEach((g) => {
       (selected[g.id] ?? []).forEach((cid) => {
-        const c = g.choices.find((x) => x.id === cid);
+        const c = (g.choices || []).find((x) => x.id === cid);
         if (c) {
-          price += c.price;
+          price += Number(c.price) || 0;
           lbls.push(c.name);
         }
       });

@@ -37,11 +37,29 @@ function NotFoundComponent() {
 }
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
-  console.error(error);
+  console.error("Root ErrorComponent caught error:", error);
   const router = useRouter();
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
+
+  const handleClearCache = () => {
+    try {
+      if (typeof localStorage !== "undefined") {
+        localStorage.removeItem("nanami_auth_profile");
+        localStorage.removeItem("nanami_catalog_menu");
+        localStorage.removeItem("nanami_admin_unlocked");
+      }
+      if (typeof sessionStorage !== "undefined") {
+        sessionStorage.clear();
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    if (typeof window !== "undefined") {
+      window.location.href = "/";
+    }
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -52,6 +70,12 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
         <p className="mt-2 text-sm text-muted-foreground">
           Something went wrong on our end. You can try refreshing or head back home.
         </p>
+        {error?.message && (
+          <div className="mt-3 rounded-lg border border-destructive/20 bg-destructive/10 p-2.5 text-left text-xs text-destructive">
+            <p className="font-semibold">Error:</p>
+            <p className="font-mono text-[11px] break-words">{error.message}</p>
+          </div>
+        )}
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
             onClick={() => {
@@ -61,6 +85,12 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             Try again
+          </button>
+          <button
+            onClick={handleClearCache}
+            className="inline-flex items-center justify-center rounded-md border border-input bg-secondary/50 px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+          >
+            Reset App Cache
           </button>
           <a
             href="/"

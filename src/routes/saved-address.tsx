@@ -42,7 +42,7 @@ function SavedAddressPage() {
 
   const items = useMemo(
     () =>
-      addresses.length > 0
+      addresses && addresses.length > 0
         ? addresses.map((a, i) => ({ label: labelFor(a, i), address: a }))
         : FALLBACK,
     [addresses],

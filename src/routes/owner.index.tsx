@@ -40,7 +40,7 @@ function OwnerHome() {
 
   const soldQty = new Map<string, number>();
   paid.forEach((o) =>
-    o.lines.forEach((l) => soldQty.set(l.name, (soldQty.get(l.name) ?? 0) + l.qty)),
+    (o.lines || []).forEach((l) => soldQty.set(l.name, (soldQty.get(l.name) ?? 0) + l.qty)),
   );
   const best = [...soldQty.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
 

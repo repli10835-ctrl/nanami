@@ -629,7 +629,7 @@ export function OrderManagementPanel() {
                           <td className="px-4 py-4 align-top max-w-[280px]">
                             <div className="space-y-1.5">
                               <div className="text-xs font-medium text-foreground">
-                                {order.lines.map((l, idx) => (
+                                {(order.lines || []).map((l, idx) => (
                                   <div key={idx} className="leading-tight mb-1">
                                     <span className="font-bold text-primary">{l.qty}x</span>{" "}
                                     <span>{l.name}</span>
@@ -979,7 +979,7 @@ export function OrderManagementPanel() {
                   <Package className="size-3.5 text-primary" /> Ordered Items
                 </span>
                 <div className="divide-y divide-border rounded-2xl border border-border bg-card">
-                  {selectedOrder.lines.map((line, idx) => (
+                  {(selectedOrder.lines || []).map((line, idx) => (
                     <div key={idx} className="p-3">
                       <div className="flex items-start justify-between gap-2">
                         <div>

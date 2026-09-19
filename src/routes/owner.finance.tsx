@@ -28,8 +28,8 @@ function FinancePage() {
     const prev = methods.get(o.paymentMethod) ?? { count: 0, total: 0 };
     methods.set(o.paymentMethod, { count: prev.count + 1, total: prev.total + o.total });
   });
-  const delivery = paid.reduce((t, o) => t + o.deliveryFee, 0);
-  const discount = paid.reduce((t, o) => t + o.discount, 0);
+  const delivery = paid.reduce((t, o) => t + (Number(o.deliveryFee) || 0), 0);
+  const discount = paid.reduce((t, o) => t + (Number(o.discount) || 0), 0);
 
   return (
     <DashboardShell role="owner" title="Finance" subtitle="Revenue breakdown and deductions">

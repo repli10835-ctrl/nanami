@@ -39,7 +39,7 @@ function Profile() {
   const [message, setMessage] = useState("");
 
   const initials =
-    profile.name
+    (profile.name || "")
       .split(" ")
       .map((p) => p[0])
       .filter(Boolean)

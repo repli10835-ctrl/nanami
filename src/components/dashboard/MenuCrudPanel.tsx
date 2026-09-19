@@ -87,7 +87,7 @@ const toDraft = (m: MenuItem): Draft => ({
   category: m.category,
   image: m.image,
   prepMinutes: String(m.prepMinutes),
-  badges: m.badges.join(", "),
+  badges: (m.badges || []).join(", "),
   available: m.available,
   specialRequestEnabled: m.specialRequestEnabled !== false,
   groups: (m.groups || []).map((g) => ({

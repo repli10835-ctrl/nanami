@@ -122,7 +122,7 @@ function CartPage() {
             )}
             <div className="min-w-0 flex-1">
               <p className="truncate text-xs font-bold">{l.name}</p>
-              {l.optionLabels.length > 0 && (
+              {l.optionLabels && l.optionLabels.length > 0 && (
                 <p className="mt-0.5 text-[10px] text-muted-foreground">
                   {l.optionLabels.join(" - ")}
                 </p>

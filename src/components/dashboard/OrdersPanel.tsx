@@ -47,7 +47,7 @@ export function OrdersPanel({ readOnly = false }: { readOnly?: boolean }) {
                 <div>
                   <p className="text-sm font-bold">{o.code}</p>
                   <p className="text-xs capitalize text-muted-foreground">
-                    {o.type} · {o.customer.name || "Guest"} ·{" "}
+                    {o.type} · {o.customer?.name || "Guest"} ·{" "}
                     {new Date(o.createdAt).toLocaleString()}
                   </p>
                 </div>
@@ -57,10 +57,12 @@ export function OrdersPanel({ readOnly = false }: { readOnly?: boolean }) {
               </div>
 
               <ul className="space-y-1 text-xs text-muted-foreground">
-                {o.lines.map((l) => (
+                {(o.lines || []).map((l) => (
                   <li key={l.id}>
                     {l.qty}x {l.name}
-                    {l.optionLabels.length ? ` (${l.optionLabels.join(", ")})` : ""}
+                    {l.optionLabels && l.optionLabels.length
+                      ? ` (${l.optionLabels.join(", ")})`
+                      : ""}
                   </li>
                 ))}
               </ul>

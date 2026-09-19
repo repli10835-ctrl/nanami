@@ -98,10 +98,10 @@ function OrderCard({ order }: { order: Order }) {
       )}
 
       <div className="mt-4 space-y-1 border-t border-border pt-3 text-xs text-muted-foreground">
-        {order.lines.map((l) => (
+        {(order.lines || []).map((l) => (
           <p key={l.id}>
             {l.qty}x {l.name}
-            {l.optionLabels.length ? ` (${l.optionLabels.join(", ")})` : ""}
+            {l.optionLabels && l.optionLabels.length ? ` (${l.optionLabels.join(", ")})` : ""}
           </p>
         ))}
         <p className="pt-1 text-sm font-bold text-primary">{rupiah(order.total)}</p>

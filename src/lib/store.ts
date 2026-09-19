@@ -729,13 +729,125 @@ const defaultState: State = {
   cms: defaultCmsContent,
 };
 
+export function normalizeMenuItem(m: any): MenuItem {
+  if (!m || typeof m !== "object") {
+    return {
+      id: uid(),
+      name: "Unnamed Item",
+      description: "",
+      price: 0,
+      category: "Meals",
+      image: resolveMenuImage(undefined),
+      prepMinutes: 15,
+      badges: [],
+      available: true,
+      specialRequestEnabled: true,
+      groups: [],
+    };
+  }
+  return {
+    id: String(m.id || uid()),
+    name: String(m.name || "Unnamed Item"),
+    description: String(m.description || ""),
+    price: typeof m.price === "number" ? m.price : Number(m.price) || 0,
+    category: String(m.category || "Meals"),
+    image: resolveMenuImage(m.image),
+    prepMinutes: typeof m.prepMinutes === "number" ? m.prepMinutes : Number(m.prepMinutes) || 15,
+    badges: Array.isArray(m.badges) ? m.badges.filter(Boolean).map(String) : [],
+    available: m.available !== false,
+    stock: typeof m.stock === "number" ? m.stock : null,
+    specialRequestEnabled: m.specialRequestEnabled !== false,
+    groups: Array.isArray(m.groups)
+      ? m.groups.map((g: any) => ({
+          id: String(g.id || uid()),
+          name: String(g.name || "Customization"),
+          type: g.type === "multi" ? ("multi" as const) : ("single" as const),
+          enabled: g.enabled !== false,
+          choices: Array.isArray(g.choices)
+            ? g.choices.map((c: any) => ({
+                id: String(c.id || uid()),
+                name: String(c.name || ""),
+                price: typeof c.price === "number" ? c.price : Number(c.price) || 0,
+              }))
+            : [],
+        }))
+      : [],
+  };
+}
+
+export function normalizeProfile(p: any): Profile {
+  if (!p || typeof p !== "object") {
+    return {
+      name: "",
+      phone: "",
+      email: "",
+      address: "",
+      addresses: [],
+      points: 0,
+      signedIn: false,
+      method: "",
+      role: undefined,
+    };
+  }
+  const address = String(p.address || "");
+  let addresses = Array.isArray(p.addresses) ? p.addresses.filter(Boolean).map(String) : [];
+  if (addresses.length === 0 && address) {
+    addresses = [address];
+  }
+  return {
+    name: String(p.name || ""),
+    phone: String(p.phone || ""),
+    email: String(p.email || ""),
+    address,
+    addresses,
+    points: typeof p.points === "number" ? p.points : Number(p.points) || 0,
+    signedIn: Boolean(p.signedIn),
+    method: String(p.method || ""),
+    role: p.role,
+  };
+}
+
+export function normalizeOrder(o: any): Order {
+  return {
+    ...o,
+    id: String(o.id || uid()),
+    code: String(o.code || ""),
+    createdAt: typeof o.createdAt === "number" ? o.createdAt : Date.now(),
+    type: o.type === "pickup" ? "pickup" : "delivery",
+    status: o.status || "Pending Payment",
+    paymentMethod: o.paymentMethod || "eWallet / Pay2Cell",
+    customer: o.customer
+      ? {
+          name: String(o.customer.name || "Guest"),
+          phone: String(o.customer.phone || ""),
+          address: String(o.customer.address || ""),
+        }
+      : { name: "Guest", phone: "", address: "" },
+    lines: Array.isArray(o.lines)
+      ? o.lines.map((l: any) => ({
+          ...l,
+          id: String(l.id || uid()),
+          itemId: String(l.itemId || ""),
+          name: String(l.name || "Item"),
+          qty: typeof l.qty === "number" ? l.qty : Number(l.qty) || 1,
+          unitPrice: typeof l.unitPrice === "number" ? l.unitPrice : Number(l.unitPrice) || 0,
+          optionLabels: Array.isArray(l.optionLabels) ? l.optionLabels.map(String) : [],
+        }))
+      : [],
+    subtotal: typeof o.subtotal === "number" ? o.subtotal : Number(o.subtotal) || 0,
+    deliveryFee: typeof o.deliveryFee === "number" ? o.deliveryFee : Number(o.deliveryFee) || 0,
+    discount: typeof o.discount === "number" ? o.discount : Number(o.discount) || 0,
+    total: typeof o.total === "number" ? o.total : Number(o.total) || 0,
+  };
+}
+
 if (typeof window !== "undefined") {
   try {
     const saved = localStorage.getItem("nanami_auth_profile");
     if (saved) {
       const parsed = JSON.parse(saved);
       if (parsed && parsed.signedIn) {
-        defaultState.profile = parsed;
+        defaultState.profile = normalizeProfile(parsed);
         defaultState.adminUnlocked =
           parsed.role === "admin" || parsed.role === "owner" || parsed.role === "staff";
       }
@@ -744,10 +856,7 @@ if (typeof window !== "undefined") {
     if (savedMenu) {
       const parsedMenu = JSON.parse(savedMenu);
       if (Array.isArray(parsedMenu) && parsedMenu.length > 0) {
-        defaultState.menu = parsedMenu.map((m: any) => ({
-          ...m,
-          image: resolveMenuImage(m.image),
-        }));
+        defaultState.menu = parsedMenu.map(normalizeMenuItem);
       }
     }
   } catch (e) {
@@ -834,11 +943,8 @@ export const actions = {
                 },
               }
             : s.cms,
-          menu:
-            data.menu && data.menu.length
-              ? data.menu.map((m) => ({ ...m, image: resolveMenuImage(m.image) }))
-              : s.menu,
-          orders: data.orders && data.orders.length ? data.orders : s.orders,
+          menu: data.menu && data.menu.length ? data.menu.map(normalizeMenuItem) : s.menu,
+          orders: data.orders && data.orders.length ? data.orders.map(normalizeOrder) : s.orders,
           promos: data.promos && data.promos.length ? data.promos : s.promos,
           vouchers: data.vouchers && data.vouchers.length ? data.vouchers : s.vouchers,
           accounts: data.accounts && data.accounts.length ? data.accounts : s.accounts,

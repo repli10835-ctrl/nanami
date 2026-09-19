@@ -73,10 +73,10 @@ function OrderCard({ order, stage }: { order: Order; stage: Stage }) {
       </div>
 
       <ul className="space-y-1 text-xs text-muted-foreground">
-        {order.lines.map((l) => (
+        {(order.lines || []).map((l) => (
           <li key={l.id}>
             <span className="font-semibold text-foreground">{l.qty}x</span> {l.name}
-            {l.optionLabels.length ? ` (${l.optionLabels.join(", ")})` : ""}
+            {l.optionLabels && l.optionLabels.length ? ` (${l.optionLabels.join(", ")})` : ""}
             {l.note ? ` — ${l.note}` : ""}
           </li>
         ))}

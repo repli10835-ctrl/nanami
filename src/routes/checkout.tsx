@@ -665,7 +665,7 @@ function Checkout() {
                     )}
                     <div className="min-w-0 flex-1">
                       <p className="font-semibold">{line.name}</p>
-                      {line.optionLabels.length > 0 && (
+                      {line.optionLabels && line.optionLabels.length > 0 && (
                         <p className="text-sm text-muted-foreground">
                           ({line.optionLabels.join(", ")})
                         </p>
